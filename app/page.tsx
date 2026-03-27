@@ -362,8 +362,8 @@ function CodeBlock() {
           <span className="terminalPrompt">$</span> npm install @smarthealth/laura-sdk
         </div>
         <div className="terminalLine">
-          <span className="terminalPrompt">$</span> import {"{ Laura }"} from
-          {" "} "@smarthealth/laura-sdk";
+          <span className="terminalPrompt">$</span> import {"{ Laura }"} from{" "}
+          "@smarthealth/laura-sdk";
         </div>
         <div className="terminalLine">
           <span className="terminalPrompt">$</span> const laura = new Laura({"{"}
@@ -659,7 +659,7 @@ export default function Page() {
           color: ${colors.textLight};
           border-radius: 999px;
           padding: 11px 16px;
-          font-size: 13px;
+          font-size: "13px";
           font-weight: 700;
         }
 
@@ -790,7 +790,7 @@ export default function Page() {
           border: 1px solid ${colors.border};
           display: flex;
           align-items: center;
-          justify-content: center;
+          justifyContent: center;
           color: ${colors.textLight};
           z-index: 2;
         }
@@ -929,6 +929,10 @@ export default function Page() {
           flex-wrap: wrap;
         }
 
+        .navCta {
+          min-width: 0;
+        }
+
         @media (max-width: 1100px) {
           .heroWrap {
             grid-template-columns: 1fr;
@@ -1011,6 +1015,29 @@ export default function Page() {
           .waitlistWrap {
             padding: 22px;
           }
+
+          .navCta {
+            width: auto !important;
+            min-width: 162px;
+            max-width: 52vw;
+            padding: 12px 16px !important;
+            font-size: 14px !important;
+            white-space: nowrap;
+          }
+        }
+
+        @media (max-width: 520px) {
+          .container {
+            padding-left: 14px;
+            padding-right: 14px;
+          }
+
+          .navCta {
+            min-width: 148px;
+            max-width: 48vw;
+            padding: 11px 14px !important;
+            font-size: 13px !important;
+          }
         }
       `}</style>
 
@@ -1036,7 +1063,7 @@ export default function Page() {
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              gap: "16px",
+              gap: "12px",
               paddingTop: "10px",
               paddingBottom: "10px",
             }}
@@ -1045,9 +1072,10 @@ export default function Page() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "12px",
+                gap: "10px",
                 minWidth: 0,
                 flex: "1 1 auto",
+                overflow: "hidden",
               }}
             >
               <div
@@ -1070,10 +1098,20 @@ export default function Page() {
                 </svg>
               </div>
 
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: "15px", fontWeight: 800, letterSpacing: "-0.03em" }}>
+              <div style={{ minWidth: 0, overflow: "hidden" }}>
+                <div
+                  style={{
+                    fontSize: "15px",
+                    fontWeight: 800,
+                    letterSpacing: "-0.03em",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
                   Smart Health
                 </div>
+
                 <div
                   className="serif"
                   style={{
@@ -1081,6 +1119,9 @@ export default function Page() {
                     color: colors.textLight,
                     marginTop: "2px",
                     fontStyle: "italic",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
                   }}
                 >
                   Powered by Laura
@@ -1112,8 +1153,13 @@ export default function Page() {
               ))}
             </div>
 
-            <a href="#waitlist" className="btnPrimary" style={{ padding: "13px 20px", flexShrink: 0 }}>
-              Get early access
+            <a
+              href="#waitlist"
+              className="btnPrimary navCta"
+              style={{ padding: "13px 20px", flexShrink: 0 }}
+            >
+              <span className="navCtaDesktop">Get early access</span>
+              <span className="navCtaMobile">Early access</span>
               <svg
                 width="14"
                 height="14"
@@ -1130,6 +1176,14 @@ export default function Page() {
             </a>
           </div>
         </motion.nav>
+
+        <style>{`
+          .navCtaMobile { display: none; }
+          @media (max-width: 720px) {
+            .navCtaDesktop { display: none; }
+            .navCtaMobile { display: inline; }
+          }
+        `}</style>
 
         <section className="section" style={{ paddingTop: "88px", paddingBottom: "46px" }}>
           <div className="container">
