@@ -1,28 +1,49 @@
 # Smart Health
 
-Smart Health is an AI-first healthcare platform powered by Laura, an intelligent health agent built to deliver real-time diagnostics, personalized insights, and easier access to care.
+Smart Health is an AI-first healthcare platform powered by Laura, an intelligent health agent built for people, providers, and developers.
 
-## Overview
+## What it is
 
-This project contains the Smart Health landing page. It presents the product vision, core value, and early positioning for users, partners, and investors.
+Smart Health gives three different groups a clear way to use Laura.
 
-Laura is at the center of the experience. She acts as a health agent that helps users understand symptoms, get guidance, and navigate care in a simple and accessible way.
+### For people
+Laura helps users understand symptoms, get guided next steps, ask health questions, and move faster toward the right care path.
 
-## Features
+### For providers
+Laura helps clinics, practices, and healthcare teams reduce front-desk load, support intake, guide triage, handle appointment workflows, and improve access.
 
-- Modern landing page built with Next.js
-- Clean and investor-ready design
-- Strong focus on Laura as the core product
-- Responsive layout across devices
-- Smooth UI interactions
-- Healthcare brand visuals and assets
+### For developers
+Laura can be integrated into apps, products, patient journeys, and healthcare infrastructure through APIs, SDKs, and embeddable experiences.
 
-## Tech Stack
+## Current repository
+
+This repository contains the Smart Health landing page built with Next.js and TypeScript.
+
+## Product direction
+
+Laura is positioned as a health agent and care access layer. She is not framed as a replacement for clinicians. The goal is to improve guidance, access, operational efficiency, and integration across the healthcare ecosystem.
+
+## Key sections on the landing page
+
+- Hero section with broader product positioning
+- Audience section for people, providers, and developers
+- Public use case section
+- Provider workflow section
+- Developer integration section with terminal-style SDK preview
+- Pricing section
+- Early access section with role selection
+- Responsive layout for desktop and mobile
+
+## Tech stack
 
 - Next.js
 - React
 - TypeScript
 - Framer Motion
-- CSS
 
-## Project Structure
+## Local development
+
+Install dependencies:
+
+```bash
+npm install

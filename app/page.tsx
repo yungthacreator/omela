@@ -4,22 +4,22 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, useInView } from "framer-motion";
 
 const FONT_IMPORT = `
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 `;
 
 const colors = {
-  bg: "#FAF9F5",
+  bg: "#F7F5F0",
   bgCard: "#FFFFFF",
+  bgSoft: "#F2F0EA",
   bgDark: "#0C0C0E",
-  bgDarkCard: "#161618",
-  text: "#1A1A1E",
-  textMuted: "#6B6B76",
-  textLight: "#9B9BA6",
+  bgDarkCard: "#151518",
+  text: "#18181B",
+  textMuted: "#5F6470",
+  textLight: "#8B93A1",
   accent: "#2563EB",
   accentSoft: "#EEF4FF",
-  border: "#E8E6E1",
+  border: "#E7E2D8",
   borderDark: "#2A2A2E",
-  cream: "#F5F3EE",
   success: "#16A34A",
 };
 
@@ -31,14 +31,14 @@ type FadeInProps = {
 
 function FadeIn({ children, delay = 0, className = "" }: FadeInProps) {
   const ref = useRef<HTMLDivElement | null>(null);
-  const isInView = useInView(ref, { once: true, amount: 0.2 });
+  const isInView = useInView(ref, { once: true, amount: 0.18 });
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 22 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.6, delay, ease: [0.25, 0.1, 0.25, 1] }}
+      transition={{ duration: 0.55, delay, ease: [0.25, 0.1, 0.25, 1] }}
       className={className}
     >
       {children}
@@ -53,17 +53,55 @@ function Badge({ children }: { children: ReactNode }) {
         display: "inline-flex",
         alignItems: "center",
         gap: "8px",
-        padding: "8px 16px",
-        borderRadius: "100px",
+        padding: "9px 16px",
+        borderRadius: "999px",
         border: `1px solid ${colors.border}`,
         background: colors.bgCard,
         fontSize: "13px",
         fontWeight: 600,
         color: colors.textMuted,
-        letterSpacing: "0.02em",
       }}
     >
       {children}
+    </div>
+  );
+}
+
+function SectionHeading({
+  badge,
+  title,
+  body,
+}: {
+  badge?: string;
+  title: ReactNode;
+  body?: string;
+}) {
+  return (
+    <div style={{ textAlign: "center", maxWidth: "760px", margin: "0 auto" }}>
+      {badge ? <Badge>{badge}</Badge> : null}
+      <h2
+        className="serif"
+        style={{
+          fontSize: "clamp(32px, 5vw, 56px)",
+          lineHeight: 1.06,
+          letterSpacing: "-0.035em",
+          marginTop: badge ? "18px" : 0,
+        }}
+      >
+        {title}
+      </h2>
+      {body ? (
+        <p
+          style={{
+            fontSize: "17px",
+            lineHeight: 1.75,
+            color: colors.textMuted,
+            marginTop: "16px",
+          }}
+        >
+          {body}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -72,8 +110,8 @@ function PhoneMockup() {
   const [visibleMessages, setVisibleMessages] = useState(0);
 
   useEffect(() => {
-    const timers = [0, 1, 2, 3, 4].map((i) =>
-      window.setTimeout(() => setVisibleMessages(i + 1), 800 + i * 900)
+    const timers = [0, 1, 2, 3].map((i) =>
+      window.setTimeout(() => setVisibleMessages(i + 1), 700 + i * 850)
     );
 
     return () => {
@@ -82,147 +120,87 @@ function PhoneMockup() {
   }, []);
 
   const chatMessages = [
-    { from: "patient", text: "Hi, I need to book an appointment for next week." },
+    {
+      from: "user",
+      text: "I have a sore throat, fever, and I feel weak. What should I do?",
+    },
     {
       from: "laura",
-      text: "Of course! I can see Dr. Patel has availability on Tuesday at 10:00 and Thursday at 14:30. Which works better?",
+      text: "I can help you think through the next step. Based on what you shared, you may need same-day clinical advice if the fever is persistent or you have trouble swallowing.",
     },
-    { from: "patient", text: "Tuesday at 10 please. Also need a repeat prescription." },
+    {
+      from: "user",
+      text: "Can you book the earliest appointment near me?",
+    },
     {
       from: "laura",
-      text: "Done. Tuesday 10:00 with Dr. Patel is confirmed. I've flagged your repeat prescription request and it'll be reviewed today. Anything else?",
+      text: "Yes. I found an available slot tomorrow at 9:30 AM. I can also guide you on self-care until then.",
     },
-    { from: "patient", text: "That's perfect, thank you!" },
   ];
 
   return (
-    <div
-      style={{
-        position: "relative",
-        width: "320px",
-        margin: "0 auto",
-      }}
-    >
-      <div
-        style={{
-          background: colors.bgCard,
-          borderRadius: "40px",
-          border: `2px solid ${colors.border}`,
-          padding: "12px",
-          boxShadow: "0 40px 80px rgba(0,0,0,0.08), 0 16px 32px rgba(0,0,0,0.04)",
-        }}
-      >
-        <div
-          style={{
-            width: "120px",
-            height: "28px",
-            background: colors.bgDark,
-            borderRadius: "20px",
-            margin: "0 auto 8px",
-          }}
-        />
-
-        <div
-          style={{
-            background: "#F8F8FA",
-            borderRadius: "28px",
-            overflow: "hidden",
-            height: "480px",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <div
-            style={{
-              padding: "16px 20px",
-              background: colors.bgCard,
-              borderBottom: `1px solid ${colors.border}`,
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-            }}
-          >
-            <div
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                background: `linear-gradient(135deg, ${colors.accent}, #7C3AED)`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#fff",
-                fontSize: "14px",
-                fontWeight: 700,
-              }}
-            >
-              L
-            </div>
+    <div className="phoneWrap">
+      <div className="phoneFrame">
+        <div className="phoneNotch" />
+        <div className="phoneScreen">
+          <div className="phoneHeader">
+            <div className="phoneAvatar">L</div>
             <div>
-              <div style={{ fontSize: "14px", fontWeight: 600, color: colors.text }}>
+              <div style={{ fontSize: "14px", fontWeight: 700, color: colors.text }}>
                 Laura
               </div>
               <div
                 style={{
-                  fontSize: "11px",
-                  color: colors.success,
                   display: "flex",
                   alignItems: "center",
-                  gap: "4px",
+                  gap: "5px",
+                  fontSize: "11px",
+                  color: colors.success,
                 }}
               >
                 <span
                   style={{
                     width: "6px",
                     height: "6px",
-                    borderRadius: "50%",
+                    borderRadius: "999px",
                     background: colors.success,
                     display: "inline-block",
                   }}
                 />
-                Online now
+                Live now
               </div>
             </div>
           </div>
 
-          <div
-            style={{
-              flex: 1,
-              padding: "16px",
-              overflowY: "auto",
-              display: "flex",
-              flexDirection: "column",
-              gap: "10px",
-            }}
-          >
+          <div className="phoneBody">
             {chatMessages.map((msg, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 12, scale: 0.95 }}
+                initial={{ opacity: 0, y: 12, scale: 0.98 }}
                 animate={
                   i < visibleMessages
                     ? { opacity: 1, y: 0, scale: 1 }
-                    : { opacity: 0, y: 12, scale: 0.95 }
+                    : { opacity: 0, y: 12, scale: 0.98 }
                 }
                 transition={{ duration: 0.35, ease: "easeOut" }}
                 style={{
-                  alignSelf: msg.from === "patient" ? "flex-end" : "flex-start",
-                  maxWidth: "85%",
+                  alignSelf: msg.from === "user" ? "flex-end" : "flex-start",
+                  maxWidth: "84%",
                 }}
               >
                 <div
                   style={{
-                    padding: "10px 14px",
+                    padding: "11px 14px",
                     borderRadius:
-                      msg.from === "patient"
+                      msg.from === "user"
                         ? "18px 18px 4px 18px"
                         : "18px 18px 18px 4px",
-                    background: msg.from === "patient" ? colors.accent : colors.bgCard,
-                    color: msg.from === "patient" ? "#fff" : colors.text,
+                    background: msg.from === "user" ? colors.accent : colors.bgCard,
+                    color: msg.from === "user" ? "#fff" : colors.text,
                     fontSize: "13px",
-                    lineHeight: "1.5",
+                    lineHeight: "1.55",
                     boxShadow:
-                      msg.from === "laura" ? "0 1px 3px rgba(0,0,0,0.06)" : "none",
+                      msg.from === "laura" ? "0 2px 8px rgba(0,0,0,0.05)" : "none",
                   }}
                 >
                   {msg.text}
@@ -236,123 +214,123 @@ function PhoneMockup() {
   );
 }
 
+function CodeBlock() {
+  return (
+    <div className="terminalCard">
+      <div className="terminalTop">
+        <div className="terminalDots">
+          <span />
+          <span />
+          <span />
+        </div>
+        <span className="terminalTitle">Laura SDK</span>
+      </div>
+
+      <div className="terminalBody">
+        <div className="terminalLine">
+          <span className="terminalPrompt">$</span> npm install @smarthealth/laura-sdk
+        </div>
+        <div className="terminalLine">
+          <span className="terminalPrompt">$</span> import {"{ Laura }"} from
+          {" "} "@smarthealth/laura-sdk";
+        </div>
+        <div className="terminalLine">
+          <span className="terminalPrompt">$</span> const laura = new Laura({"{"}
+          apiKey: process.env.NEXT_PUBLIC_SMART_HEALTH_KEY {"}"});
+        </div>
+        <div className="terminalLine">
+          <span className="terminalPrompt">$</span> await laura.chat({"{"}
+          userId: "user_123",
+        </div>
+        <div className="terminalLine terminalIndent">
+          message: "I have a rash and a headache. What should I do?"
+        </div>
+        <div className="terminalLine">{"});"}</div>
+      </div>
+    </div>
+  );
+}
+
 export default function Page() {
-  const navItems = ["Product", "Pricing", "About"];
+  const [role, setRole] = useState("Patient");
+  const [email, setEmail] = useState("");
 
-  const logos = ["NHS", "EMIS", "SystmOne", "Epic", "Cerner", "AccuRx"];
+  const navItems = ["People", "Providers", "Developers", "Pricing"];
 
-  const features = [
+  const integrations = ["NHS", "EMIS", "SystmOne", "Epic", "Cerner", "AccuRx"];
+
+  const audienceCards = [
     {
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
-        </svg>
-      ),
-      title: "Answers every call",
-      desc: "Handles enquiries, overflow, after-hours, and follow-ups so your team never misses a patient.",
+      title: "For people",
+      desc: "Use Laura directly for symptom understanding, guidance, booking support, medication questions, and care navigation.",
+      bullets: ["Symptom guidance", "Care navigation", "Booking support", "24/7 availability"],
     },
     {
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-          <line x1="16" y1="2" x2="16" y2="6" />
-          <line x1="8" y1="2" x2="8" y2="6" />
-          <line x1="3" y1="10" x2="21" y2="10" />
-        </svg>
-      ),
-      title: "Books appointments live",
-      desc: "Checks real availability, books, reschedules, and cancels without pushing staff back into admin loops.",
+      title: "For providers",
+      desc: "Use Laura to reduce front-desk load, handle intake, guide triage, support prescriptions, and improve multilingual access.",
+      bullets: ["Voice and chat intake", "Appointment workflows", "Triage support", "Multilingual interactions"],
     },
     {
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <line x1="2" y1="12" x2="22" y2="12" />
-          <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
-        </svg>
-      ),
-      title: "Multilingual from day one",
-      desc: "Patients interact in their preferred language. No add-ons. No third-party middleware. Built in.",
+      title: "For developers",
+      desc: "Embed Laura into apps, patient experiences, provider workflows, and digital health platforms with APIs and SDKs.",
+      bullets: ["API and SDK access", "Embeddable widgets", "Secure auth flows", "Observability and logs"],
     },
   ];
 
+  const publicUseCases = [
+    "Understand symptoms before deciding the next step",
+    "Ask Laura everyday health questions in plain language",
+    "Get help booking appointments and navigating services",
+  ];
+
+  const providerUseCases = [
+    "Answer routine patient calls automatically",
+    "Book, reschedule, and confirm appointments",
+    "Handle prescription and follow-up requests",
+  ];
+
+  const developerFeatures = [
+    "REST API and SDK access",
+    "Embeddable chat and voice widgets",
+    "Patient workflow triggers",
+    "Secure event logging and audit trails",
+  ];
+
   const metrics = [
-    { value: "60–80%", label: "Reduction in receptionist workload" },
-    { value: "24/7", label: "Patient call coverage" },
-    { value: "<2s", label: "Average response time" },
-    { value: "40+", label: "Languages supported" },
+    { value: "24/7", label: "always-on access" },
+    { value: "40+", label: "supported languages" },
+    { value: "<2s", label: "average response time" },
+    { value: "3x", label: "broader market coverage" },
   ];
 
   const pricingPlans = [
     {
-      name: "Starter",
-      price: "£699",
-      period: "/mo",
-      desc: "For single-site practices starting with voice coverage.",
-      features: [
-        "Voice + web chat",
-        "Appointment workflows",
-        "After-hours coverage",
-        "Basic analytics dashboard",
-      ],
-      cta: "Start free trial",
+      name: "Public Access",
+      price: "Waitlist",
+      period: "",
+      desc: "For early users who want direct access to Laura.",
+      features: ["Symptom guidance", "Care navigation", "Appointment support", "Early product access"],
       highlighted: false,
+      cta: "Join waitlist",
     },
     {
-      name: "Growth",
-      price: "£1,750",
+      name: "Provider",
+      price: "£1,250",
       period: "/mo",
-      desc: "For growing teams that want deeper automation across channels.",
-      features: [
-        "Everything in Starter",
-        "SMS + WhatsApp",
-        "Translation workflows",
-        "Priority support + SLA",
-      ],
-      cta: "Start free trial",
+      desc: "For clinics and practices using Laura in operations.",
+      features: ["Voice and chat intake", "Scheduling workflows", "Multilingual support", "Provider dashboard"],
       highlighted: true,
       badge: "Most popular",
+      cta: "Request demo",
     },
     {
-      name: "Enterprise",
+      name: "Developer",
       price: "Custom",
       period: "",
-      desc: "For health groups, trusts, and provider networks.",
-      features: [
-        "Everything in Growth",
-        "EHR/PAS integrations",
-        "Governance + audit controls",
-        "Dedicated implementation",
-      ],
-      cta: "Talk to us",
+      desc: "For teams embedding Laura into products and services.",
+      features: ["API and SDK access", "Embeddable components", "Usage analytics", "Technical onboarding"],
       highlighted: false,
+      cta: "Talk to us",
     },
   ];
 
@@ -360,20 +338,22 @@ export default function Page() {
     <>
       <style>{FONT_IMPORT}</style>
       <style>{`
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
         body {
           background: ${colors.bg};
-          font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
           color: ${colors.text};
+          font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
           -webkit-font-smoothing: antialiased;
           overflow-x: hidden;
         }
-        a { text-decoration: none; color: inherit; }
-        button { cursor: pointer; border: none; font-family: inherit; }
-        ::selection { background: ${colors.accent}; color: #fff; }
+        a { color: inherit; text-decoration: none; }
+        button, input, select { font-family: inherit; }
+        ::selection { background: ${colors.accent}; color: white; }
 
-        .serif { font-family: 'Instrument Serif', Georgia, serif; }
+        .serif {
+          font-family: 'Instrument Serif', Georgia, serif;
+        }
 
         .container {
           max-width: 1200px;
@@ -381,65 +361,414 @@ export default function Page() {
           padding: 0 24px;
         }
 
-        @media (min-width: 768px) {
-          .container { padding: 0 40px; }
-        }
-
-        @media (min-width: 1024px) {
-          .container { padding: 0 48px; }
-        }
-
-        .btn-primary {
+        .btnPrimary {
           display: inline-flex;
           align-items: center;
+          justify-content: center;
           gap: 8px;
-          padding: 14px 28px;
           background: ${colors.bgDark};
-          color: #fff;
-          border-radius: 100px;
+          color: white;
+          border: none;
+          border-radius: 999px;
+          padding: 15px 24px;
           font-size: 15px;
-          font-weight: 600;
-          transition: all 0.2s;
-          letter-spacing: -0.01em;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s ease;
         }
 
-        .btn-primary:hover {
-          background: #2A2A2E;
+        .btnPrimary:hover {
           transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          background: #1A1A20;
+          box-shadow: 0 10px 26px rgba(0,0,0,0.12);
         }
 
-        .btn-secondary {
+        .btnSecondary {
           display: inline-flex;
           align-items: center;
+          justify-content: center;
           gap: 8px;
-          padding: 14px 28px;
           background: transparent;
           color: ${colors.text};
-          border-radius: 100px;
-          font-size: 15px;
-          font-weight: 600;
           border: 1px solid ${colors.border};
-          transition: all 0.2s;
-          letter-spacing: -0.01em;
+          border-radius: 999px;
+          padding: 15px 24px;
+          font-size: 15px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s ease;
         }
 
-        .btn-secondary:hover {
+        .btnSecondary:hover {
           background: ${colors.bgCard};
-          border-color: #D0CEC8;
+          border-color: #D9D1C4;
         }
 
-        @keyframes scroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+        .section {
+          padding: 88px 0;
         }
 
-        .logo-scroll {
-          animation: scroll 20s linear infinite;
+        .grid3 {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 20px;
         }
 
-        .logo-scroll:hover {
-          animation-play-state: paused;
+        .grid2 {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 20px;
+        }
+
+        .card {
+          background: ${colors.bgCard};
+          border: 1px solid ${colors.border};
+          border-radius: 24px;
+          padding: 28px;
+        }
+
+        .darkCard {
+          background: ${colors.bgDarkCard};
+          border: 1px solid ${colors.borderDark};
+          border-radius: 24px;
+          padding: 28px;
+        }
+
+        .heroWrap {
+          display: grid;
+          grid-template-columns: 1.12fr 0.88fr;
+          gap: 48px;
+          align-items: center;
+        }
+
+        .heroTitle {
+          font-size: clamp(52px, 7vw, 92px);
+          line-height: 0.95;
+          letter-spacing: -0.055em;
+        }
+
+        .heroAccent {
+          color: ${colors.accent};
+          font-style: italic;
+          display: block;
+        }
+
+        .heroBody {
+          margin-top: 22px;
+          font-size: 19px;
+          line-height: 1.8;
+          color: ${colors.textMuted};
+          max-width: 640px;
+        }
+
+        .heroButtons {
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+          margin-top: 32px;
+        }
+
+        .logoStrip {
+          display: flex;
+          gap: 16px;
+          flex-wrap: wrap;
+          justify-content: center;
+          margin-top: 28px;
+        }
+
+        .logoChip {
+          border: 1px solid ${colors.border};
+          background: ${colors.bgCard};
+          color: ${colors.textLight};
+          border-radius: 999px;
+          padding: 11px 16px;
+          font-size: 13px;
+          font-weight: 700;
+        }
+
+        .phoneWrap {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+        }
+
+        .phoneFrame {
+          width: min(100%, 348px);
+          background: white;
+          border: 2px solid ${colors.border};
+          border-radius: 40px;
+          padding: 12px;
+          box-shadow: 0 34px 80px rgba(0,0,0,0.1);
+        }
+
+        .phoneNotch {
+          width: 120px;
+          height: 28px;
+          border-radius: 999px;
+          background: ${colors.bgDark};
+          margin: 0 auto 8px;
+        }
+
+        .phoneScreen {
+          height: 500px;
+          background: #F8F8FB;
+          border-radius: 28px;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .phoneHeader {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 16px 18px;
+          background: ${colors.bgCard};
+          border-bottom: 1px solid ${colors.border};
+        }
+
+        .phoneAvatar {
+          width: 38px;
+          height: 38px;
+          border-radius: 999px;
+          background: linear-gradient(135deg, ${colors.accent}, #7C3AED);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: 800;
+          font-size: 14px;
+        }
+
+        .phoneBody {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          padding: 16px;
+          overflow: hidden;
+        }
+
+        .featureList {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          margin-top: 18px;
+        }
+
+        .featureRow {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          color: ${colors.textMuted};
+          font-size: 14px;
+          line-height: 1.65;
+        }
+
+        .dotCheck {
+          width: 18px;
+          height: 18px;
+          margin-top: 2px;
+          border-radius: 999px;
+          background: ${colors.accentSoft};
+          color: ${colors.accent};
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          flex-shrink: 0;
+        }
+
+        .terminalCard {
+          background: #0A0A0D;
+          color: #E5E7EB;
+          border: 1px solid #22242B;
+          border-radius: 24px;
+          overflow: hidden;
+          box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+        }
+
+        .terminalTop {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 14px 16px;
+          border-bottom: 1px solid #1E2027;
+          background: #111319;
+        }
+
+        .terminalDots {
+          display: flex;
+          gap: 8px;
+        }
+
+        .terminalDots span {
+          width: 10px;
+          height: 10px;
+          border-radius: 999px;
+          display: inline-block;
+          background: #343844;
+        }
+
+        .terminalDots span:nth-child(1) { background: #F87171; }
+        .terminalDots span:nth-child(2) { background: #FBBF24; }
+        .terminalDots span:nth-child(3) { background: #34D399; }
+
+        .terminalTitle {
+          font-size: 12px;
+          color: #9CA3AF;
+          font-weight: 700;
+        }
+
+        .terminalBody {
+          padding: 18px;
+          overflow-x: auto;
+        }
+
+        .terminalLine {
+          white-space: pre;
+          font-size: 13px;
+          line-height: 1.8;
+          color: #E5E7EB;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        .terminalPrompt {
+          color: #60A5FA;
+          margin-right: 10px;
+        }
+
+        .terminalIndent {
+          padding-left: 28px;
+        }
+
+        .waitlistWrap {
+          background: ${colors.bgCard};
+          border: 1px solid ${colors.border};
+          border-radius: 28px;
+          padding: 32px;
+          max-width: 880px;
+          margin: 0 auto;
+        }
+
+        .waitlistForm {
+          display: grid;
+          grid-template-columns: 1.2fr 0.9fr auto;
+          gap: 12px;
+          margin-top: 24px;
+        }
+
+        .inputBase {
+          width: 100%;
+          height: 54px;
+          border-radius: 16px;
+          border: 1px solid ${colors.border};
+          background: ${colors.bgCard};
+          padding: 0 16px;
+          font-size: 15px;
+          color: ${colors.text};
+          outline: none;
+        }
+
+        .inputBase:focus {
+          border-color: ${colors.accent};
+          box-shadow: 0 0 0 4px rgba(37,99,235,0.08);
+        }
+
+        .metricsGrid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 1px;
+          background: ${colors.border};
+          border: 1px solid ${colors.border};
+          border-radius: 24px;
+          overflow: hidden;
+        }
+
+        .metricCard {
+          background: ${colors.bgCard};
+          padding: 28px 20px;
+          text-align: center;
+        }
+
+        .footerRow {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+
+        @media (max-width: 1100px) {
+          .heroWrap {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 900px) {
+          .grid3 {
+            grid-template-columns: 1fr;
+          }
+
+          .grid2 {
+            grid-template-columns: 1fr;
+          }
+
+          .metricsGrid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .waitlistForm {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 720px) {
+          .container {
+            padding: 0 18px;
+          }
+
+          .section {
+            padding: 72px 0;
+          }
+
+          .navLinks {
+            display: none !important;
+          }
+
+          .heroTitle {
+            font-size: clamp(42px, 14vw, 68px);
+          }
+
+          .heroBody {
+            font-size: 17px;
+          }
+
+          .heroButtons {
+            flex-direction: column;
+            align-items: stretch;
+          }
+
+          .btnPrimary,
+          .btnSecondary {
+            width: 100%;
+          }
+
+          .phoneFrame {
+            width: min(100%, 320px);
+          }
+
+          .phoneScreen {
+            height: 470px;
+          }
+
+          .metricsGrid {
+            grid-template-columns: 1fr;
+          }
+
+          .waitlistWrap {
+            padding: 22px;
+          }
         }
       `}</style>
 
@@ -447,57 +776,63 @@ export default function Page() {
         <motion.nav
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.45 }}
           style={{
             position: "sticky",
             top: 0,
             zIndex: 100,
-            background: `${colors.bg}E8`,
-            backdropFilter: "blur(16px)",
-            WebkitBackdropFilter: "blur(16px)",
+            background: `${colors.bg}EE`,
+            backdropFilter: "blur(14px)",
+            WebkitBackdropFilter: "blur(14px)",
             borderBottom: `1px solid ${colors.border}`,
           }}
         >
           <div
             className="container"
             style={{
+              height: "82px",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              height: "72px",
+              gap: "18px",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <div
                 style={{
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "10px",
+                  width: "42px",
+                  height: "42px",
+                  borderRadius: "14px",
                   background: colors.bgDark,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                 }}
               >
-                <svg width="16" height="16" viewBox="0 0 32 32" fill="none">
+                <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
                   <rect x="4" y="8" width="3.5" height="16" rx="1.75" fill="#fff" />
                   <rect x="10.5" y="5" width="3.5" height="22" rx="1.75" fill="#fff" />
                   <rect x="17" y="11" width="3.5" height="10" rx="1.75" fill="#fff" />
                   <rect x="23.5" y="7" width="3.5" height="18" rx="1.75" fill="#fff" />
                 </svg>
               </div>
-              <span style={{ fontSize: "18px", fontWeight: 700, letterSpacing: "-0.03em" }}>
-                Smart Health
-              </span>
+              <div>
+                <div style={{ fontSize: "15px", fontWeight: 800, letterSpacing: "-0.03em" }}>
+                  Smart Health
+                </div>
+                <div style={{ fontSize: "12px", color: colors.textLight, marginTop: "2px" }}>
+                  Powered by Laura
+                </div>
+              </div>
             </div>
 
             <div
+              className="navLinks"
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "36px",
+                gap: "28px",
               }}
-              className="desktop-nav"
             >
               {navItems.map((item) => (
                 <a
@@ -505,15 +840,8 @@ export default function Page() {
                   href={`#${item.toLowerCase()}`}
                   style={{
                     fontSize: "14px",
-                    fontWeight: 500,
+                    fontWeight: 600,
                     color: colors.textMuted,
-                    transition: "color 0.15s",
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.color = colors.text;
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.color = colors.textMuted;
                   }}
                 >
                   {item}
@@ -521,115 +849,66 @@ export default function Page() {
               ))}
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <a
-                href="#waitlist"
-                style={{
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  color: colors.textMuted,
-                  display: "none",
-                }}
-                className="desktop-only"
+            <a href="#waitlist" className="btnPrimary" style={{ padding: "13px 20px" }}>
+              Get early access
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                Sign in
-              </a>
-              <button className="btn-primary" style={{ padding: "10px 22px", fontSize: "14px" }}>
-                Request demo
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="12 5 19 12 12 19" />
-                </svg>
-              </button>
-            </div>
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </a>
           </div>
         </motion.nav>
 
-        <section style={{ padding: "80px 0 40px", overflow: "hidden" }}>
+        <section className="section" style={{ paddingTop: "88px", paddingBottom: "54px" }}>
           <div className="container">
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr",
-                gap: "60px",
-                alignItems: "center",
-              }}
-            >
-              <div style={{ maxWidth: "720px", margin: "0 auto", textAlign: "center" }}>
+            <div className="heroWrap">
+              <div>
                 <FadeIn>
                   <Badge>
                     <span
                       style={{
                         width: "8px",
                         height: "8px",
-                        borderRadius: "50%",
                         background: colors.success,
+                        borderRadius: "999px",
                         display: "inline-block",
                       }}
                     />
-                    Now onboarding UK practices
+                    Now onboarding people, providers, and developers
                   </Badge>
                 </FadeIn>
 
-                <FadeIn delay={0.1}>
-                  <h1
-                    className="serif"
-                    style={{
-                      fontSize: "clamp(42px, 6vw, 72px)",
-                      lineHeight: 1.05,
-                      letterSpacing: "-0.035em",
-                      marginTop: "28px",
-                      color: colors.text,
-                    }}
-                  >
-                    The AI receptionist
-                    <br />
-                    <span style={{ fontStyle: "italic", color: colors.accent }}>
-                      your practice deserves.
-                    </span>
+                <FadeIn delay={0.08}>
+                  <h1 className="serif heroTitle" style={{ marginTop: "24px" }}>
+                    The AI health agent
+                    <span className="heroAccent">for care, triage, and access.</span>
                   </h1>
                 </FadeIn>
 
-                <FadeIn delay={0.2}>
-                  <p
-                    style={{
-                      fontSize: "18px",
-                      lineHeight: 1.7,
-                      color: colors.textMuted,
-                      marginTop: "24px",
-                      maxWidth: "540px",
-                      margin: "24px auto 0",
-                    }}
-                  >
-                    Laura answers every patient call, books appointments, handles prescriptions,
-                    and speaks 40+ languages  so your front desk can focus on care, not admin.
+                <FadeIn delay={0.16}>
+                  <p className="heroBody">
+                    Laura helps people understand symptoms, navigate care, and get answers fast.
+                    Providers use her to automate front-desk workflows. Developers integrate her
+                    through APIs, SDKs, and embeddable experiences.
                   </p>
                 </FadeIn>
 
-                <FadeIn delay={0.3}>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "12px",
-                      marginTop: "36px",
-                      justifyContent: "center",
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <button className="btn-primary">
-                      Request a demo
+                <FadeIn delay={0.24}>
+                  <div className="heroButtons">
+                    <a href="#waitlist" className="btnPrimary">
+                      Get early access
                       <svg
-                        width="16"
-                        height="16"
+                        width="15"
+                        height="15"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -640,495 +919,448 @@ export default function Page() {
                         <line x1="5" y1="12" x2="19" y2="12" />
                         <polyline points="12 5 19 12 12 19" />
                       </svg>
-                    </button>
-                    <button className="btn-secondary">Watch Laura in action</button>
+                    </a>
+                    <a href="#developers" className="btnSecondary">
+                      Explore developer tools
+                    </a>
                   </div>
                 </FadeIn>
 
-                <FadeIn delay={0.35}>
-                  <p
-                    style={{
-                      fontSize: "13px",
-                      color: colors.textLight,
-                      marginTop: "16px",
-                    }}
-                  >
-                    Free pilot for qualifying practices · No integration required to start
-                  </p>
+                <FadeIn delay={0.3}>
+                  <div style={{ marginTop: "18px", fontSize: "13px", color: colors.textLight }}>
+                    Built for public access, providers, and health platforms
+                  </div>
                 </FadeIn>
               </div>
 
-              <FadeIn delay={0.4}>
+              <FadeIn delay={0.2}>
                 <PhoneMockup />
+              </FadeIn>
+            </div>
+
+            <FadeIn delay={0.35}>
+              <div className="logoStrip">
+                {integrations.map((item) => (
+                  <div className="logoChip" key={item}>
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+
+        <section className="section" style={{ paddingTop: "34px" }}>
+          <div className="container">
+            <FadeIn>
+              <SectionHeading
+                badge="Built for everyone"
+                title={<>One platform. Three entry points.</>}
+                body="Laura works as a direct health experience for the public, an operations layer for providers, and an integration layer for digital health teams."
+              />
+            </FadeIn>
+
+            <div className="grid3" style={{ marginTop: "48px" }}>
+              {audienceCards.map((card, i) => (
+                <FadeIn key={card.title} delay={i * 0.08}>
+                  <div className="card">
+                    <div
+                      style={{
+                        width: "48px",
+                        height: "48px",
+                        borderRadius: "16px",
+                        background: colors.accentSoft,
+                        color: colors.accent,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "20px",
+                        fontWeight: 800,
+                      }}
+                    >
+                      {i + 1}
+                    </div>
+                    <h3
+                      style={{
+                        fontSize: "24px",
+                        fontWeight: 800,
+                        letterSpacing: "-0.03em",
+                        marginTop: "18px",
+                      }}
+                    >
+                      {card.title}
+                    </h3>
+                    <p
+                      style={{
+                        marginTop: "10px",
+                        color: colors.textMuted,
+                        fontSize: "15px",
+                        lineHeight: 1.8,
+                      }}
+                    >
+                      {card.desc}
+                    </p>
+
+                    <div className="featureList">
+                      {card.bullets.map((bullet) => (
+                        <div className="featureRow" key={bullet}>
+                          <span className="dotCheck">✓</span>
+                          <span>{bullet}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </FadeIn>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="people" className="section">
+          <div className="container">
+            <div className="grid2" style={{ alignItems: "center" }}>
+              <FadeIn>
+                <div>
+                  <Badge>Laura for people</Badge>
+                  <h2
+                    className="serif"
+                    style={{
+                      fontSize: "clamp(30px, 5vw, 54px)",
+                      lineHeight: 1.07,
+                      letterSpacing: "-0.04em",
+                      marginTop: "18px",
+                    }}
+                  >
+                    Healthcare guidance that starts with a conversation.
+                  </h2>
+                  <p
+                    style={{
+                      marginTop: "16px",
+                      color: colors.textMuted,
+                      fontSize: "17px",
+                      lineHeight: 1.8,
+                      maxWidth: "560px",
+                    }}
+                  >
+                    Laura gives people a clear starting point. Ask questions in plain language,
+                    understand what may matter, get guided next steps, and move faster toward the
+                    right kind of care.
+                  </p>
+
+                  <div className="featureList" style={{ marginTop: "24px" }}>
+                    {publicUseCases.map((item) => (
+                      <div className="featureRow" key={item}>
+                        <span className="dotCheck">✓</span>
+                        <span>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </FadeIn>
+
+              <FadeIn delay={0.08}>
+                <div className="card" style={{ background: colors.bgSoft }}>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      color: colors.textLight,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.12em",
+                    }}
+                  >
+                    Example prompts
+                  </div>
+
+                  <div style={{ display: "grid", gap: "12px", marginTop: "18px" }}>
+                    {[
+                      "I have a rash and headache. What should I do next?",
+                      "Can you help me understand this prescription?",
+                      "Book the earliest available appointment near me.",
+                    ].map((q) => (
+                      <div
+                        key={q}
+                        style={{
+                          border: `1px solid ${colors.border}`,
+                          background: colors.bgCard,
+                          borderRadius: "18px",
+                          padding: "16px",
+                          fontSize: "15px",
+                          lineHeight: 1.7,
+                          color: colors.text,
+                        }}
+                      >
+                        {q}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </FadeIn>
             </div>
           </div>
         </section>
 
-        <section style={{ padding: "40px 0 60px" }}>
+        <section id="providers" className="section">
           <div className="container">
-            <p
-              style={{
-                fontSize: "12px",
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.12em",
-                color: colors.textLight,
-                textAlign: "center",
-                marginBottom: "28px",
-              }}
-            >
-              Built to integrate with the systems providers already use
-            </p>
-
-            <div
-              style={{
-                position: "relative",
-                overflow: "hidden",
-                maskImage:
-                  "linear-gradient(90deg, transparent, black 10%, black 90%, transparent)",
-                WebkitMaskImage:
-                  "linear-gradient(90deg, transparent, black 10%, black 90%, transparent)",
-              }}
-            >
-              <div
-                className="logo-scroll"
-                style={{
-                  display: "flex",
-                  gap: "48px",
-                  width: "max-content",
-                  alignItems: "center",
-                }}
-              >
-                {[...logos, ...logos].map((logo, i) => (
-                  <div
-                    key={`${logo}-${i}`}
-                    style={{
-                      fontSize: "18px",
-                      fontWeight: 700,
-                      color: colors.textLight,
-                      letterSpacing: "-0.02em",
-                      whiteSpace: "nowrap",
-                      opacity: 0.6,
-                    }}
-                  >
-                    {logo}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section style={{ padding: "40px 0" }}>
-          <div className="container">
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                gap: "1px",
-                background: colors.border,
-                borderRadius: "20px",
-                overflow: "hidden",
-                border: `1px solid ${colors.border}`,
-              }}
-            >
-              {metrics.map((metric, i) => (
-                <FadeIn key={metric.label} delay={i * 0.08}>
+            <div className="grid2" style={{ alignItems: "center" }}>
+              <FadeIn>
+                <div className="card">
                   <div
                     style={{
-                      background: colors.bgCard,
-                      padding: "32px 28px",
-                      textAlign: "center",
+                      display: "grid",
+                      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                      gap: "14px",
                     }}
                   >
-                    <div
-                      className="serif"
-                      style={{
-                        fontSize: "36px",
-                        fontWeight: 400,
-                        letterSpacing: "-0.03em",
-                        color: colors.text,
-                      }}
-                    >
-                      {metric.value}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "13px",
-                        color: colors.textMuted,
-                        marginTop: "6px",
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      {metric.label}
-                    </div>
+                    {[
+                      "Calls handled",
+                      "Appointment requests",
+                      "Prescription follow-ups",
+                      "Multilingual patient support",
+                    ].map((item, i) => (
+                      <div
+                        key={item}
+                        style={{
+                          border: `1px solid ${colors.border}`,
+                          borderRadius: "18px",
+                          padding: "18px",
+                          background: i % 2 === 0 ? colors.bgSoft : colors.bgCard,
+                        }}
+                      >
+                        <div style={{ fontSize: "13px", color: colors.textLight, fontWeight: 700 }}>
+                          Workflow
+                        </div>
+                        <div
+                          style={{
+                            marginTop: "8px",
+                            fontSize: "18px",
+                            lineHeight: 1.4,
+                            letterSpacing: "-0.02em",
+                            fontWeight: 700,
+                          }}
+                        >
+                          {item}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </FadeIn>
-              ))}
-            </div>
-          </div>
-        </section>
+                </div>
+              </FadeIn>
 
-        <section id="product" style={{ padding: "80px 0" }}>
-          <div className="container">
-            <FadeIn>
-              <div style={{ textAlign: "center", maxWidth: "600px", margin: "0 auto" }}>
-                <Badge>Product</Badge>
-                <h2
-                  className="serif"
-                  style={{
-                    fontSize: "clamp(32px, 4.5vw, 52px)",
-                    lineHeight: 1.1,
-                    letterSpacing: "-0.03em",
-                    marginTop: "20px",
-                  }}
-                >
-                  Built like infrastructure,
-                  <br />
-                  not a chatbot demo.
-                </h2>
-                <p
-                  style={{
-                    fontSize: "17px",
-                    lineHeight: 1.7,
-                    color: colors.textMuted,
-                    marginTop: "16px",
-                  }}
-                >
-                  Laura fits into real clinical workflows: voice, messaging, scheduling,
-                  prescriptions with the reliability providers actually need.
-                </p>
-              </div>
-            </FadeIn>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-                gap: "20px",
-                marginTop: "56px",
-              }}
-            >
-              {features.map((feature, i) => (
-                <FadeIn key={feature.title} delay={i * 0.1}>
-                  <div
+              <FadeIn delay={0.08}>
+                <div>
+                  <Badge>Laura for providers</Badge>
+                  <h2
+                    className="serif"
                     style={{
-                      padding: "36px 32px",
-                      background: colors.bgCard,
-                      border: `1px solid ${colors.border}`,
-                      borderRadius: "20px",
-                      transition: "all 0.25s",
-                      height: "100%",
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.borderColor = "#D0CEC8";
-                      e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,0.06)";
-                      e.currentTarget.style.transform = "translateY(-2px)";
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.borderColor = colors.border;
-                      e.currentTarget.style.boxShadow = "none";
-                      e.currentTarget.style.transform = "translateY(0)";
+                      fontSize: "clamp(30px, 5vw, 54px)",
+                      lineHeight: 1.07,
+                      letterSpacing: "-0.04em",
+                      marginTop: "18px",
                     }}
                   >
-                    <div
-                      style={{
-                        width: "48px",
-                        height: "48px",
-                        borderRadius: "14px",
-                        background: colors.cream,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: colors.accent,
-                      }}
-                    >
-                      {feature.icon}
-                    </div>
-                    <h3
-                      style={{
-                        fontSize: "20px",
-                        fontWeight: 700,
-                        letterSpacing: "-0.02em",
-                        marginTop: "20px",
-                      }}
-                    >
-                      {feature.title}
-                    </h3>
-                    <p
-                      style={{
-                        fontSize: "15px",
-                        lineHeight: 1.7,
-                        color: colors.textMuted,
-                        marginTop: "10px",
-                      }}
-                    >
-                      {feature.desc}
-                    </p>
+                    Reduce admin load without reducing quality.
+                  </h2>
+                  <p
+                    style={{
+                      marginTop: "16px",
+                      color: colors.textMuted,
+                      fontSize: "17px",
+                      lineHeight: 1.8,
+                      maxWidth: "560px",
+                    }}
+                  >
+                    Providers use Laura to handle repetitive front-desk demand, guide intake,
+                    support basic triage flows, and improve access at scale. She becomes an always-on
+                    care access layer, not just a chatbot.
+                  </p>
+
+                  <div className="featureList" style={{ marginTop: "24px" }}>
+                    {providerUseCases.map((item) => (
+                      <div className="featureRow" key={item}>
+                        <span className="dotCheck">✓</span>
+                        <span>{item}</span>
+                      </div>
+                    ))}
                   </div>
-                </FadeIn>
-              ))}
+                </div>
+              </FadeIn>
             </div>
           </div>
         </section>
 
         <section
-          style={{
-            background: colors.bgDark,
-            padding: "80px 0",
-            color: "#fff",
-          }}
+          id="developers"
+          className="section"
+          style={{ background: colors.bgDark, color: "#fff" }}
         >
           <div className="container">
             <FadeIn>
-              <div style={{ textAlign: "center", maxWidth: "600px", margin: "0 auto" }}>
-                <div
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    padding: "8px 16px",
-                    borderRadius: "100px",
-                    border: `1px solid ${colors.borderDark}`,
-                    background: "rgba(255,255,255,0.05)",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    color: "rgba(255,255,255,0.6)",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: "8px",
-                      height: "8px",
-                      borderRadius: "50%",
-                      background: "#60A5FA",
-                      display: "inline-block",
-                    }}
-                  />
-                  How it works
-                </div>
-                <h2
-                  className="serif"
-                  style={{
-                    fontSize: "clamp(32px, 4.5vw, 52px)",
-                    lineHeight: 1.1,
-                    letterSpacing: "-0.03em",
-                    marginTop: "20px",
-                  }}
-                >
-                  Live in days, not months.
-                </h2>
-                <p
-                  style={{
-                    fontSize: "17px",
-                    lineHeight: 1.7,
-                    color: "rgba(255,255,255,0.55)",
-                    marginTop: "16px",
-                  }}
-                >
-                  No complex integrations needed to start. Laura connects to your existing phone
-                  system and scheduling tools.
-                </p>
-              </div>
+              <SectionHeading
+                badge="Developer platform"
+                title={
+                  <>
+                    Integrate Laura
+                    <br />
+                    into your product in minutes.
+                  </>
+                }
+                body="Embed health guidance, care flows, and conversational support into apps, patient journeys, and provider workflows."
+              />
             </FadeIn>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-                gap: "1px",
-                marginTop: "56px",
-              }}
-            >
-              {[
-                {
-                  step: "01",
-                  title: "Connect your phone line",
-                  desc: "Forward calls to Laura or run her alongside your existing reception team.",
-                },
-                {
-                  step: "02",
-                  title: "Configure your workflows",
-                  desc: "Define booking rules, triage paths, escalation triggers, and language preferences.",
-                },
-                {
-                  step: "03",
-                  title: "Go live",
-                  desc: "Laura starts handling calls immediately. Your team reviews, monitors, and adjusts via the dashboard.",
-                },
-              ].map((item, i) => (
-                <FadeIn key={item.step} delay={i * 0.12}>
-                  <div
+            <div className="grid2" style={{ marginTop: "48px", alignItems: "center" }}>
+              <FadeIn>
+                <CodeBlock />
+              </FadeIn>
+
+              <FadeIn delay={0.08}>
+                <div className="darkCard">
+                  <h3
                     style={{
-                      padding: "36px 32px",
-                      background: colors.bgDarkCard,
-                      borderRadius: "20px",
-                      border: `1px solid ${colors.borderDark}`,
-                      height: "100%",
+                      fontSize: "28px",
+                      lineHeight: 1.15,
+                      letterSpacing: "-0.03em",
+                      fontWeight: 800,
                     }}
                   >
-                    <div
-                      style={{
-                        fontSize: "48px",
-                        fontWeight: 700,
-                        color: "rgba(255,255,255,0.08)",
-                        letterSpacing: "-0.04em",
-                        lineHeight: 1,
-                      }}
-                    >
-                      {item.step}
-                    </div>
-                    <h3
-                      style={{
-                        fontSize: "20px",
-                        fontWeight: 700,
-                        letterSpacing: "-0.02em",
-                        marginTop: "16px",
-                      }}
-                    >
-                      {item.title}
-                    </h3>
-                    <p
-                      style={{
-                        fontSize: "15px",
-                        lineHeight: 1.7,
-                        color: "rgba(255,255,255,0.5)",
-                        marginTop: "10px",
-                      }}
-                    >
-                      {item.desc}
-                    </p>
+                    Built for real integration teams
+                  </h3>
+                  <p
+                    style={{
+                      marginTop: "12px",
+                      color: "rgba(255,255,255,0.62)",
+                      fontSize: "15px",
+                      lineHeight: 1.8,
+                    }}
+                  >
+                    Laura is not only a front-end experience. She can be embedded into platforms,
+                    products, marketplaces, patient apps, internal tooling, and provider systems.
+                  </p>
+
+                  <div className="featureList" style={{ marginTop: "22px" }}>
+                    {developerFeatures.map((item) => (
+                      <div
+                        className="featureRow"
+                        key={item}
+                        style={{ color: "rgba(255,255,255,0.75)" }}
+                      >
+                        <span
+                          className="dotCheck"
+                          style={{ background: "rgba(37,99,235,0.16)", color: "#60A5FA" }}
+                        >
+                          ✓
+                        </span>
+                        <span>{item}</span>
+                      </div>
+                    ))}
                   </div>
-                </FadeIn>
-              ))}
+
+                  <div
+                    style={{
+                      marginTop: "24px",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "11px 14px",
+                      borderRadius: "999px",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      background: "rgba(255,255,255,0.04)",
+                      color: "rgba(255,255,255,0.8)",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                    }}
+                  >
+                    API, SDK, widget, and workflow-ready
+                  </div>
+                </div>
+              </FadeIn>
             </div>
           </div>
         </section>
 
-        <section id="pricing" style={{ padding: "80px 0" }}>
+        <section id="pricing" className="section">
           <div className="container">
             <FadeIn>
-              <div style={{ textAlign: "center", maxWidth: "540px", margin: "0 auto" }}>
-                <Badge>Pricing</Badge>
-                <h2
-                  className="serif"
-                  style={{
-                    fontSize: "clamp(32px, 4.5vw, 52px)",
-                    lineHeight: 1.1,
-                    letterSpacing: "-0.03em",
-                    marginTop: "20px",
-                  }}
-                >
-                  Simple pricing plans.
-                </h2>
-                <p
-                  style={{
-                    fontSize: "17px",
-                    lineHeight: 1.7,
-                    color: colors.textMuted,
-                    marginTop: "16px",
-                  }}
-                >
-                  Start small and scale as Laura proves her value across your operations.
-                </p>
-              </div>
+              <SectionHeading
+                badge="Pricing"
+                title={<>Simple access for public, provider, and platform use.</>}
+                body="Start with the audience that matters most now, then expand as Laura becomes part of your workflow or product."
+              />
             </FadeIn>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-                gap: "20px",
-                maxWidth: "1000px",
-                margin: "56px auto 0",
-              }}
-            >
+            <div className="grid3" style={{ marginTop: "48px" }}>
               {pricingPlans.map((plan, i) => (
-                <FadeIn key={plan.name} delay={i * 0.1}>
+                <FadeIn key={plan.name} delay={i * 0.08}>
                   <div
+                    className="card"
                     style={{
-                      padding: "36px 32px",
                       background: plan.highlighted ? colors.bgDark : colors.bgCard,
                       color: plan.highlighted ? "#fff" : colors.text,
                       border: plan.highlighted ? "none" : `1px solid ${colors.border}`,
-                      borderRadius: "20px",
+                      boxShadow: plan.highlighted ? "0 24px 60px rgba(0,0,0,0.16)" : "none",
                       position: "relative",
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      boxShadow: plan.highlighted
-                        ? "0 24px 60px rgba(0,0,0,0.2)"
-                        : "none",
                     }}
                   >
-                    {"badge" in plan && plan.badge && (
+                    {"badge" in plan && plan.badge ? (
                       <div
                         style={{
                           position: "absolute",
-                          top: "20px",
-                          right: "20px",
-                          background: "rgba(255,255,255,0.12)",
-                          padding: "4px 12px",
-                          borderRadius: "100px",
+                          top: "18px",
+                          right: "18px",
+                          borderRadius: "999px",
+                          padding: "6px 10px",
+                          background: "rgba(255,255,255,0.1)",
+                          color: "rgba(255,255,255,0.75)",
                           fontSize: "11px",
-                          fontWeight: 700,
+                          fontWeight: 800,
                           textTransform: "uppercase",
                           letterSpacing: "0.08em",
-                          color: "rgba(255,255,255,0.7)",
                         }}
                       >
                         {plan.badge}
                       </div>
-                    )}
+                    ) : null}
+
+                    <div style={{ fontSize: "16px", fontWeight: 700 }}>{plan.name}</div>
 
                     <div
                       style={{
-                        fontSize: "16px",
-                        fontWeight: 600,
-                        letterSpacing: "-0.01em",
-                      }}
-                    >
-                      {plan.name}
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: "20px",
                         display: "flex",
                         alignItems: "baseline",
                         gap: "4px",
+                        marginTop: "16px",
                       }}
                     >
-                      <span
+                      <div
                         className="serif"
                         style={{
                           fontSize: "44px",
-                          letterSpacing: "-0.04em",
+                          letterSpacing: "-0.05em",
                         }}
                       >
                         {plan.price}
-                      </span>
-                      {plan.period && (
-                        <span
+                      </div>
+                      {plan.period ? (
+                        <div
                           style={{
-                            fontSize: "15px",
+                            fontSize: "14px",
                             color: plan.highlighted
-                              ? "rgba(255,255,255,0.5)"
+                              ? "rgba(255,255,255,0.55)"
                               : colors.textMuted,
                           }}
                         >
                           {plan.period}
-                        </span>
-                      )}
+                        </div>
+                      ) : null}
                     </div>
 
                     <p
                       style={{
+                        marginTop: "10px",
+                        color: plan.highlighted ? "rgba(255,255,255,0.65)" : colors.textMuted,
                         fontSize: "14px",
-                        lineHeight: 1.6,
-                        color: plan.highlighted ? "rgba(255,255,255,0.55)" : colors.textMuted,
-                        marginTop: "12px",
+                        lineHeight: 1.75,
                       }}
                     >
                       {plan.desc}
@@ -1136,64 +1368,55 @@ export default function Page() {
 
                     <div
                       style={{
-                        marginTop: "24px",
-                        paddingTop: "24px",
+                        marginTop: "22px",
+                        paddingTop: "20px",
                         borderTop: `1px solid ${
                           plan.highlighted ? colors.borderDark : colors.border
                         }`,
                         display: "flex",
                         flexDirection: "column",
-                        gap: "14px",
-                        flex: 1,
+                        gap: "12px",
                       }}
                     >
-                      {plan.features.map((f) => (
+                      {plan.features.map((feature) => (
                         <div
-                          key={f}
+                          key={feature}
+                          className="featureRow"
                           style={{
-                            display: "flex",
-                            alignItems: "flex-start",
-                            gap: "10px",
-                            fontSize: "14px",
                             color: plan.highlighted
-                              ? "rgba(255,255,255,0.8)"
+                              ? "rgba(255,255,255,0.78)"
                               : colors.textMuted,
                           }}
                         >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke={plan.highlighted ? "#60A5FA" : colors.accent}
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            style={{ marginTop: "2px", flexShrink: 0 }}
+                          <span
+                            className="dotCheck"
+                            style={{
+                              background: plan.highlighted
+                                ? "rgba(96,165,250,0.12)"
+                                : colors.accentSoft,
+                              color: plan.highlighted ? "#60A5FA" : colors.accent,
+                            }}
                           >
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                          {f}
+                            ✓
+                          </span>
+                          <span>{feature}</span>
                         </div>
                       ))}
                     </div>
 
-                    <button
+                    <a
+                      href="#waitlist"
+                      className={plan.highlighted ? "btnSecondary" : "btnPrimary"}
                       style={{
-                        marginTop: "28px",
-                        padding: "14px 24px",
-                        borderRadius: "100px",
-                        fontSize: "14px",
-                        fontWeight: 600,
+                        marginTop: "24px",
+                        width: "100%",
                         background: plan.highlighted ? "#fff" : colors.bgDark,
                         color: plan.highlighted ? colors.bgDark : "#fff",
                         border: "none",
-                        transition: "all 0.2s",
-                        width: "100%",
                       }}
                     >
                       {plan.cta}
-                    </button>
+                    </a>
                   </div>
                 </FadeIn>
               ))}
@@ -1201,122 +1424,98 @@ export default function Page() {
           </div>
         </section>
 
-        <section id="waitlist" style={{ padding: "40px 0 80px" }}>
+        <section className="section" style={{ paddingTop: "24px" }}>
           <div className="container">
             <FadeIn>
-              <div
-                style={{
-                  background: colors.bgCard,
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: "24px",
-                  padding: "64px 40px",
-                  textAlign: "center",
-                  maxWidth: "720px",
-                  margin: "0 auto",
-                }}
-              >
-                <h2
-                  className="serif"
-                  style={{
-                    fontSize: "clamp(28px, 4vw, 44px)",
-                    lineHeight: 1.15,
-                    letterSpacing: "-0.03em",
-                  }}
-                >
-                  Ready to stop missing
-                  <br />
-                  patient calls?
-                </h2>
-
-                <p
-                  style={{
-                    fontSize: "16px",
-                    lineHeight: 1.7,
-                    color: colors.textMuted,
-                    marginTop: "16px",
-                    maxWidth: "440px",
-                    margin: "16px auto 0",
-                  }}
-                >
-                  Join the early rollout. Pilot access opens to selected UK practices first.
-                </p>
-
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "12px",
-                    justifyContent: "center",
-                    marginTop: "32px",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <button className="btn-primary">
-                    Request a demo
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+              <div className="metricsGrid">
+                {metrics.map((metric) => (
+                  <div className="metricCard" key={metric.label}>
+                    <div
+                      className="serif"
+                      style={{
+                        fontSize: "42px",
+                        lineHeight: 1,
+                        letterSpacing: "-0.05em",
+                      }}
                     >
-                      <line x1="5" y1="12" x2="19" y2="12" />
-                      <polyline points="12 5 19 12 12 19" />
-                    </svg>
+                      {metric.value}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: "10px",
+                        fontSize: "13px",
+                        color: colors.textMuted,
+                        lineHeight: 1.6,
+                        textTransform: "lowercase",
+                      }}
+                    >
+                      {metric.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+
+        <section id="waitlist" className="section">
+          <div className="container">
+            <FadeIn>
+              <div className="waitlistWrap">
+                <SectionHeading
+                  badge="Get early access"
+                  title={<>Join the next wave of Laura users.</>}
+                  body="Choose how you want to use Laura. Join as a person, provider, or developer and we will tailor the next step."
+                />
+
+                <div className="waitlistForm">
+                  <input
+                    className="inputBase"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  <select
+                    className="inputBase"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                  >
+                    <option>Patient</option>
+                    <option>Provider</option>
+                    <option>Developer</option>
+                  </select>
+                  <button className="btnPrimary" style={{ height: "54px" }}>
+                    Get early access
                   </button>
-                  <button className="btn-secondary">hello@smarthealth.ai</button>
                 </div>
 
                 <div
                   style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    gap: "24px",
-                    marginTop: "28px",
-                    flexWrap: "wrap",
+                    marginTop: "14px",
+                    textAlign: "center",
+                    color: colors.textLight,
+                    fontSize: "13px",
+                    lineHeight: 1.7,
                   }}
                 >
-                  {[].map((m) => (
-                    <span
-                      key={m}
-                      style={{
-                        fontSize: "13px",
-                        color: colors.textLight,
-                      }}
-                    >
-                      {m}
-                    </span>
-                  ))}
+                  Selected role: <strong style={{ color: colors.text }}>{role}</strong> · Early
+                  access requests help us prioritise launch order.
                 </div>
               </div>
             </FadeIn>
           </div>
         </section>
 
-        <footer
-          style={{
-            borderTop: `1px solid ${colors.border}`,
-            padding: "40px 0",
-          }}
-        >
+        <footer style={{ borderTop: `1px solid ${colors.border}`, padding: "34px 0 44px" }}>
           <div className="container">
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: "16px",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div className="footerRow">
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <div
                   style={{
-                    width: "28px",
-                    height: "28px",
-                    borderRadius: "8px",
+                    width: "34px",
+                    height: "34px",
+                    borderRadius: "12px",
                     background: colors.bgDark,
                     display: "flex",
                     alignItems: "center",
@@ -1330,36 +1529,27 @@ export default function Page() {
                     <rect x="23.5" y="7" width="3.5" height="18" rx="1.75" fill="#fff" />
                   </svg>
                 </div>
-                <span style={{ fontSize: "14px", fontWeight: 600, color: colors.textMuted }}>
-                  Smart Health
-                </span>
+                <div>
+                  <div style={{ fontSize: "14px", fontWeight: 800 }}>Smart Health</div>
+                  <div style={{ fontSize: "12px", color: colors.textLight }}>Powered by Laura</div>
+                </div>
               </div>
 
-              <div style={{ display: "flex", gap: "24px" }}>
-                {["Privacy", "Terms", "Contact"].map((item) => (
+              <div style={{ display: "flex", gap: "18px", flexWrap: "wrap" }}>
+                {["People", "Providers", "Developers", "Pricing"].map((item) => (
                   <a
                     key={item}
-                    href="#"
-                    style={{
-                      fontSize: "13px",
-                      color: colors.textLight,
-                      transition: "color 0.15s",
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.color = colors.textMuted;
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.color = colors.textLight;
-                    }}
+                    href={`#${item.toLowerCase()}`}
+                    style={{ fontSize: "13px", color: colors.textLight, fontWeight: 600 }}
                   >
                     {item}
                   </a>
                 ))}
               </div>
 
-              <p style={{ fontSize: "13px", color: colors.textLight }}>
-                © 2026 Smart Health. Proudly built for the Globe.
-              </p>
+              <div style={{ fontSize: "13px", color: colors.textLight }}>
+                © 2026 Smart Health. Built for public, provider, and platform use.
+              </div>
             </div>
           </div>
         </footer>
