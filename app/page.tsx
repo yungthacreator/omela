@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { motion, useInView } from "framer-motion";
 
 const FONT_IMPORT = `
@@ -10,16 +10,16 @@ const FONT_IMPORT = `
 const colors = {
   bg: "#F7F5F0",
   bgCard: "#FFFFFF",
-  bgSoft: "#F2F0EA",
-  bgDark: "#0C0C0E",
-  bgDarkCard: "#151518",
-  text: "#18181B",
-  textMuted: "#5F6470",
-  textLight: "#8B93A1",
+  bgSoft: "#F1EEE7",
+  bgDark: "#090A0D",
+  bgDarkCard: "#111318",
+  text: "#17181C",
+  textMuted: "#616775",
+  textLight: "#9298A6",
   accent: "#2563EB",
   accentSoft: "#EEF4FF",
-  border: "#E7E2D8",
-  borderDark: "#2A2A2E",
+  border: "#E5E0D6",
+  borderDark: "#252831",
   success: "#16A34A",
 };
 
@@ -31,12 +31,12 @@ type FadeInProps = {
 
 function FadeIn({ children, delay = 0, className = "" }: FadeInProps) {
   const ref = useRef<HTMLDivElement | null>(null);
-  const isInView = useInView(ref, { once: true, amount: 0.18 });
+  const isInView = useInView(ref, { once: true, amount: 0.15 });
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 22 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.55, delay, ease: [0.25, 0.1, 0.25, 1] }}
       className={className}
@@ -60,6 +60,7 @@ function Badge({ children }: { children: ReactNode }) {
         fontSize: "13px",
         fontWeight: 600,
         color: colors.textMuted,
+        maxWidth: "100%",
       }}
     >
       {children}
@@ -83,8 +84,8 @@ function SectionHeading({
         className="serif"
         style={{
           fontSize: "clamp(32px, 5vw, 56px)",
-          lineHeight: 1.06,
-          letterSpacing: "-0.035em",
+          lineHeight: 1.04,
+          letterSpacing: "-0.04em",
           marginTop: badge ? "18px" : 0,
         }}
       >
@@ -94,7 +95,7 @@ function SectionHeading({
         <p
           style={{
             fontSize: "17px",
-            lineHeight: 1.75,
+            lineHeight: 1.8,
             color: colors.textMuted,
             marginTop: "16px",
           }}
@@ -106,17 +107,115 @@ function SectionHeading({
   );
 }
 
+function TypewriterPrompts() {
+  const prompts = useMemo(
+    () => [
+      "I have a rash and headache. What should I do next?",
+      "Can you help me understand this prescription?",
+      "Book the earliest available appointment near me.",
+    ],
+    []
+  );
+
+  const [promptIndex, setPromptIndex] = useState(0);
+  const [typed, setTyped] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    const current = prompts[promptIndex];
+    const speed = deleting ? 24 : 42;
+
+    const timer = window.setTimeout(() => {
+      if (!deleting) {
+        const next = current.slice(0, typed.length + 1);
+        setTyped(next);
+
+        if (next === current) {
+          window.setTimeout(() => setDeleting(true), 1100);
+        }
+      } else {
+        const next = current.slice(0, Math.max(0, typed.length - 1));
+        setTyped(next);
+
+        if (next.length === 0) {
+          setDeleting(false);
+          setPromptIndex((prev) => (prev + 1) % prompts.length);
+        }
+      }
+    }, speed);
+
+    return () => window.clearTimeout(timer);
+  }, [typed, deleting, promptIndex, prompts]);
+
+  return (
+    <div
+      style={{
+        border: `1px solid ${colors.border}`,
+        background: colors.bgCard,
+        borderRadius: "22px",
+        padding: "18px 18px 22px",
+      }}
+    >
+      <div
+        style={{
+          fontSize: "12px",
+          fontWeight: 800,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          color: colors.textLight,
+          marginBottom: "14px",
+        }}
+      >
+        Example prompts
+      </div>
+
+      <div
+        style={{
+          border: `1px solid ${colors.border}`,
+          background: "#FCFBF8",
+          borderRadius: "18px",
+          minHeight: "118px",
+          padding: "20px",
+          display: "flex",
+          alignItems: "flex-start",
+        }}
+      >
+        <div
+          style={{
+            fontSize: "17px",
+            lineHeight: 1.7,
+            color: colors.text,
+            wordBreak: "break-word",
+            overflowWrap: "anywhere",
+          }}
+        >
+          {typed}
+          <span
+            style={{
+              display: "inline-block",
+              width: "10px",
+              marginLeft: "2px",
+              color: colors.accent,
+              animation: "blink 1s step-end infinite",
+            }}
+          >
+            |
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PhoneMockup() {
   const [visibleMessages, setVisibleMessages] = useState(0);
 
   useEffect(() => {
     const timers = [0, 1, 2, 3].map((i) =>
-      window.setTimeout(() => setVisibleMessages(i + 1), 700 + i * 850)
+      window.setTimeout(() => setVisibleMessages(i + 1), 550 + i * 700)
     );
 
-    return () => {
-      timers.forEach((timer) => window.clearTimeout(timer));
-    };
+    return () => timers.forEach((t) => window.clearTimeout(t));
   }, []);
 
   const chatMessages = [
@@ -142,13 +241,42 @@ function PhoneMockup() {
     <div className="phoneWrap">
       <div className="phoneFrame">
         <div className="phoneNotch" />
+
         <div className="phoneScreen">
           <div className="phoneHeader">
             <div className="phoneAvatar">L</div>
+
             <div>
-              <div style={{ fontSize: "14px", fontWeight: 700, color: colors.text }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "7px",
+                  fontSize: "14px",
+                  fontWeight: 800,
+                  color: colors.text,
+                }}
+              >
                 Laura
+                <span
+                  style={{
+                    width: "18px",
+                    height: "18px",
+                    borderRadius: "999px",
+                    background: colors.accent,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#fff",
+                    fontSize: "11px",
+                    lineHeight: 1,
+                    flexShrink: 0,
+                  }}
+                >
+                  ✓
+                </span>
               </div>
+
               <div
                 style={{
                   display: "flex",
@@ -156,12 +284,13 @@ function PhoneMockup() {
                   gap: "5px",
                   fontSize: "11px",
                   color: colors.success,
+                  marginTop: "3px",
                 }}
               >
                 <span
                   style={{
-                    width: "6px",
-                    height: "6px",
+                    width: "8px",
+                    height: "8px",
                     borderRadius: "999px",
                     background: colors.success,
                     display: "inline-block",
@@ -176,31 +305,33 @@ function PhoneMockup() {
             {chatMessages.map((msg, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                initial={{ opacity: 0, y: 10, scale: 0.98 }}
                 animate={
                   i < visibleMessages
                     ? { opacity: 1, y: 0, scale: 1 }
-                    : { opacity: 0, y: 12, scale: 0.98 }
+                    : { opacity: 0, y: 10, scale: 0.98 }
                 }
-                transition={{ duration: 0.35, ease: "easeOut" }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
                 style={{
                   alignSelf: msg.from === "user" ? "flex-end" : "flex-start",
-                  maxWidth: "84%",
+                  maxWidth: "86%",
                 }}
               >
                 <div
                   style={{
-                    padding: "11px 14px",
+                    padding: "12px 15px",
                     borderRadius:
                       msg.from === "user"
-                        ? "18px 18px 4px 18px"
-                        : "18px 18px 18px 4px",
+                        ? "18px 18px 6px 18px"
+                        : "18px 18px 18px 6px",
                     background: msg.from === "user" ? colors.accent : colors.bgCard,
                     color: msg.from === "user" ? "#fff" : colors.text,
                     fontSize: "13px",
-                    lineHeight: "1.55",
+                    lineHeight: 1.6,
                     boxShadow:
-                      msg.from === "laura" ? "0 2px 8px rgba(0,0,0,0.05)" : "none",
+                      msg.from === "laura" ? "0 2px 8px rgba(0,0,0,0.04)" : "none",
+                    wordBreak: "break-word",
+                    overflowWrap: "anywhere",
                   }}
                 >
                   {msg.text}
@@ -240,8 +371,8 @@ function CodeBlock() {
         </div>
         <div className="terminalLine">
           <span className="terminalPrompt">$</span> await laura.chat({"{"}
-          userId: "user_123",
         </div>
+        <div className="terminalLine terminalIndent">userId: "user_123",</div>
         <div className="terminalLine terminalIndent">
           message: "I have a rash and a headache. What should I do?"
         </div>
@@ -262,18 +393,18 @@ export default function Page() {
   const audienceCards = [
     {
       title: "For people",
-      desc: "Use Laura directly for symptom understanding, guidance, booking support, medication questions, and care navigation.",
-      bullets: ["Symptom guidance", "Care navigation", "Booking support", "24/7 availability"],
+      desc: "Use Laura directly for symptom understanding, everyday health guidance, care navigation, booking support, and medication questions.",
+      bullets: ["Symptom guidance", "Health questions", "Care navigation", "24/7 access"],
     },
     {
       title: "For providers",
-      desc: "Use Laura to reduce front-desk load, handle intake, guide triage, support prescriptions, and improve multilingual access.",
-      bullets: ["Voice and chat intake", "Appointment workflows", "Triage support", "Multilingual interactions"],
+      desc: "Use Laura to reduce front-desk load, guide intake, support appointment workflows, and improve access at scale.",
+      bullets: ["Voice and chat intake", "Scheduling support", "Triage support", "Multilingual access"],
     },
     {
       title: "For developers",
-      desc: "Embed Laura into apps, patient experiences, provider workflows, and digital health platforms with APIs and SDKs.",
-      bullets: ["API and SDK access", "Embeddable widgets", "Secure auth flows", "Observability and logs"],
+      desc: "Embed Laura into apps, patient journeys, marketplaces, and health platforms through APIs, SDKs, and widgets.",
+      bullets: ["API and SDK access", "Embeddable widgets", "Workflow triggers", "Secure logs"],
     },
   ];
 
@@ -283,33 +414,42 @@ export default function Page() {
     "Get help booking appointments and navigating services",
   ];
 
-  const providerUseCases = [
-    "Answer routine patient calls automatically",
-    "Book, reschedule, and confirm appointments",
-    "Handle prescription and follow-up requests",
-  ];
-
   const developerFeatures = [
     "REST API and SDK access",
     "Embeddable chat and voice widgets",
     "Patient workflow triggers",
-    "Secure event logging and audit trails",
+    "Secure auth, logging, and audit trails",
+  ];
+
+  const workflowItems = [
+    {
+      title: "People ask Laura",
+      body: "Users describe symptoms, ask health questions, or request help with care access.",
+    },
+    {
+      title: "Laura guides the next step",
+      body: "She provides structured guidance, routes intent, and supports booking or navigation.",
+    },
+    {
+      title: "Providers and platforms respond faster",
+      body: "Teams and products receive cleaner demand, better workflows, and lower friction.",
+    },
   ];
 
   const metrics = [
     { value: "24/7", label: "always-on access" },
     { value: "40+", label: "supported languages" },
     { value: "<2s", label: "average response time" },
-    { value: "3x", label: "broader market coverage" },
+    { value: "3x", label: "broader market reach" },
   ];
 
   const pricingPlans = [
     {
       name: "Public Access",
-      price: "Waitlist",
-      period: "",
-      desc: "For early users who want direct access to Laura.",
-      features: ["Symptom guidance", "Care navigation", "Appointment support", "Early product access"],
+      price: "£3.99",
+      period: "/mo",
+      desc: "For people who want direct access to Laura for guidance, health questions, and care navigation.",
+      features: ["Symptom guidance", "Everyday health questions", "Care navigation", "Booking support"],
       highlighted: false,
       cta: "Join waitlist",
     },
@@ -340,25 +480,43 @@ export default function Page() {
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
+        html, body {
+          max-width: 100%;
+          overflow-x: clip;
+        }
+
         body {
           background: ${colors.bg};
           color: ${colors.text};
           font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
           -webkit-font-smoothing: antialiased;
-          overflow-x: hidden;
         }
+
         a { color: inherit; text-decoration: none; }
         button, input, select { font-family: inherit; }
+        img, svg, canvas, video { max-width: 100%; display: block; }
         ::selection { background: ${colors.accent}; color: white; }
+
+        @keyframes blink {
+          0%, 50% { opacity: 1; }
+          50.01%, 100% { opacity: 0; }
+        }
 
         .serif {
           font-family: 'Instrument Serif', Georgia, serif;
         }
 
+        .siteWrap {
+          width: 100%;
+          overflow-x: clip;
+        }
+
         .container {
+          width: 100%;
           max-width: 1200px;
           margin: 0 auto;
-          padding: 0 24px;
+          padding-left: 24px;
+          padding-right: 24px;
         }
 
         .btnPrimary {
@@ -375,11 +533,13 @@ export default function Page() {
           font-weight: 700;
           cursor: pointer;
           transition: all 0.2s ease;
+          max-width: 100%;
+          text-align: center;
         }
 
         .btnPrimary:hover {
           transform: translateY(-1px);
-          background: #1A1A20;
+          background: #14161B;
           box-shadow: 0 10px 26px rgba(0,0,0,0.12);
         }
 
@@ -397,15 +557,18 @@ export default function Page() {
           font-weight: 700;
           cursor: pointer;
           transition: all 0.2s ease;
+          max-width: 100%;
+          text-align: center;
         }
 
         .btnSecondary:hover {
           background: ${colors.bgCard};
-          border-color: #D9D1C4;
+          border-color: #D8D1C5;
         }
 
         .section {
           padding: 88px 0;
+          overflow-x: clip;
         }
 
         .grid3 {
@@ -423,20 +586,24 @@ export default function Page() {
         .card {
           background: ${colors.bgCard};
           border: 1px solid ${colors.border};
-          border-radius: 24px;
+          border-radius: 26px;
           padding: 28px;
+          min-width: 0;
+          overflow: hidden;
         }
 
         .darkCard {
           background: ${colors.bgDarkCard};
           border: 1px solid ${colors.borderDark};
-          border-radius: 24px;
+          border-radius: 26px;
           padding: 28px;
+          min-width: 0;
+          overflow: hidden;
         }
 
         .heroWrap {
           display: grid;
-          grid-template-columns: 1.12fr 0.88fr;
+          grid-template-columns: 1.08fr 0.92fr;
           gap: 48px;
           align-items: center;
         }
@@ -456,9 +623,9 @@ export default function Page() {
         .heroBody {
           margin-top: 22px;
           font-size: 19px;
-          line-height: 1.8;
+          line-height: 1.82;
           color: ${colors.textMuted};
-          max-width: 640px;
+          max-width: 680px;
         }
 
         .heroButtons {
@@ -468,12 +635,22 @@ export default function Page() {
           margin-top: 32px;
         }
 
+        .trustedHeader {
+          margin-top: 28px;
+          text-align: center;
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: ${colors.textLight};
+        }
+
         .logoStrip {
           display: flex;
-          gap: 16px;
+          gap: 14px;
           flex-wrap: wrap;
           justify-content: center;
-          margin-top: 28px;
+          margin-top: 20px;
         }
 
         .logoChip {
@@ -490,19 +667,21 @@ export default function Page() {
           width: 100%;
           display: flex;
           justify-content: center;
+          min-width: 0;
         }
 
         .phoneFrame {
-          width: min(100%, 348px);
+          width: min(100%, 352px);
           background: white;
           border: 2px solid ${colors.border};
-          border-radius: 40px;
+          border-radius: 42px;
           padding: 12px;
           box-shadow: 0 34px 80px rgba(0,0,0,0.1);
+          flex-shrink: 1;
         }
 
         .phoneNotch {
-          width: 120px;
+          width: 118px;
           height: 28px;
           border-radius: 999px;
           background: ${colors.bgDark};
@@ -510,12 +689,10 @@ export default function Page() {
         }
 
         .phoneScreen {
-          height: 500px;
-          background: #F8F8FB;
-          border-radius: 28px;
+          background: #F7F7FB;
+          border-radius: 30px;
+          padding-bottom: 8px;
           overflow: hidden;
-          display: flex;
-          flex-direction: column;
         }
 
         .phoneHeader {
@@ -541,12 +718,10 @@ export default function Page() {
         }
 
         .phoneBody {
-          flex: 1;
           display: flex;
           flex-direction: column;
           gap: 10px;
           padding: 16px;
-          overflow: hidden;
         }
 
         .featureList {
@@ -554,6 +729,7 @@ export default function Page() {
           flex-direction: column;
           gap: 12px;
           margin-top: 18px;
+          min-width: 0;
         }
 
         .featureRow {
@@ -562,13 +738,19 @@ export default function Page() {
           gap: 10px;
           color: ${colors.textMuted};
           font-size: 14px;
-          line-height: 1.65;
+          line-height: 1.68;
+          min-width: 0;
+        }
+
+        .featureRow span:last-child {
+          min-width: 0;
+          overflow-wrap: anywhere;
         }
 
         .dotCheck {
-          width: 18px;
-          height: 18px;
-          margin-top: 2px;
+          width: 20px;
+          height: 20px;
+          margin-top: 1px;
           border-radius: 999px;
           background: ${colors.accentSoft};
           color: ${colors.accent};
@@ -579,27 +761,65 @@ export default function Page() {
           flex-shrink: 0;
         }
 
+        .workflowGrid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 18px;
+          align-items: stretch;
+          margin-top: 46px;
+        }
+
+        .workflowItem {
+          background: ${colors.bgCard};
+          border: 1px solid ${colors.border};
+          border-radius: 24px;
+          padding: 24px;
+          position: relative;
+          min-width: 0;
+        }
+
+        .workflowArrow {
+          position: absolute;
+          top: 50%;
+          right: -18px;
+          transform: translateY(-50%);
+          width: 36px;
+          height: 36px;
+          border-radius: 999px;
+          background: ${colors.bgCard};
+          border: 1px solid ${colors.border};
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: ${colors.textLight};
+          z-index: 2;
+        }
+
         .terminalCard {
-          background: #0A0A0D;
+          width: 100%;
+          max-width: 100%;
+          background: #07080B;
           color: #E5E7EB;
-          border: 1px solid #22242B;
+          border: 1px solid #1F2330;
           border-radius: 24px;
           overflow: hidden;
-          box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+          box-shadow: 0 24px 60px rgba(0,0,0,0.22);
         }
 
         .terminalTop {
           display: flex;
           align-items: center;
           justify-content: space-between;
+          gap: 12px;
           padding: 14px 16px;
-          border-bottom: 1px solid #1E2027;
-          background: #111319;
+          border-bottom: 1px solid #1B202B;
+          background: #0E1118;
         }
 
         .terminalDots {
           display: flex;
           gap: 8px;
+          flex-shrink: 0;
         }
 
         .terminalDots span {
@@ -607,7 +827,6 @@ export default function Page() {
           height: 10px;
           border-radius: 999px;
           display: inline-block;
-          background: #343844;
         }
 
         .terminalDots span:nth-child(1) { background: #F87171; }
@@ -618,15 +837,20 @@ export default function Page() {
           font-size: 12px;
           color: #9CA3AF;
           font-weight: 700;
+          flex-shrink: 1;
+          min-width: 0;
         }
 
         .terminalBody {
           padding: 18px;
-          overflow-x: auto;
+          width: 100%;
+          overflow-x: hidden;
         }
 
         .terminalLine {
-          white-space: pre;
+          white-space: pre-wrap;
+          overflow-wrap: anywhere;
+          word-break: break-word;
           font-size: 13px;
           line-height: 1.8;
           color: #E5E7EB;
@@ -645,10 +869,12 @@ export default function Page() {
         .waitlistWrap {
           background: ${colors.bgCard};
           border: 1px solid ${colors.border};
-          border-radius: 28px;
+          border-radius: 30px;
           padding: 32px;
           max-width: 880px;
           margin: 0 auto;
+          width: 100%;
+          overflow: hidden;
         }
 
         .waitlistForm {
@@ -656,10 +882,12 @@ export default function Page() {
           grid-template-columns: 1.2fr 0.9fr auto;
           gap: 12px;
           margin-top: 24px;
+          width: 100%;
         }
 
         .inputBase {
           width: 100%;
+          max-width: 100%;
           height: 54px;
           border-radius: 16px;
           border: 1px solid ${colors.border};
@@ -668,6 +896,7 @@ export default function Page() {
           font-size: 15px;
           color: ${colors.text};
           outline: none;
+          min-width: 0;
         }
 
         .inputBase:focus {
@@ -689,6 +918,7 @@ export default function Page() {
           background: ${colors.bgCard};
           padding: 28px 20px;
           text-align: center;
+          min-width: 0;
         }
 
         .footerRow {
@@ -706,11 +936,10 @@ export default function Page() {
         }
 
         @media (max-width: 900px) {
-          .grid3 {
-            grid-template-columns: 1fr;
-          }
-
-          .grid2 {
+          .grid3,
+          .grid2,
+          .workflowGrid,
+          .waitlistForm {
             grid-template-columns: 1fr;
           }
 
@@ -718,18 +947,19 @@ export default function Page() {
             grid-template-columns: repeat(2, minmax(0, 1fr));
           }
 
-          .waitlistForm {
-            grid-template-columns: 1fr;
+          .workflowArrow {
+            display: none;
           }
         }
 
         @media (max-width: 720px) {
           .container {
-            padding: 0 18px;
+            padding-left: 18px;
+            padding-right: 18px;
           }
 
           .section {
-            padding: 72px 0;
+            padding: 70px 0;
           }
 
           .navLinks {
@@ -737,7 +967,7 @@ export default function Page() {
           }
 
           .heroTitle {
-            font-size: clamp(42px, 14vw, 68px);
+            font-size: clamp(42px, 14vw, 66px);
           }
 
           .heroBody {
@@ -755,11 +985,23 @@ export default function Page() {
           }
 
           .phoneFrame {
-            width: min(100%, 320px);
+            width: min(100%, 340px);
           }
 
-          .phoneScreen {
-            height: 470px;
+          .terminalCard,
+          .darkCard,
+          .card,
+          .waitlistWrap {
+            max-width: 100%;
+          }
+
+          .terminalBody {
+            padding: 16px;
+          }
+
+          .terminalLine {
+            font-size: 12px;
+            line-height: 1.75;
           }
 
           .metricsGrid {
@@ -772,7 +1014,7 @@ export default function Page() {
         }
       `}</style>
 
-      <div style={{ minHeight: "100vh" }}>
+      <div className="siteWrap">
         <motion.nav
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -790,14 +1032,24 @@ export default function Page() {
           <div
             className="container"
             style={{
-              height: "82px",
+              minHeight: "82px",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              gap: "18px",
+              gap: "16px",
+              paddingTop: "10px",
+              paddingBottom: "10px",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                minWidth: 0,
+                flex: "1 1 auto",
+              }}
+            >
               <div
                 style={{
                   width: "42px",
@@ -807,6 +1059,7 @@ export default function Page() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  flexShrink: 0,
                 }}
               >
                 <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
@@ -816,11 +1069,20 @@ export default function Page() {
                   <rect x="23.5" y="7" width="3.5" height="18" rx="1.75" fill="#fff" />
                 </svg>
               </div>
-              <div>
+
+              <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: "15px", fontWeight: 800, letterSpacing: "-0.03em" }}>
                   Smart Health
                 </div>
-                <div style={{ fontSize: "12px", color: colors.textLight, marginTop: "2px" }}>
+                <div
+                  className="serif"
+                  style={{
+                    fontSize: "13px",
+                    color: colors.textLight,
+                    marginTop: "2px",
+                    fontStyle: "italic",
+                  }}
+                >
                   Powered by Laura
                 </div>
               </div>
@@ -832,6 +1094,7 @@ export default function Page() {
                 display: "flex",
                 alignItems: "center",
                 gap: "28px",
+                flex: "0 1 auto",
               }}
             >
               {navItems.map((item) => (
@@ -849,7 +1112,7 @@ export default function Page() {
               ))}
             </div>
 
-            <a href="#waitlist" className="btnPrimary" style={{ padding: "13px 20px" }}>
+            <a href="#waitlist" className="btnPrimary" style={{ padding: "13px 20px", flexShrink: 0 }}>
               Get early access
               <svg
                 width="14"
@@ -868,7 +1131,7 @@ export default function Page() {
           </div>
         </motion.nav>
 
-        <section className="section" style={{ paddingTop: "88px", paddingBottom: "54px" }}>
+        <section className="section" style={{ paddingTop: "88px", paddingBottom: "46px" }}>
           <div className="container">
             <div className="heroWrap">
               <div>
@@ -897,8 +1160,8 @@ export default function Page() {
                 <FadeIn delay={0.16}>
                   <p className="heroBody">
                     Laura helps people understand symptoms, navigate care, and get answers fast.
-                    Providers use her to automate front-desk workflows. Developers integrate her
-                    through APIs, SDKs, and embeddable experiences.
+                    Providers use her to automate workflows. Developers integrate her through APIs,
+                    SDKs, and embeddable experiences.
                   </p>
                 </FadeIn>
 
@@ -925,20 +1188,15 @@ export default function Page() {
                     </a>
                   </div>
                 </FadeIn>
-
-                <FadeIn delay={0.3}>
-                  <div style={{ marginTop: "18px", fontSize: "13px", color: colors.textLight }}>
-                    Built for public access, providers, and health platforms
-                  </div>
-                </FadeIn>
               </div>
 
-              <FadeIn delay={0.2}>
+              <FadeIn delay={0.16}>
                 <PhoneMockup />
               </FadeIn>
             </div>
 
-            <FadeIn delay={0.35}>
+            <FadeIn delay={0.28}>
+              <div className="trustedHeader">Trusted by teams across care delivery</div>
               <div className="logoStrip">
                 {integrations.map((item) => (
                   <div className="logoChip" key={item}>
@@ -950,7 +1208,7 @@ export default function Page() {
           </div>
         </section>
 
-        <section className="section" style={{ paddingTop: "34px" }}>
+        <section className="section" style={{ paddingTop: "36px" }}>
           <div className="container">
             <FadeIn>
               <SectionHeading
@@ -980,6 +1238,7 @@ export default function Page() {
                     >
                       {i + 1}
                     </div>
+
                     <h3
                       style={{
                         fontSize: "24px",
@@ -990,6 +1249,7 @@ export default function Page() {
                     >
                       {card.title}
                     </h3>
+
                     <p
                       style={{
                         marginTop: "10px",
@@ -1026,13 +1286,14 @@ export default function Page() {
                     className="serif"
                     style={{
                       fontSize: "clamp(30px, 5vw, 54px)",
-                      lineHeight: 1.07,
+                      lineHeight: 1.06,
                       letterSpacing: "-0.04em",
                       marginTop: "18px",
                     }}
                   >
                     Healthcare guidance that starts with a conversation.
                   </h2>
+
                   <p
                     style={{
                       marginTop: "16px",
@@ -1059,132 +1320,81 @@ export default function Page() {
               </FadeIn>
 
               <FadeIn delay={0.08}>
-                <div className="card" style={{ background: colors.bgSoft }}>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: 700,
-                      color: colors.textLight,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.12em",
-                    }}
-                  >
-                    Example prompts
-                  </div>
-
-                  <div style={{ display: "grid", gap: "12px", marginTop: "18px" }}>
-                    {[
-                      "I have a rash and headache. What should I do next?",
-                      "Can you help me understand this prescription?",
-                      "Book the earliest available appointment near me.",
-                    ].map((q) => (
-                      <div
-                        key={q}
-                        style={{
-                          border: `1px solid ${colors.border}`,
-                          background: colors.bgCard,
-                          borderRadius: "18px",
-                          padding: "16px",
-                          fontSize: "15px",
-                          lineHeight: 1.7,
-                          color: colors.text,
-                        }}
-                      >
-                        {q}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <TypewriterPrompts />
               </FadeIn>
             </div>
           </div>
         </section>
 
-        <section id="providers" className="section">
+        <section id="providers" className="section" style={{ paddingTop: "22px" }}>
           <div className="container">
-            <div className="grid2" style={{ alignItems: "center" }}>
-              <FadeIn>
-                <div className="card">
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                      gap: "14px",
-                    }}
-                  >
-                    {[
-                      "Calls handled",
-                      "Appointment requests",
-                      "Prescription follow-ups",
-                      "Multilingual patient support",
-                    ].map((item, i) => (
-                      <div
-                        key={item}
-                        style={{
-                          border: `1px solid ${colors.border}`,
-                          borderRadius: "18px",
-                          padding: "18px",
-                          background: i % 2 === 0 ? colors.bgSoft : colors.bgCard,
-                        }}
-                      >
-                        <div style={{ fontSize: "13px", color: colors.textLight, fontWeight: 700 }}>
-                          Workflow
-                        </div>
-                        <div
-                          style={{
-                            marginTop: "8px",
-                            fontSize: "18px",
-                            lineHeight: 1.4,
-                            letterSpacing: "-0.02em",
-                            fontWeight: 700,
-                          }}
+            <FadeIn>
+              <SectionHeading
+                badge="Workflow"
+                title={<>A cleaner flow from demand to care access.</>}
+                body="Laura helps turn fragmented questions, intake, and requests into clearer action for people, providers, and platforms."
+              />
+            </FadeIn>
+
+            <div className="workflowGrid">
+              {workflowItems.map((item, i) => (
+                <FadeIn key={item.title} delay={i * 0.08}>
+                  <div className="workflowItem">
+                    {i < workflowItems.length - 1 ? (
+                      <div className="workflowArrow">
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                         >
-                          {item}
-                        </div>
+                          <line x1="5" y1="12" x2="19" y2="12" />
+                          <polyline points="12 5 19 12 12 19" />
+                        </svg>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </FadeIn>
+                    ) : null}
 
-              <FadeIn delay={0.08}>
-                <div>
-                  <Badge>Laura for providers</Badge>
-                  <h2
-                    className="serif"
-                    style={{
-                      fontSize: "clamp(30px, 5vw, 54px)",
-                      lineHeight: 1.07,
-                      letterSpacing: "-0.04em",
-                      marginTop: "18px",
-                    }}
-                  >
-                    Reduce admin load without reducing quality.
-                  </h2>
-                  <p
-                    style={{
-                      marginTop: "16px",
-                      color: colors.textMuted,
-                      fontSize: "17px",
-                      lineHeight: 1.8,
-                      maxWidth: "560px",
-                    }}
-                  >
-                    Providers use Laura to handle repetitive front-desk demand, guide intake,
-                    support basic triage flows, and improve access at scale. She becomes an always-on
-                    care access layer, not just a chatbot.
-                  </p>
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: 800,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.12em",
+                        color: colors.textLight,
+                      }}
+                    >
+                      Step {i + 1}
+                    </div>
 
-                  <div className="featureList" style={{ marginTop: "24px" }}>
-                    {providerUseCases.map((item) => (
-                      <div className="featureRow" key={item}>
-                        <span className="dotCheck">✓</span>
-                        <span>{item}</span>
-                      </div>
-                    ))}
+                    <h3
+                      style={{
+                        marginTop: "12px",
+                        fontSize: "22px",
+                        lineHeight: 1.2,
+                        letterSpacing: "-0.03em",
+                        fontWeight: 800,
+                      }}
+                    >
+                      {item.title}
+                    </h3>
+
+                    <p
+                      style={{
+                        marginTop: "12px",
+                        color: colors.textMuted,
+                        fontSize: "15px",
+                        lineHeight: 1.8,
+                      }}
+                    >
+                      {item.body}
+                    </p>
                   </div>
-                </div>
-              </FadeIn>
+                </FadeIn>
+              ))}
             </div>
           </div>
         </section>
@@ -1205,7 +1415,7 @@ export default function Page() {
                     into your product in minutes.
                   </>
                 }
-                body="Embed health guidance, care flows, and conversational support into apps, patient journeys, and provider workflows."
+                body="Embed health guidance, conversational support, and care flows into apps, patient journeys, and internal healthcare workflows."
               />
             </FadeIn>
 
@@ -1224,18 +1434,20 @@ export default function Page() {
                       fontWeight: 800,
                     }}
                   >
-                    Built for real integration teams
+                    Built for modern integration teams
                   </h3>
+
                   <p
                     style={{
                       marginTop: "12px",
-                      color: "rgba(255,255,255,0.62)",
+                      color: "rgba(255,255,255,0.66)",
                       fontSize: "15px",
-                      lineHeight: 1.8,
+                      lineHeight: 1.85,
                     }}
                   >
-                    Laura is not only a front-end experience. She can be embedded into platforms,
-                    products, marketplaces, patient apps, internal tooling, and provider systems.
+                    Laura can be embedded into consumer health apps, marketplaces, internal
+                    tooling, and provider systems without forcing teams into fragile custom
+                    workflows.
                   </p>
 
                   <div className="featureList" style={{ marginTop: "22px" }}>
@@ -1243,7 +1455,7 @@ export default function Page() {
                       <div
                         className="featureRow"
                         key={item}
-                        style={{ color: "rgba(255,255,255,0.75)" }}
+                        style={{ color: "rgba(255,255,255,0.78)" }}
                       >
                         <span
                           className="dotCheck"
@@ -1269,6 +1481,7 @@ export default function Page() {
                       color: "rgba(255,255,255,0.8)",
                       fontSize: "13px",
                       fontWeight: 700,
+                      maxWidth: "100%",
                     }}
                   >
                     API, SDK, widget, and workflow-ready
@@ -1284,8 +1497,8 @@ export default function Page() {
             <FadeIn>
               <SectionHeading
                 badge="Pricing"
-                title={<>Simple access for public, provider, and platform use.</>}
-                body="Start with the audience that matters most now, then expand as Laura becomes part of your workflow or product."
+                title={<>Simple access for people, providers, and developers.</>}
+                body="Start with the audience that matters now, then expand as Laura becomes part of your workflow, product, or daily health routine."
               />
             </FadeIn>
 
@@ -1330,6 +1543,7 @@ export default function Page() {
                         alignItems: "baseline",
                         gap: "4px",
                         marginTop: "16px",
+                        flexWrap: "wrap",
                       }}
                     >
                       <div
@@ -1358,7 +1572,7 @@ export default function Page() {
                     <p
                       style={{
                         marginTop: "10px",
-                        color: plan.highlighted ? "rgba(255,255,255,0.65)" : colors.textMuted,
+                        color: plan.highlighted ? "rgba(255,255,255,0.68)" : colors.textMuted,
                         fontSize: "14px",
                         lineHeight: 1.75,
                       }}
@@ -1384,7 +1598,7 @@ export default function Page() {
                           className="featureRow"
                           style={{
                             color: plan.highlighted
-                              ? "rgba(255,255,255,0.78)"
+                              ? "rgba(255,255,255,0.8)"
                               : colors.textMuted,
                           }}
                         >
@@ -1446,7 +1660,6 @@ export default function Page() {
                         fontSize: "13px",
                         color: colors.textMuted,
                         lineHeight: 1.6,
-                        textTransform: "lowercase",
                       }}
                     >
                       {metric.label}
@@ -1476,6 +1689,7 @@ export default function Page() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
+
                   <select
                     className="inputBase"
                     value={role}
@@ -1485,6 +1699,7 @@ export default function Page() {
                     <option>Provider</option>
                     <option>Developer</option>
                   </select>
+
                   <button className="btnPrimary" style={{ height: "54px" }}>
                     Get early access
                   </button>
@@ -1510,7 +1725,7 @@ export default function Page() {
         <footer style={{ borderTop: `1px solid ${colors.border}`, padding: "34px 0 44px" }}>
           <div className="container">
             <div className="footerRow">
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
                 <div
                   style={{
                     width: "34px",
@@ -1520,6 +1735,7 @@ export default function Page() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
+                    flexShrink: 0,
                   }}
                 >
                   <svg width="14" height="14" viewBox="0 0 32 32" fill="none">
@@ -1529,9 +1745,15 @@ export default function Page() {
                     <rect x="23.5" y="7" width="3.5" height="18" rx="1.75" fill="#fff" />
                   </svg>
                 </div>
-                <div>
+
+                <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: "14px", fontWeight: 800 }}>Smart Health</div>
-                  <div style={{ fontSize: "12px", color: colors.textLight }}>Powered by Laura</div>
+                  <div
+                    className="serif"
+                    style={{ fontSize: "13px", color: colors.textLight, fontStyle: "italic" }}
+                  >
+                    Powered by Laura
+                  </div>
                 </div>
               </div>
 
@@ -1548,7 +1770,7 @@ export default function Page() {
               </div>
 
               <div style={{ fontSize: "13px", color: colors.textLight }}>
-                © 2026 Smart Health. Built for public, provider, and platform use.
+                © 2026 Smart Health. Built with 💙 for all.
               </div>
             </div>
           </div>
