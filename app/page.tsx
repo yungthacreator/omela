@@ -1,7 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { motion, useInView } from "framer-motion";
+import Image from "next/image";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
+import { AnimatePresence, motion, useInView } from "framer-motion";
 
 const FONT_IMPORT = `
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -10,17 +18,18 @@ const FONT_IMPORT = `
 const colors = {
   bg: "#F7F5F0",
   bgCard: "#FFFFFF",
-  bgSoft: "#F1EEE7",
+  bgSoft: "#F3EFE7",
   bgDark: "#090A0D",
-  bgDarkCard: "#111318",
+  bgDarkCard: "#101218",
   text: "#17181C",
   textMuted: "#616775",
   textLight: "#9298A6",
   accent: "#2563EB",
   accentSoft: "#EEF4FF",
   border: "#E5E0D6",
-  borderDark: "#252831",
+  borderDark: "#242833",
   success: "#16A34A",
+  successSoft: "#EAF8EE",
 };
 
 type FadeInProps = {
@@ -29,14 +38,27 @@ type FadeInProps = {
   className?: string;
 };
 
+type RoleKey = "patient" | "provider" | "developer";
+
+type PhoneMessage = {
+  from: "user" | "laura";
+  text: string;
+};
+
+type EcosystemLogoItem = {
+  name: string;
+  src: string;
+  blend?: boolean;
+};
+
 function FadeIn({ children, delay = 0, className = "" }: FadeInProps) {
   const ref = useRef<HTMLDivElement | null>(null);
-  const isInView = useInView(ref, { once: true, amount: 0.15 });
+  const isInView = useInView(ref, { once: true, amount: 0.14 });
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 22 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.55, delay, ease: [0.25, 0.1, 0.25, 1] }}
       className={className}
@@ -56,7 +78,9 @@ function Badge({ children }: { children: ReactNode }) {
         padding: "9px 16px",
         borderRadius: "999px",
         border: `1px solid ${colors.border}`,
-        background: colors.bgCard,
+        background: "rgba(255,255,255,0.82)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
         fontSize: "13px",
         fontWeight: 600,
         color: colors.textMuted,
@@ -78,24 +102,26 @@ function SectionHeading({
   body?: string;
 }) {
   return (
-    <div style={{ textAlign: "center", maxWidth: "760px", margin: "0 auto" }}>
+    <div style={{ textAlign: "center", maxWidth: "800px", margin: "0 auto" }}>
       {badge ? <Badge>{badge}</Badge> : null}
+
       <h2
         className="serif"
         style={{
           fontSize: "clamp(32px, 5vw, 56px)",
-          lineHeight: 1.04,
-          letterSpacing: "-0.04em",
+          lineHeight: 1.03,
+          letterSpacing: "-0.045em",
           marginTop: badge ? "18px" : 0,
         }}
       >
         {title}
       </h2>
+
       {body ? (
         <p
           style={{
             fontSize: "17px",
-            lineHeight: 1.8,
+            lineHeight: 1.86,
             color: colors.textMuted,
             marginTop: "16px",
           }}
@@ -110,9 +136,9 @@ function SectionHeading({
 function TypewriterPrompts() {
   const prompts = useMemo(
     () => [
-      "I have a rash and headache. What should I do next?",
-      "Can you help me understand this prescription?",
+      "Can you help me understand what my symptoms might mean?",
       "Book the earliest available appointment near me.",
+      "Can you explain this prescription in simpler language?",
     ],
     []
   );
@@ -123,7 +149,7 @@ function TypewriterPrompts() {
 
   useEffect(() => {
     const current = prompts[promptIndex];
-    const speed = deleting ? 24 : 42;
+    const speed = deleting ? 18 : 34;
 
     const timer = window.setTimeout(() => {
       if (!deleting) {
@@ -131,7 +157,7 @@ function TypewriterPrompts() {
         setTyped(next);
 
         if (next === current) {
-          window.setTimeout(() => setDeleting(true), 1100);
+          window.setTimeout(() => setDeleting(true), 1150);
         }
       } else {
         const next = current.slice(0, Math.max(0, typed.length - 1));
@@ -152,8 +178,9 @@ function TypewriterPrompts() {
       style={{
         border: `1px solid ${colors.border}`,
         background: colors.bgCard,
-        borderRadius: "22px",
+        borderRadius: "24px",
         padding: "18px 18px 22px",
+        boxShadow: "0 18px 40px rgba(0,0,0,0.04)",
       }}
     >
       <div
@@ -174,7 +201,7 @@ function TypewriterPrompts() {
           border: `1px solid ${colors.border}`,
           background: "#FCFBF8",
           borderRadius: "18px",
-          minHeight: "118px",
+          minHeight: "120px",
           padding: "20px",
           display: "flex",
           alignItems: "flex-start",
@@ -183,7 +210,7 @@ function TypewriterPrompts() {
         <div
           style={{
             fontSize: "17px",
-            lineHeight: 1.7,
+            lineHeight: 1.72,
             color: colors.text,
             wordBreak: "break-word",
             overflowWrap: "anywhere",
@@ -207,35 +234,133 @@ function TypewriterPrompts() {
   );
 }
 
+function DoubleTickIcon() {
+  return (
+    <svg
+      width="16"
+      height="12"
+      viewBox="0 0 20 14"
+      fill="none"
+      aria-hidden="true"
+      style={{ display: "block" }}
+    >
+      <path
+        d="M1.5 7.6L4.7 10.8L10.2 5.2"
+        stroke={colors.success}
+        strokeWidth="2.1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M7.3 7.6L10.5 10.8L18.2 3.2"
+        stroke={colors.success}
+        strokeWidth="2.1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function MessageMeta({
+  status,
+}: {
+  status: "Sending" | "Delivered" | "Seen";
+}) {
+  return (
+    <div
+      style={{
+        marginTop: "6px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "flex-end",
+        gap: "6px",
+        color: status === "Sending" ? colors.textLight : colors.success,
+        fontSize: "11px",
+        fontWeight: 700,
+      }}
+    >
+      <DoubleTickIcon />
+      <span>{status}</span>
+    </div>
+  );
+}
+
 function PhoneMockup() {
-  const [visibleMessages, setVisibleMessages] = useState(0);
+  const chatMessages = useMemo<PhoneMessage[]>(
+    () => [
+      {
+        from: "user",
+        text: "I have a sore throat, fever, and I feel weak. What should I do?",
+      },
+      {
+        from: "laura",
+        text: "I can help you think through the next step. Based on what you shared, you may need same day clinical advice if the fever is persistent or you have trouble swallowing.",
+      },
+      {
+        from: "user",
+        text: "Can you book the earliest appointment near me?",
+      },
+      {
+        from: "laura",
+        text: "Yes. I found an available slot tomorrow at 9:30 AM. I can also guide you on self care until then.",
+      },
+    ],
+    []
+  );
+
+  const [displayed, setDisplayed] = useState<string[]>(
+    Array(chatMessages.length).fill("")
+  );
+  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
-    const timers = [0, 1, 2, 3].map((i) =>
-      window.setTimeout(() => setVisibleMessages(i + 1), 550 + i * 700)
-    );
+    const current = chatMessages[activeIndex];
+    if (!current) return;
 
-    return () => timers.forEach((t) => window.clearTimeout(t));
-  }, []);
+    const currentShown = displayed[activeIndex] ?? "";
+    let timer: number;
 
-  const chatMessages = [
-    {
-      from: "user",
-      text: "I have a sore throat, fever, and I feel weak. What should I do?",
-    },
-    {
-      from: "laura",
-      text: "I can help you think through the next step. Based on what you shared, you may need same-day clinical advice if the fever is persistent or you have trouble swallowing.",
-    },
-    {
-      from: "user",
-      text: "Can you book the earliest appointment near me?",
-    },
-    {
-      from: "laura",
-      text: "Yes. I found an available slot tomorrow at 9:30 AM. I can also guide you on self-care until then.",
-    },
-  ];
+    if (currentShown.length < current.text.length) {
+      timer = window.setTimeout(() => {
+        setDisplayed((prev) => {
+          const next = [...prev];
+          next[activeIndex] = current.text.slice(0, currentShown.length + 1);
+          return next;
+        });
+      }, current.from === "user" ? 26 : 18);
+    } else if (activeIndex < chatMessages.length - 1) {
+      timer = window.setTimeout(() => {
+        setActiveIndex((prev) => prev + 1);
+      }, 760);
+    } else {
+      timer = window.setTimeout(() => {
+        setDisplayed(Array(chatMessages.length).fill(""));
+        setActiveIndex(0);
+      }, 2200);
+    }
+
+    return () => window.clearTimeout(timer);
+  }, [activeIndex, displayed, chatMessages]);
+
+  function getUserStatus(index: number) {
+    const isComplete = displayed[index]?.length === chatMessages[index].text.length;
+
+    if (!isComplete) return "Sending" as const;
+
+    if (index === 0) {
+      return activeIndex >= 1 ? ("Seen" as const) : ("Delivered" as const);
+    }
+
+    if (index === 2) {
+      const finalLauraComplete =
+        displayed[3]?.length === chatMessages[3].text.length && activeIndex === 3;
+
+      return finalLauraComplete ? ("Seen" as const) : ("Delivered" as const);
+    }
+
+    return "Delivered" as const;
+  }
 
   return (
     <div className="phoneWrap">
@@ -244,9 +369,17 @@ function PhoneMockup() {
 
         <div className="phoneScreen">
           <div className="phoneHeader">
-            <div className="phoneAvatar">L</div>
+            <div className="phoneAvatarReal">
+              <Image
+                src="/laura-avatar.png"
+                alt="Laura"
+                fill
+                sizes="44px"
+                style={{ objectFit: "cover" }}
+              />
+            </div>
 
-            <div>
+            <div style={{ minWidth: 0 }}>
               <div
                 style={{
                   display: "flex",
@@ -260,20 +393,32 @@ function PhoneMockup() {
                 Laura
                 <span
                   style={{
-                    width: "18px",
-                    height: "18px",
+                    width: "24px",
+                    height: "24px",
                     borderRadius: "999px",
-                    background: colors.accent,
+                    background: colors.successSoft,
+                    border: `1px solid rgba(22,163,74,0.16)`,
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "#fff",
-                    fontSize: "11px",
-                    lineHeight: 1,
                     flexShrink: 0,
                   }}
                 >
-                  ✓
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M3 8.2L6.1 11.2L13 4.5"
+                      stroke={colors.success}
+                      strokeWidth="2.1"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 </span>
               </div>
 
@@ -281,10 +426,11 @@ function PhoneMockup() {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "5px",
+                  gap: "6px",
                   fontSize: "11px",
                   color: colors.success,
                   marginTop: "3px",
+                  fontWeight: 600,
                 }}
               >
                 <span
@@ -302,42 +448,60 @@ function PhoneMockup() {
           </div>
 
           <div className="phoneBody">
-            {chatMessages.map((msg, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                animate={
-                  i < visibleMessages
-                    ? { opacity: 1, y: 0, scale: 1 }
-                    : { opacity: 0, y: 10, scale: 0.98 }
-                }
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                style={{
-                  alignSelf: msg.from === "user" ? "flex-end" : "flex-start",
-                  maxWidth: "86%",
-                }}
-              >
-                <div
+            {chatMessages.map((msg, i) => {
+              const text = displayed[i];
+              const isVisible = text.length > 0;
+              const isComplete = text.length === msg.text.length;
+
+              if (!isVisible) return null;
+
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 10, scale: 0.985 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.28, ease: "easeOut" }}
                   style={{
-                    padding: "12px 15px",
-                    borderRadius:
-                      msg.from === "user"
-                        ? "18px 18px 6px 18px"
-                        : "18px 18px 18px 6px",
-                    background: msg.from === "user" ? colors.accent : colors.bgCard,
-                    color: msg.from === "user" ? "#fff" : colors.text,
-                    fontSize: "13px",
-                    lineHeight: 1.6,
-                    boxShadow:
-                      msg.from === "laura" ? "0 2px 8px rgba(0,0,0,0.04)" : "none",
-                    wordBreak: "break-word",
-                    overflowWrap: "anywhere",
+                    alignSelf: msg.from === "user" ? "flex-end" : "flex-start",
+                    maxWidth: "86%",
                   }}
                 >
-                  {msg.text}
-                </div>
-              </motion.div>
-            ))}
+                  <div
+                    style={{
+                      padding: "12px 15px",
+                      borderRadius:
+                        msg.from === "user"
+                          ? "18px 18px 6px 18px"
+                          : "18px 18px 18px 6px",
+                      background: msg.from === "user" ? colors.accent : colors.bgCard,
+                      color: msg.from === "user" ? "#fff" : colors.text,
+                      fontSize: "13px",
+                      lineHeight: 1.64,
+                      boxShadow:
+                        msg.from === "laura" ? "0 6px 20px rgba(0,0,0,0.05)" : "none",
+                      wordBreak: "break-word",
+                      overflowWrap: "anywhere",
+                    }}
+                  >
+                    {text}
+                    {isComplete && i === activeIndex ? (
+                      <span
+                        style={{
+                          display: "inline-block",
+                          width: "8px",
+                          marginLeft: "2px",
+                          animation: "blink 1s step-end infinite",
+                        }}
+                      />
+                    ) : null}
+                  </div>
+
+                  {msg.from === "user" ? (
+                    <MessageMeta status={getUserStatus(i)} />
+                  ) : null}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -359,15 +523,14 @@ function CodeBlock() {
 
       <div className="terminalBody">
         <div className="terminalLine">
-          <span className="terminalPrompt">$</span> npm install @smarthealth/laura-sdk
+          <span className="terminalPrompt">$</span> npm install @omela/laura-sdk
         </div>
         <div className="terminalLine">
-          <span className="terminalPrompt">$</span> import {"{ Laura }"} from{" "}
-          "@smarthealth/laura-sdk";
+          <span className="terminalPrompt">$</span> import {"{ Laura }"} from "@omela/laura-sdk";
         </div>
         <div className="terminalLine">
           <span className="terminalPrompt">$</span> const laura = new Laura({"{"}
-          apiKey: process.env.NEXT_PUBLIC_SMART_HEALTH_KEY {"}"});
+          apiKey: process.env.NEXT_PUBLIC_OMELA_KEY {"}"});
         </div>
         <div className="terminalLine">
           <span className="terminalPrompt">$</span> await laura.chat({"{"}
@@ -382,13 +545,243 @@ function CodeBlock() {
   );
 }
 
+function EcosystemMarquee({ logos }: { logos: EcosystemLogoItem[] }) {
+  const marqueeItems = useMemo(() => [...logos, ...logos], [logos]);
+
+  return (
+    <div className="ecosystemMarqueeShell" aria-label="Platform ecosystem">
+      <motion.div
+        className="ecosystemTrack"
+        animate={{ x: ["0%", "-50%"] }}
+        transition={{
+          duration: 26,
+          ease: "linear",
+          repeat: Infinity,
+        }}
+      >
+        {marqueeItems.map((logo, index) => (
+          <motion.div
+            key={`${logo.name}-${index}`}
+            className="ecosystemCard"
+            whileHover={{ y: -3, scale: 1.01 }}
+            transition={{ duration: 0.18 }}
+            aria-label={logo.name}
+          >
+            <div className="ecosystemLogoWrap">
+              <Image
+                src={logo.src}
+                alt={logo.name}
+                width={140}
+                height={44}
+                className={`ecosystemLogo${logo.blend ? " ecosystemLogoBlend" : ""}`}
+              />
+            </div>
+          </motion.div>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+function getSuccessCopy(role: RoleKey) {
+  if (role === "patient") {
+    return {
+      eyebrow: "Early access confirmed",
+      title: "Congratulations. You are in early.",
+      body:
+        "You are now on the Omela early access list for people. Laura will reach out as access opens for your care experience. Follow us on X @joinomela for launch drops, product notes, and first looks.",
+    };
+  }
+
+  if (role === "provider") {
+    return {
+      eyebrow: "Provider access confirmed",
+      title: "Congratulations. Your place is reserved.",
+      body:
+        "You are now on the Omela early access list for providers. Laura will reach out as access opens for care teams and live operations. Follow us on X @joinomela for rollout updates, demos, and product previews.",
+    };
+  }
+
+  return {
+    eyebrow: "Developer access confirmed",
+    title: "Congratulations. You are on the list.",
+    body:
+      "You are now on the Omela early access list for developers. Laura will reach out as API and integration access opens for your use case. Follow us on X @joinomela for SDK updates, technical previews, and launch notes.",
+  };
+}
+
+function SuccessModal({
+  open,
+  role,
+  onClose,
+}: {
+  open: boolean;
+  role: RoleKey;
+  onClose: () => void;
+}) {
+  const copy = getSuccessCopy(role);
+
+  return (
+    <AnimatePresence>
+      {open ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={onClose}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 220,
+            background: "rgba(9,10,13,0.34)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.985 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.985 }}
+            transition={{ duration: 0.26, ease: [0.25, 0.1, 0.25, 1] }}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: "580px",
+              background: "rgba(255,255,255,0.92)",
+              border: `1px solid ${colors.border}`,
+              borderRadius: "30px",
+              padding: "28px",
+              boxShadow: "0 34px 90px rgba(0,0,0,0.18)",
+            }}
+          >
+            <div
+              style={{
+                width: "62px",
+                height: "62px",
+                borderRadius: "22px",
+                background: "linear-gradient(180deg, #F7FBFF 0%, #EEF4FF 100%)",
+                border: `1px solid ${colors.border}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: colors.success,
+              }}
+            >
+              <svg
+                width="26"
+                height="26"
+                viewBox="0 0 32 32"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M7 16.5L12.8 22L25 9.5"
+                  stroke={colors.success}
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+
+            <div
+              style={{
+                marginTop: "18px",
+                fontSize: "12px",
+                fontWeight: 800,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: colors.textLight,
+              }}
+            >
+              {copy.eyebrow}
+            </div>
+
+            <h3
+              className="serif"
+              style={{
+                fontSize: "clamp(30px, 5vw, 44px)",
+                lineHeight: 1.02,
+                letterSpacing: "-0.045em",
+                marginTop: "10px",
+                color: colors.text,
+              }}
+            >
+              {copy.title}
+            </h3>
+
+            <p
+              style={{
+                marginTop: "14px",
+                color: colors.textMuted,
+                fontSize: "16px",
+                lineHeight: 1.84,
+              }}
+            >
+              {copy.body}
+            </p>
+
+            <div
+              style={{
+                marginTop: "18px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "10px 14px",
+                borderRadius: "999px",
+                background: colors.bgSoft,
+                border: `1px solid ${colors.border}`,
+                color: colors.text,
+                fontSize: "13px",
+                fontWeight: 700,
+              }}
+            >
+              Follow on X <span style={{ color: colors.accent }}>@joinomela</span>
+            </div>
+
+            <div
+              style={{
+                marginTop: "24px",
+                display: "flex",
+                gap: "12px",
+                flexWrap: "wrap",
+              }}
+            >
+              <a
+                href="https://x.com/joinomela"
+                target="_blank"
+                rel="noreferrer"
+                className="btnPrimary"
+              >
+                Follow on X
+              </a>
+
+              <button type="button" className="btnSecondary" onClick={onClose}>
+                Continue exploring
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
+  );
+}
+
 export default function Page() {
-  const [role, setRole] = useState("Patient");
+  const [role, setRole] = useState<RoleKey>("patient");
   const [email, setEmail] = useState("");
+  const [website, setWebsite] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
 
   const navItems = ["People", "Providers", "Developers", "Pricing"];
-
-  const integrations = ["NHS", "EMIS", "SystmOne", "Epic", "Cerner", "AccuRx"];
 
   const audienceCards = [
     {
@@ -398,7 +791,7 @@ export default function Page() {
     },
     {
       title: "For providers",
-      desc: "Use Laura to reduce front-desk load, guide intake, support appointment workflows, and improve access at scale.",
+      desc: "Use Laura to reduce front desk load, guide intake, support appointment workflows, and improve access at scale.",
       bullets: ["Voice and chat intake", "Scheduling support", "Triage support", "Multilingual access"],
     },
     {
@@ -431,13 +824,13 @@ export default function Page() {
       body: "She provides structured guidance, routes intent, and supports booking or navigation.",
     },
     {
-      title: "Providers and platforms respond faster",
-      body: "Teams and products receive cleaner demand, better workflows, and lower friction.",
+      title: "Care teams move faster",
+      body: "Teams receive cleaner demand, better intake quality, and lower operational friction.",
     },
   ];
 
   const metrics = [
-    { value: "24/7", label: "always-on access" },
+    { value: "24/7", label: "always on access" },
     { value: "40+", label: "supported languages" },
     { value: "<2s", label: "average response time" },
     { value: "3x", label: "broader market reach" },
@@ -460,7 +853,7 @@ export default function Page() {
       desc: "For clinics and practices using Laura in operations.",
       features: ["Voice and chat intake", "Scheduling workflows", "Multilingual support", "Provider dashboard"],
       highlighted: true,
-      badge: "Most popular",
+      badge: "Best for care teams",
       cta: "Request demo",
     },
     {
@@ -473,6 +866,60 @@ export default function Page() {
       cta: "Talk to us",
     },
   ];
+
+  const ecosystemLogos: EcosystemLogoItem[] = [
+    { name: "AWS", src: "/logos/aws-logo.png" },
+    { name: "Microsoft", src: "/logos/microsoft-logo.png" },
+    { name: "Google", src: "/logos/google-logo.png" },
+    { name: "Salesforce", src: "/logos/salesforce-logo.png" },
+    { name: "Twilio", src: "/logos/twilio-logo.png" },
+    { name: "Epic", src: "/logos/epic-logo.png" },
+    { name: "Veradigm", src: "/logos/veradigm-logo.png" },
+    { name: "GitHub", src: "/logos/github-logo.png", blend: true },
+  ];
+
+  async function handleWaitlistSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    setIsSubmitting(true);
+    setSuccessMessage("");
+    setErrorMessage("");
+
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          role,
+          website,
+          source: "landing-page",
+          marketingOptIn: false,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorMessage(data.error || "Something went wrong. Please try again.");
+        return;
+      }
+
+      setSuccessMessage(
+        data.message || "You are in. Laura will reach out as early access opens."
+      );
+      setEmail("");
+      setRole("patient");
+      setWebsite("");
+      setIsSuccessOpen(true);
+    } catch {
+      setErrorMessage("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <>
@@ -543,6 +990,13 @@ export default function Page() {
           box-shadow: 0 10px 26px rgba(0,0,0,0.12);
         }
 
+        .btnPrimary:disabled {
+          opacity: 0.72;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: none;
+        }
+
         .btnSecondary {
           display: inline-flex;
           align-items: center;
@@ -580,13 +1034,13 @@ export default function Page() {
         .grid2 {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 20px;
+          gap: 24px;
         }
 
         .card {
           background: ${colors.bgCard};
           border: 1px solid ${colors.border};
-          border-radius: 26px;
+          border-radius: 28px;
           padding: 28px;
           min-width: 0;
           overflow: hidden;
@@ -595,8 +1049,8 @@ export default function Page() {
         .darkCard {
           background: ${colors.bgDarkCard};
           border: 1px solid ${colors.borderDark};
-          border-radius: 26px;
-          padding: 28px;
+          border-radius: 28px;
+          padding: 30px;
           min-width: 0;
           overflow: hidden;
         }
@@ -604,7 +1058,7 @@ export default function Page() {
         .heroWrap {
           display: grid;
           grid-template-columns: 1.08fr 0.92fr;
-          gap: 48px;
+          gap: 54px;
           align-items: center;
         }
 
@@ -625,7 +1079,7 @@ export default function Page() {
           font-size: 19px;
           line-height: 1.82;
           color: ${colors.textMuted};
-          max-width: 680px;
+          max-width: 690px;
         }
 
         .heroButtons {
@@ -636,7 +1090,7 @@ export default function Page() {
         }
 
         .trustedHeader {
-          margin-top: 28px;
+          margin-top: 30px;
           text-align: center;
           font-size: 12px;
           font-weight: 800;
@@ -645,22 +1099,68 @@ export default function Page() {
           color: ${colors.textLight};
         }
 
-        .logoStrip {
-          display: flex;
-          gap: 14px;
-          flex-wrap: wrap;
-          justify-content: center;
-          margin-top: 20px;
+        .ecosystemMarqueeShell {
+          margin-top: 22px;
+          overflow: hidden;
+          position: relative;
+          mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+          -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
         }
 
-        .logoChip {
+        .ecosystemTrack {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          width: max-content;
+          padding: 6px 0;
+        }
+
+        .ecosystemCard {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 220px;
+          min-height: 88px;
           border: 1px solid ${colors.border};
-          background: ${colors.bgCard};
+          background: rgba(255,255,255,0.84);
+          border-radius: 22px;
+          padding: 18px 20px;
+          box-shadow: 0 10px 28px rgba(0,0,0,0.04);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+        }
+
+        .ecosystemLogoWrap {
+          position: relative;
+          width: 100%;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .ecosystemLogo {
+          width: auto;
+          max-width: 132px;
+          height: auto;
+          max-height: 34px;
+          object-fit: contain;
+        }
+
+        .ecosystemLogoBlend {
+          mix-blend-mode: multiply;
+          opacity: 0.96;
+        }
+
+        .ecosystemCaption {
+          margin-top: 14px;
+          text-align: center;
+          font-size: 13px;
+          line-height: 1.76;
           color: ${colors.textLight};
-          border-radius: 999px;
-          padding: 11px 16px;
-          font-size: "13px";
-          font-weight: 700;
+          max-width: 760px;
+          margin-left: auto;
+          margin-right: auto;
         }
 
         .phoneWrap {
@@ -671,10 +1171,10 @@ export default function Page() {
         }
 
         .phoneFrame {
-          width: min(100%, 352px);
+          width: min(100%, 360px);
           background: white;
           border: 2px solid ${colors.border};
-          border-radius: 42px;
+          border-radius: 44px;
           padding: 12px;
           box-shadow: 0 34px 80px rgba(0,0,0,0.1);
           flex-shrink: 1;
@@ -704,17 +1204,15 @@ export default function Page() {
           border-bottom: 1px solid ${colors.border};
         }
 
-        .phoneAvatar {
-          width: 38px;
-          height: 38px;
+        .phoneAvatarReal {
+          position: relative;
+          width: 44px;
+          height: 44px;
           border-radius: 999px;
-          background: linear-gradient(135deg, ${colors.accent}, #7C3AED);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-weight: 800;
-          font-size: 14px;
+          overflow: hidden;
+          flex-shrink: 0;
+          border: 1px solid rgba(0,0,0,0.06);
+          background: #EDEFF5;
         }
 
         .phoneBody {
@@ -738,7 +1236,7 @@ export default function Page() {
           gap: 10px;
           color: ${colors.textMuted};
           font-size: 14px;
-          line-height: 1.68;
+          line-height: 1.78;
           min-width: 0;
         }
 
@@ -776,6 +1274,7 @@ export default function Page() {
           padding: 24px;
           position: relative;
           min-width: 0;
+          box-shadow: 0 10px 28px rgba(0,0,0,0.03);
         }
 
         .workflowArrow {
@@ -790,7 +1289,7 @@ export default function Page() {
           border: 1px solid ${colors.border};
           display: flex;
           align-items: center;
-          justifyContent: center;
+          justify-content: center;
           color: ${colors.textLight};
           z-index: 2;
         }
@@ -852,7 +1351,7 @@ export default function Page() {
           overflow-wrap: anywhere;
           word-break: break-word;
           font-size: 13px;
-          line-height: 1.8;
+          line-height: 1.9;
           color: #E5E7EB;
           font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         }
@@ -867,14 +1366,18 @@ export default function Page() {
         }
 
         .waitlistWrap {
-          background: ${colors.bgCard};
+          background: rgba(255,255,255,0.9);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
           border: 1px solid ${colors.border};
-          border-radius: 30px;
+          border-radius: 32px;
           padding: 32px;
-          max-width: 880px;
+          max-width: 900px;
           margin: 0 auto;
           width: 100%;
           overflow: hidden;
+          position: relative;
+          box-shadow: 0 24px 60px rgba(0,0,0,0.05);
         }
 
         .waitlistForm {
@@ -888,7 +1391,7 @@ export default function Page() {
         .inputBase {
           width: 100%;
           max-width: 100%;
-          height: 54px;
+          height: 56px;
           border-radius: 16px;
           border: 1px solid ${colors.border};
           background: ${colors.bgCard};
@@ -954,6 +1457,11 @@ export default function Page() {
           .workflowArrow {
             display: none;
           }
+
+          .ecosystemCard {
+            min-width: 190px;
+            min-height: 82px;
+          }
         }
 
         @media (max-width: 720px) {
@@ -989,7 +1497,7 @@ export default function Page() {
           }
 
           .phoneFrame {
-            width: min(100%, 340px);
+            width: min(100%, 344px);
           }
 
           .terminalCard,
@@ -1024,6 +1532,22 @@ export default function Page() {
             font-size: 14px !important;
             white-space: nowrap;
           }
+
+          .ecosystemTrack {
+            gap: 12px;
+          }
+
+          .ecosystemCard {
+            min-width: 168px;
+            min-height: 76px;
+            padding: 14px 16px;
+            border-radius: 18px;
+          }
+
+          .ecosystemLogo {
+            max-width: 110px;
+            max-height: 28px;
+          }
         }
 
         @media (max-width: 520px) {
@@ -1038,8 +1562,18 @@ export default function Page() {
             padding: 11px 14px !important;
             font-size: 13px !important;
           }
+
+          .ecosystemCard {
+            min-width: 152px;
+          }
         }
       `}</style>
+
+      <SuccessModal
+        open={isSuccessOpen}
+        role={role}
+        onClose={() => setIsSuccessOpen(false)}
+      />
 
       <div className="siteWrap">
         <motion.nav
@@ -1072,7 +1606,7 @@ export default function Page() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "10px",
+                gap: "12px",
                 minWidth: 0,
                 flex: "1 1 auto",
                 overflow: "hidden",
@@ -1080,22 +1614,24 @@ export default function Page() {
             >
               <div
                 style={{
-                  width: "42px",
-                  height: "42px",
-                  borderRadius: "14px",
-                  background: colors.bgDark,
+                  width: "46px",
+                  height: "46px",
+                  borderRadius: "16px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   flexShrink: 0,
+                  overflow: "hidden",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
                 }}
               >
-                <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
-                  <rect x="4" y="8" width="3.5" height="16" rx="1.75" fill="#fff" />
-                  <rect x="10.5" y="5" width="3.5" height="22" rx="1.75" fill="#fff" />
-                  <rect x="17" y="11" width="3.5" height="10" rx="1.75" fill="#fff" />
-                  <rect x="23.5" y="7" width="3.5" height="18" rx="1.75" fill="#fff" />
-                </svg>
+                <Image
+                  src="/omela-logo-mark.png"
+                  alt="Omela logo"
+                  width={46}
+                  height={46}
+                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                />
               </div>
 
               <div style={{ minWidth: 0, overflow: "hidden" }}>
@@ -1109,7 +1645,7 @@ export default function Page() {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  Smart Health
+                  Omela
                 </div>
 
                 <div
@@ -1213,9 +1749,9 @@ export default function Page() {
 
                 <FadeIn delay={0.16}>
                   <p className="heroBody">
-                    Laura helps people understand symptoms, navigate care, and get answers fast.
-                    Providers use her to automate workflows. Developers integrate her through APIs,
-                    SDKs, and embeddable experiences.
+                    Laura gives people a clearer starting point, gives care teams faster intake and
+                    routing, and gives developers a care ready AI layer for products, workflows,
+                    and digital experiences.
                   </p>
                 </FadeIn>
 
@@ -1237,6 +1773,7 @@ export default function Page() {
                         <polyline points="12 5 19 12 12 19" />
                       </svg>
                     </a>
+
                     <a href="#developers" className="btnSecondary">
                       Explore developer tools
                     </a>
@@ -1250,14 +1787,14 @@ export default function Page() {
             </div>
 
             <FadeIn delay={0.28}>
-              <div className="trustedHeader">Trusted by teams across care delivery</div>
-              <div className="logoStrip">
-                {integrations.map((item) => (
-                  <div className="logoChip" key={item}>
-                    {item}
-                  </div>
-                ))}
-              </div>
+              <div className="trustedHeader">Designed for the systems behind modern care</div>
+
+              <EcosystemMarquee logos={ecosystemLogos} />
+
+              <p className="ecosystemCaption">
+                Representative platforms and infrastructure Omela is being designed to work
+                alongside across cloud, care workflows, communication, and developer tooling.
+              </p>
             </FadeIn>
           </div>
         </section>
@@ -1268,7 +1805,7 @@ export default function Page() {
               <SectionHeading
                 badge="Built for everyone"
                 title={<>One platform. Three entry points.</>}
-                body="Laura works as a direct health experience for the public, an operations layer for providers, and an integration layer for digital health teams."
+                body="Laura works as a direct health experience for the public, an operations layer for care teams, and an integration layer for digital health products."
               />
             </FadeIn>
 
@@ -1336,6 +1873,7 @@ export default function Page() {
               <FadeIn>
                 <div>
                   <Badge>Laura for people</Badge>
+
                   <h2
                     className="serif"
                     style={{
@@ -1353,7 +1891,7 @@ export default function Page() {
                       marginTop: "16px",
                       color: colors.textMuted,
                       fontSize: "17px",
-                      lineHeight: 1.8,
+                      lineHeight: 1.84,
                       maxWidth: "560px",
                     }}
                   >
@@ -1386,7 +1924,7 @@ export default function Page() {
               <SectionHeading
                 badge="Workflow"
                 title={<>A cleaner flow from demand to care access.</>}
-                body="Laura helps turn fragmented questions, intake, and requests into clearer action for people, providers, and platforms."
+                body="Laura helps turn fragmented questions, intake, and requests into clearer action for people, care teams, and connected products."
               />
             </FadeIn>
 
@@ -1441,7 +1979,7 @@ export default function Page() {
                         marginTop: "12px",
                         color: colors.textMuted,
                         fontSize: "15px",
-                        lineHeight: 1.8,
+                        lineHeight: 1.82,
                       }}
                     >
                       {item.body}
@@ -1493,10 +2031,11 @@ export default function Page() {
 
                   <p
                     style={{
-                      marginTop: "12px",
-                      color: "rgba(255,255,255,0.66)",
+                      marginTop: "14px",
+                      color: "rgba(255,255,255,0.68)",
                       fontSize: "15px",
-                      lineHeight: 1.85,
+                      lineHeight: 1.96,
+                      maxWidth: "560px",
                     }}
                   >
                     Laura can be embedded into consumer health apps, marketplaces, internal
@@ -1509,7 +2048,7 @@ export default function Page() {
                       <div
                         className="featureRow"
                         key={item}
-                        style={{ color: "rgba(255,255,255,0.78)" }}
+                        style={{ color: "rgba(255,255,255,0.82)" }}
                       >
                         <span
                           className="dotCheck"
@@ -1538,7 +2077,7 @@ export default function Page() {
                       maxWidth: "100%",
                     }}
                   >
-                    API, SDK, widget, and workflow-ready
+                    API, SDK, widget, and workflow ready
                   </div>
                 </div>
               </FadeIn>
@@ -1552,7 +2091,7 @@ export default function Page() {
               <SectionHeading
                 badge="Pricing"
                 title={<>Simple access for people, providers, and developers.</>}
-                body="Start with the audience that matters now, then expand as Laura becomes part of your workflow, product, or daily health routine."
+                body="Start with the audience that matters now, then expand as Laura becomes part of your workflow, product, or daily care routine."
               />
             </FadeIn>
 
@@ -1576,9 +2115,9 @@ export default function Page() {
                           top: "18px",
                           right: "18px",
                           borderRadius: "999px",
-                          padding: "6px 10px",
+                          padding: "7px 11px",
                           background: "rgba(255,255,255,0.1)",
-                          color: "rgba(255,255,255,0.75)",
+                          color: "rgba(255,255,255,0.78)",
                           fontSize: "11px",
                           fontWeight: 800,
                           textTransform: "uppercase",
@@ -1609,6 +2148,7 @@ export default function Page() {
                       >
                         {plan.price}
                       </div>
+
                       {plan.period ? (
                         <div
                           style={{
@@ -1628,7 +2168,7 @@ export default function Page() {
                         marginTop: "10px",
                         color: plan.highlighted ? "rgba(255,255,255,0.68)" : colors.textMuted,
                         fontSize: "14px",
-                        lineHeight: 1.75,
+                        lineHeight: 1.82,
                       }}
                     >
                       {plan.desc}
@@ -1652,7 +2192,7 @@ export default function Page() {
                           className="featureRow"
                           style={{
                             color: plan.highlighted
-                              ? "rgba(255,255,255,0.8)"
+                              ? "rgba(255,255,255,0.82)"
                               : colors.textMuted,
                           }}
                         >
@@ -1735,29 +2275,54 @@ export default function Page() {
                   body="Choose how you want to use Laura. Join as a person, provider, or developer and we will tailor the next step."
                 />
 
-                <div className="waitlistForm">
+                <form className="waitlistForm" onSubmit={handleWaitlistSubmit}>
                   <input
                     className="inputBase"
                     type="email"
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    required
+                    autoComplete="email"
                   />
 
                   <select
                     className="inputBase"
                     value={role}
-                    onChange={(e) => setRole(e.target.value)}
+                    onChange={(e) => setRole(e.target.value as RoleKey)}
                   >
-                    <option>Patient</option>
-                    <option>Provider</option>
-                    <option>Developer</option>
+                    <option value="patient">Patient</option>
+                    <option value="provider">Provider</option>
+                    <option value="developer">Developer</option>
                   </select>
 
-                  <button className="btnPrimary" style={{ height: "54px" }}>
-                    Get early access
+                  <input
+                    type="text"
+                    name="website"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                    style={{
+                      position: "absolute",
+                      left: "-9999px",
+                      opacity: 0,
+                      pointerEvents: "none",
+                      height: 0,
+                      width: 0,
+                    }}
+                  />
+
+                  <button
+                    type="submit"
+                    className="btnPrimary"
+                    style={{ height: "56px" }}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Submitting..." : "Get early access"}
                   </button>
-                </div>
+                </form>
 
                 <div
                   style={{
@@ -1768,9 +2333,50 @@ export default function Page() {
                     lineHeight: 1.7,
                   }}
                 >
-                  Selected role: <strong style={{ color: colors.text }}>{role}</strong> · Early
-                  access requests help us prioritise launch order.
+                  Selected role:{" "}
+                  <strong style={{ color: colors.text }}>
+                    {role.charAt(0).toUpperCase() + role.slice(1)}
+                  </strong>{" "}
+                  · Early access requests help us prioritize launch order.
                 </div>
+
+                {successMessage ? (
+                  <div
+                    style={{
+                      marginTop: "18px",
+                      border: `1px solid ${colors.border}`,
+                      background: "#F7FBF8",
+                      color: "#166534",
+                      borderRadius: "18px",
+                      padding: "16px 18px",
+                      textAlign: "center",
+                      fontSize: "14px",
+                      lineHeight: 1.7,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {successMessage}
+                  </div>
+                ) : null}
+
+                {errorMessage ? (
+                  <div
+                    style={{
+                      marginTop: "18px",
+                      border: `1px solid ${colors.border}`,
+                      background: "#FFF7F7",
+                      color: "#B91C1C",
+                      borderRadius: "18px",
+                      padding: "16px 18px",
+                      textAlign: "center",
+                      fontSize: "14px",
+                      lineHeight: 1.7,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {errorMessage}
+                  </div>
+                ) : null}
               </div>
             </FadeIn>
           </div>
@@ -1782,26 +2388,24 @@ export default function Page() {
               <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
                 <div
                   style={{
-                    width: "34px",
-                    height: "34px",
+                    width: "36px",
+                    height: "36px",
                     borderRadius: "12px",
-                    background: colors.bgDark,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    overflow: "hidden",
                     flexShrink: 0,
                   }}
                 >
-                  <svg width="14" height="14" viewBox="0 0 32 32" fill="none">
-                    <rect x="4" y="8" width="3.5" height="16" rx="1.75" fill="#fff" />
-                    <rect x="10.5" y="5" width="3.5" height="22" rx="1.75" fill="#fff" />
-                    <rect x="17" y="11" width="3.5" height="10" rx="1.75" fill="#fff" />
-                    <rect x="23.5" y="7" width="3.5" height="18" rx="1.75" fill="#fff" />
-                  </svg>
+                  <Image
+                    src="/omela-logo-mark.png"
+                    alt="Omela logo"
+                    width={36}
+                    height={36}
+                    style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                  />
                 </div>
 
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: "14px", fontWeight: 800 }}>Smart Health</div>
+                  <div style={{ fontSize: "14px", fontWeight: 800 }}>Omela</div>
                   <div
                     className="serif"
                     style={{ fontSize: "13px", color: colors.textLight, fontStyle: "italic" }}
@@ -1824,7 +2428,7 @@ export default function Page() {
               </div>
 
               <div style={{ fontSize: "13px", color: colors.textLight }}>
-                © 2026 Smart Health. Built with 💙 for all.
+                © 2026 Omela. Built for modern care access.
               </div>
             </div>
           </div>
