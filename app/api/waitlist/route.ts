@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
+import { createHash } from "crypto";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { waitlistSchema } from "@/lib/validation";
-import { waitlistRatelimit } from "@/lib/ratelimit";
+import { limitWaitlist } from "@/lib/ratelimit";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 function getClientIp(req: NextRequest): string {
   const forwardedFor = req.headers.get("x-forwarded-for");
@@ -19,25 +23,46 @@ function getClientIp(req: NextRequest): string {
 }
 
 function hashIp(ip: string): string {
-  return crypto.createHash("sha256").update(ip).digest("hex");
+  return createHash("sha256").update(ip).digest("hex");
 }
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req);
+
   try {
-    const ip = getClientIp(req);
+    const rate = await limitWaitlist(`waitlist:${ip}`);
 
-    if (waitlistRatelimit) {
-      const rate = await waitlistRatelimit.limit(`waitlist:${ip}`);
-
-      if (!rate.success) {
-        return NextResponse.json(
-          { error: "Too many requests. Please try again later." },
-          { status: 429 }
-        );
-      }
+    if (!rate.success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        {
+          status: 429,
+          headers: {
+            ...(typeof rate.limit === "number"
+              ? { "X-RateLimit-Limit": String(rate.limit) }
+              : {}),
+            ...(typeof rate.remaining === "number"
+              ? { "X-RateLimit-Remaining": String(rate.remaining) }
+              : {}),
+            ...(typeof rate.reset === "number"
+              ? { "X-RateLimit-Reset": String(rate.reset) }
+              : {}),
+          },
+        }
+      );
     }
 
-    const body = await req.json();
+    let body: unknown;
+
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid request body." },
+        { status: 400 }
+      );
+    }
+
     const parsed = waitlistSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -47,7 +72,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { email, role, website, source, marketingOptIn } = parsed.data;
+    const email = parsed.data.email.trim().toLowerCase();
+    const role = parsed.data.role;
+    const website = parsed.data.website?.trim() || "";
+    const source = parsed.data.source?.trim() || "landing-page";
+    const marketingOptIn = Boolean(parsed.data.marketingOptIn);
 
     if (website) {
       return NextResponse.json(
@@ -56,22 +85,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const existing = await prisma.waitlistEntry.findUnique({
-      where: { email },
-    });
-
-    if (existing) {
-      return NextResponse.json(
-        { error: "This email is already on the waitlist." },
-        { status: 409 }
-      );
-    }
-
     await prisma.waitlistEntry.create({
       data: {
         email,
         role,
-        source: source || "landing-page",
+        source,
         marketingOptIn,
         ipHash: ip === "unknown" ? null : hashIp(ip),
       },
@@ -80,11 +98,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: "You’re in. We’ll reach out as early access opens.",
+        message: "You're in. Laura will reach out as early access opens.",
       },
       { status: 201 }
     );
   } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return NextResponse.json(
+        { error: "This email is already on the waitlist." },
+        { status: 409 }
+      );
+    }
+
     console.error("WAITLIST_POST_ERROR", error);
 
     return NextResponse.json(

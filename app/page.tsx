@@ -16,20 +16,24 @@ const FONT_IMPORT = `
 `;
 
 const colors = {
-  bg: "#F7F5F0",
+  bg: "#F7F4ED",
+  bgSoft: "#F2EEE5",
   bgCard: "#FFFFFF",
-  bgSoft: "#F3EFE7",
-  bgDark: "#090A0D",
-  bgDarkCard: "#101218",
-  text: "#17181C",
-  textMuted: "#616775",
-  textLight: "#9298A6",
-  accent: "#2563EB",
-  accentSoft: "#EEF4FF",
-  border: "#E5E0D6",
-  borderDark: "#242833",
+  bgCardSoft: "rgba(255,255,255,0.78)",
+  bgDark: "#090B10",
+  bgDarkSoft: "#11141C",
+  text: "#151821",
+  textMuted: "#606877",
+  textLight: "#949CAC",
+  border: "#E4DED1",
+  borderStrong: "#D8D0C0",
+  borderDark: "#232837",
+  accent: "#2964EA",
+  accentSoft: "#EDF3FF",
   success: "#16A34A",
   successSoft: "#EAF8EE",
+  purple: "#8B5CF6",
+  purpleSoft: "#F3EEFF",
 };
 
 type FadeInProps = {
@@ -43,24 +47,142 @@ type RoleKey = "patient" | "provider" | "developer";
 type PhoneMessage = {
   from: "user" | "laura";
   text: string;
+  status?: "Delivered" | "Seen";
 };
 
 type EcosystemLogoItem = {
   name: string;
   src: string;
+  width: number;
+  height: number;
   blend?: boolean;
+  scale?: number;
 };
+
+const navItems = [
+  { label: "People", href: "#people" },
+  { label: "Providers", href: "#providers" },
+  { label: "Developers", href: "#developers" },
+  { label: "Pricing", href: "#pricing" },
+];
+
+const roleLabels: Record<RoleKey, string> = {
+  patient: "Patient",
+  provider: "Provider",
+  developer: "Developer",
+};
+
+const roleNotes: Record<RoleKey, string> = {
+  patient: "You will hear about consumer access, guided care experiences, and Laura rollout windows.",
+  provider: "You will hear about care team onboarding, workflow access, and provider demos as capacity opens.",
+  developer: "You will hear about API access, integration previews, and technical onboarding as tools become available.",
+};
+
+const audienceCards = [
+  {
+    title: "For people",
+    desc: "Laura gives people a clearer first step for symptoms, everyday health questions, care navigation, and appointment support.",
+    bullets: ["Symptom guidance", "Health questions", "Care navigation", "Booking support"],
+  },
+  {
+    title: "For providers",
+    desc: "Laura helps care teams reduce front desk pressure, improve intake quality, and support access with calmer operations.",
+    bullets: ["Voice and chat intake", "Scheduling support", "Triage support", "Multilingual access"],
+  },
+  {
+    title: "For developers",
+    desc: "Laura can be embedded into apps, workflows, and digital health products through APIs, SDKs, and adaptable components.",
+    bullets: ["API and SDK access", "Embeddable widgets", "Workflow triggers", "Secure logs"],
+  },
+];
+
+const publicUseCases = [
+  "Understand symptoms before deciding the next step",
+  "Ask Laura everyday health questions in plain language",
+  "Get help booking appointments and navigating services",
+];
+
+const developerFeatures = [
+  "REST API and SDK access",
+  "Embeddable chat and voice widgets",
+  "Patient workflow triggers",
+  "Secure auth, logging, and audit trails",
+];
+
+const workflowItems = [
+  {
+    title: "People ask Laura",
+    body: "Users describe symptoms, ask questions, or request help with navigation and access.",
+  },
+  {
+    title: "Laura structures intent",
+    body: "She guides the next step, routes demand, and supports booking or follow through.",
+  },
+  {
+    title: "Care teams move faster",
+    body: "Teams receive clearer intake, reduced friction, and better readiness for real demand.",
+  },
+];
+
+const metrics = [
+  { value: "24/7", label: "always on availability" },
+  { value: "40+", label: "supported languages" },
+  { value: "<2s", label: "average response time" },
+  { value: "3x", label: "broader market reach" },
+];
+
+const pricingPlans = [
+  {
+    name: "Public Access",
+    price: "£3.99",
+    period: "/mo",
+    desc: "For people who want direct access to Laura for guidance, health questions, and care navigation.",
+    features: ["Symptom guidance", "Everyday health questions", "Care navigation", "Booking support"],
+    highlighted: false,
+    cta: "Join waitlist",
+  },
+  {
+    name: "Provider",
+    price: "£1,250",
+    period: "/mo",
+    desc: "For clinics and care teams using Laura in intake, routing, and patient communication workflows.",
+    features: ["Voice and chat intake", "Scheduling workflows", "Multilingual support", "Provider dashboard"],
+    highlighted: true,
+    badge: "Best for care teams",
+    cta: "Request demo",
+  },
+  {
+    name: "Developer",
+    price: "Custom",
+    period: "",
+    desc: "For product teams embedding Laura into apps, marketplaces, and digital healthcare experiences.",
+    features: ["API and SDK access", "Embeddable components", "Usage analytics", "Technical onboarding"],
+    highlighted: false,
+    cta: "Talk to us",
+  },
+];
+
+const ecosystemLogos: EcosystemLogoItem[] = [
+  { name: "AWS", src: "/logos/aws-logo.png", width: 126, height: 34, scale: 1 },
+  { name: "Microsoft", src: "/logos/microsoft-logo.png", width: 132, height: 30, scale: 1 },
+  { name: "Google", src: "/logos/google-logo.png", width: 120, height: 38, scale: 1 },
+  { name: "Salesforce", src: "/logos/salesforce-logo.png", width: 104, height: 34, scale: 1.18 },
+  { name: "Twilio", src: "/logos/twilio-logo.png", width: 110, height: 28, scale: 1.05 },
+  { name: "Epic", src: "/logos/epic-logo.png", width: 88, height: 26, scale: 1.04 },
+  { name: "Veradigm", src: "/logos/veradigm-logo.png", width: 132, height: 28, scale: 1.02 },
+  { name: "GitHub", src: "/logos/github-logo.png", width: 108, height: 30, blend: true, scale: 1.02 },
+];
 
 function FadeIn({ children, delay = 0, className = "" }: FadeInProps) {
   const ref = useRef<HTMLDivElement | null>(null);
-  const isInView = useInView(ref, { once: true, amount: 0.14 });
+  const isInView = useInView(ref, { once: true, amount: 0.16 });
 
   return (
     <motion.div
       ref={ref}
       initial={{ opacity: 0, y: 22 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.55, delay, ease: [0.25, 0.1, 0.25, 1] }}
+      transition={{ duration: 0.58, delay, ease: [0.25, 0.1, 0.25, 1] }}
       className={className}
     >
       {children}
@@ -75,14 +197,14 @@ function Badge({ children }: { children: ReactNode }) {
         display: "inline-flex",
         alignItems: "center",
         gap: "8px",
-        padding: "9px 16px",
+        padding: "10px 16px",
         borderRadius: "999px",
         border: `1px solid ${colors.border}`,
-        background: "rgba(255,255,255,0.82)",
+        background: "rgba(255,255,255,0.72)",
         backdropFilter: "blur(10px)",
         WebkitBackdropFilter: "blur(10px)",
         fontSize: "13px",
-        fontWeight: 600,
+        fontWeight: 700,
         color: colors.textMuted,
         maxWidth: "100%",
       }}
@@ -102,16 +224,17 @@ function SectionHeading({
   body?: string;
 }) {
   return (
-    <div style={{ textAlign: "center", maxWidth: "800px", margin: "0 auto" }}>
+    <div style={{ textAlign: "center", maxWidth: "820px", margin: "0 auto" }}>
       {badge ? <Badge>{badge}</Badge> : null}
 
       <h2
         className="serif"
         style={{
-          fontSize: "clamp(32px, 5vw, 56px)",
-          lineHeight: 1.03,
-          letterSpacing: "-0.045em",
+          fontSize: "clamp(34px, 5vw, 58px)",
+          lineHeight: 1.02,
+          letterSpacing: "-0.05em",
           marginTop: badge ? "18px" : 0,
+          color: colors.text,
         }}
       >
         {title}
@@ -121,7 +244,7 @@ function SectionHeading({
         <p
           style={{
             fontSize: "17px",
-            lineHeight: 1.86,
+            lineHeight: 1.88,
             color: colors.textMuted,
             marginTop: "16px",
           }}
@@ -157,7 +280,7 @@ function TypewriterPrompts() {
         setTyped(next);
 
         if (next === current) {
-          window.setTimeout(() => setDeleting(true), 1150);
+          window.setTimeout(() => setDeleting(true), 1200);
         }
       } else {
         const next = current.slice(0, Math.max(0, typed.length - 1));
@@ -174,61 +297,21 @@ function TypewriterPrompts() {
   }, [typed, deleting, promptIndex, prompts]);
 
   return (
-    <div
-      style={{
-        border: `1px solid ${colors.border}`,
-        background: colors.bgCard,
-        borderRadius: "24px",
-        padding: "18px 18px 22px",
-        boxShadow: "0 18px 40px rgba(0,0,0,0.04)",
-      }}
-    >
-      <div
-        style={{
-          fontSize: "12px",
-          fontWeight: 800,
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          color: colors.textLight,
-          marginBottom: "14px",
-        }}
-      >
-        Example prompts
+    <div className="promptCard">
+      <div className="promptTop">
+        <span className="promptTopLabel">Example prompts</span>
+        <span className="promptTopHint">Consumer experience</span>
       </div>
 
-      <div
-        style={{
-          border: `1px solid ${colors.border}`,
-          background: "#FCFBF8",
-          borderRadius: "18px",
-          minHeight: "120px",
-          padding: "20px",
-          display: "flex",
-          alignItems: "flex-start",
-        }}
-      >
-        <div
-          style={{
-            fontSize: "17px",
-            lineHeight: 1.72,
-            color: colors.text,
-            wordBreak: "break-word",
-            overflowWrap: "anywhere",
-          }}
-        >
+      <div className="promptStage">
+        <div className="promptTyped">
           {typed}
-          <span
-            style={{
-              display: "inline-block",
-              width: "10px",
-              marginLeft: "2px",
-              color: colors.accent,
-              animation: "blink 1s step-end infinite",
-            }}
-          >
-            |
-          </span>
+          <span className="promptCaret">|</span>
         </div>
+      </div>
+
+      <div className="promptFooter">
+        Laura responds in plain language and helps route the next step with a calmer starting point.
       </div>
     </div>
   );
@@ -265,7 +348,7 @@ function DoubleTickIcon() {
 function MessageMeta({
   status,
 }: {
-  status: "Sending" | "Delivered" | "Seen";
+  status: "Delivered" | "Seen";
 }) {
   return (
     <div
@@ -275,7 +358,7 @@ function MessageMeta({
         alignItems: "center",
         justifyContent: "flex-end",
         gap: "6px",
-        color: status === "Sending" ? colors.textLight : colors.success,
+        color: colors.success,
         fontSize: "11px",
         fontWeight: 700,
       }}
@@ -287,19 +370,21 @@ function MessageMeta({
 }
 
 function PhoneMockup() {
-  const chatMessages = useMemo<PhoneMessage[]>(
+  const messages = useMemo<PhoneMessage[]>(
     () => [
       {
         from: "user",
         text: "I have a sore throat, fever, and I feel weak. What should I do?",
+        status: "Seen",
       },
       {
         from: "laura",
-        text: "I can help you think through the next step. Based on what you shared, you may need same day clinical advice if the fever is persistent or you have trouble swallowing.",
+        text: "I can help you think through the next step. Based on what you shared, you may need same day clinical advice if the fever is persistent.",
       },
       {
         from: "user",
         text: "Can you book the earliest appointment near me?",
+        status: "Delivered",
       },
       {
         from: "laura",
@@ -309,72 +394,54 @@ function PhoneMockup() {
     []
   );
 
-  const [displayed, setDisplayed] = useState<string[]>(
-    Array(chatMessages.length).fill("")
-  );
+  const [displayed, setDisplayed] = useState<string[]>(Array(messages.length).fill(""));
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
-    const current = chatMessages[activeIndex];
+    const current = messages[activeIndex];
     if (!current) return;
 
-    const currentShown = displayed[activeIndex] ?? "";
+    const shown = displayed[activeIndex] ?? "";
     let timer: number;
 
-    if (currentShown.length < current.text.length) {
+    if (shown.length < current.text.length) {
       timer = window.setTimeout(() => {
         setDisplayed((prev) => {
           const next = [...prev];
-          next[activeIndex] = current.text.slice(0, currentShown.length + 1);
+          next[activeIndex] = current.text.slice(0, shown.length + 1);
           return next;
         });
-      }, current.from === "user" ? 26 : 18);
-    } else if (activeIndex < chatMessages.length - 1) {
+      }, current.from === "user" ? 24 : 16);
+    } else if (activeIndex < messages.length - 1) {
       timer = window.setTimeout(() => {
         setActiveIndex((prev) => prev + 1);
       }, 760);
     } else {
       timer = window.setTimeout(() => {
-        setDisplayed(Array(chatMessages.length).fill(""));
+        setDisplayed(Array(messages.length).fill(""));
         setActiveIndex(0);
-      }, 2200);
+      }, 2400);
     }
 
     return () => window.clearTimeout(timer);
-  }, [activeIndex, displayed, chatMessages]);
-
-  function getUserStatus(index: number) {
-    const isComplete = displayed[index]?.length === chatMessages[index].text.length;
-
-    if (!isComplete) return "Sending" as const;
-
-    if (index === 0) {
-      return activeIndex >= 1 ? ("Seen" as const) : ("Delivered" as const);
-    }
-
-    if (index === 2) {
-      const finalLauraComplete =
-        displayed[3]?.length === chatMessages[3].text.length && activeIndex === 3;
-
-      return finalLauraComplete ? ("Seen" as const) : ("Delivered" as const);
-    }
-
-    return "Delivered" as const;
-  }
+  }, [activeIndex, displayed, messages]);
 
   return (
-    <div className="phoneWrap">
+    <div className="phoneShell">
+      <div className="phoneFloatTag phoneFloatTagLeft">Same day care routing</div>
+      <div className="phoneFloatTag phoneFloatTagRight">Voice + chat ready</div>
+
       <div className="phoneFrame">
         <div className="phoneNotch" />
 
         <div className="phoneScreen">
           <div className="phoneHeader">
-            <div className="phoneAvatarReal">
+            <div className="phoneAvatar">
               <Image
                 src="/laura-avatar.png"
                 alt="Laura"
                 fill
-                sizes="44px"
+                sizes="46px"
                 style={{ objectFit: "cover" }}
               />
             </div>
@@ -384,33 +451,15 @@ function PhoneMockup() {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "7px",
-                  fontSize: "14px",
+                  gap: "8px",
+                  fontSize: "16px",
                   fontWeight: 800,
                   color: colors.text,
                 }}
               >
                 Laura
-                <span
-                  style={{
-                    width: "24px",
-                    height: "24px",
-                    borderRadius: "999px",
-                    background: colors.successSoft,
-                    border: `1px solid rgba(22,163,74,0.16)`,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    aria-hidden="true"
-                  >
+                <span className="verifiedBadge">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                     <path
                       d="M3 8.2L6.1 11.2L13 4.5"
                       stroke={colors.success}
@@ -422,86 +471,84 @@ function PhoneMockup() {
                 </span>
               </div>
 
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  fontSize: "11px",
-                  color: colors.success,
-                  marginTop: "3px",
-                  fontWeight: 600,
-                }}
-              >
-                <span
-                  style={{
-                    width: "8px",
-                    height: "8px",
-                    borderRadius: "999px",
-                    background: colors.success,
-                    display: "inline-block",
-                  }}
-                />
+              <div className="liveStatus">
+                <span className="liveDot" />
                 Live now
               </div>
             </div>
           </div>
 
-          <div className="phoneBody">
-            {chatMessages.map((msg, i) => {
-              const text = displayed[i];
-              const isVisible = text.length > 0;
-              const isComplete = text.length === msg.text.length;
+          <div className="phoneConversation">
+            <div className="phoneConversationInner">
+              {messages.map((msg, index) => {
+                const text = displayed[index];
+                const isVisible = text.length > 0;
 
-              if (!isVisible) return null;
+                if (!isVisible) return null;
 
-              return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10, scale: 0.985 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.28, ease: "easeOut" }}
-                  style={{
-                    alignSelf: msg.from === "user" ? "flex-end" : "flex-start",
-                    maxWidth: "86%",
-                  }}
-                >
-                  <div
+                return (
+                  <motion.div
+                    key={`${msg.from}-${index}`}
+                    initial={{ opacity: 0, y: 12, scale: 0.985 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.24, ease: "easeOut" }}
                     style={{
-                      padding: "12px 15px",
-                      borderRadius:
-                        msg.from === "user"
-                          ? "18px 18px 6px 18px"
-                          : "18px 18px 18px 6px",
-                      background: msg.from === "user" ? colors.accent : colors.bgCard,
-                      color: msg.from === "user" ? "#fff" : colors.text,
-                      fontSize: "13px",
-                      lineHeight: 1.64,
-                      boxShadow:
-                        msg.from === "laura" ? "0 6px 20px rgba(0,0,0,0.05)" : "none",
-                      wordBreak: "break-word",
-                      overflowWrap: "anywhere",
+                      alignSelf: msg.from === "user" ? "flex-end" : "flex-start",
+                      maxWidth: msg.from === "user" ? "84%" : "88%",
                     }}
                   >
-                    {text}
-                    {isComplete && i === activeIndex ? (
-                      <span
-                        style={{
-                          display: "inline-block",
-                          width: "8px",
-                          marginLeft: "2px",
-                          animation: "blink 1s step-end infinite",
-                        }}
-                      />
-                    ) : null}
-                  </div>
+                    <div
+                      style={{
+                        padding: msg.from === "user" ? "13px 16px" : "14px 16px",
+                        borderRadius:
+                          msg.from === "user" ? "20px 20px 8px 20px" : "20px 20px 20px 8px",
+                        background:
+                          msg.from === "user"
+                            ? "linear-gradient(180deg, #3471F2 0%, #245FDE 100%)"
+                            : "rgba(255,255,255,0.96)",
+                        color: msg.from === "user" ? "#FFFFFF" : colors.text,
+                        fontSize: "13px",
+                        lineHeight: 1.66,
+                        boxShadow:
+                          msg.from === "user"
+                            ? "0 14px 28px rgba(41,100,234,0.18)"
+                            : "0 10px 24px rgba(13,18,28,0.06)",
+                        wordBreak: "break-word",
+                        overflowWrap: "anywhere",
+                      }}
+                    >
+                      {text}
+                    </div>
 
-                  {msg.from === "user" ? (
-                    <MessageMeta status={getUserStatus(i)} />
-                  ) : null}
-                </motion.div>
-              );
-            })}
+                    {msg.from === "user" && msg.status ? <MessageMeta status={msg.status} /> : null}
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="phoneComposer">
+            <div className="phoneComposerPill">
+              <span className="phoneComposerPlus">+</span>
+              <span className="phoneComposerText">Reply...</span>
+            </div>
+
+            <div className="phoneMic">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M12 15a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <path
+                  d="M19 11.5a7 7 0 0 1-14 0"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+                <path d="M12 18.5V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </div>
           </div>
         </div>
       </div>
@@ -546,37 +593,30 @@ function CodeBlock() {
 }
 
 function EcosystemMarquee({ logos }: { logos: EcosystemLogoItem[] }) {
-  const marqueeItems = useMemo(() => [...logos, ...logos], [logos]);
+  const items = useMemo(() => [...logos, ...logos], [logos]);
 
   return (
     <div className="ecosystemMarqueeShell" aria-label="Platform ecosystem">
       <motion.div
         className="ecosystemTrack"
         animate={{ x: ["0%", "-50%"] }}
-        transition={{
-          duration: 26,
-          ease: "linear",
-          repeat: Infinity,
-        }}
+        transition={{ duration: 26, ease: "linear", repeat: Infinity }}
       >
-        {marqueeItems.map((logo, index) => (
-          <motion.div
-            key={`${logo.name}-${index}`}
-            className="ecosystemCard"
-            whileHover={{ y: -3, scale: 1.01 }}
-            transition={{ duration: 0.18 }}
-            aria-label={logo.name}
-          >
+        {items.map((logo, index) => (
+          <div key={`${logo.name}-${index}`} className="ecosystemCard" aria-label={logo.name}>
             <div className="ecosystemLogoWrap">
               <Image
                 src={logo.src}
                 alt={logo.name}
-                width={140}
-                height={44}
+                width={logo.width}
+                height={logo.height}
                 className={`ecosystemLogo${logo.blend ? " ecosystemLogoBlend" : ""}`}
+                style={{
+                  transform: `scale(${logo.scale ?? 1})`,
+                }}
               />
             </div>
-          </motion.div>
+          </div>
         ))}
       </motion.div>
     </div>
@@ -589,7 +629,7 @@ function getSuccessCopy(role: RoleKey) {
       eyebrow: "Early access confirmed",
       title: "Congratulations. You are in early.",
       body:
-        "You are now on the Omela early access list for people. Laura will reach out as access opens for your care experience. Follow us on X @joinomela for launch drops, product notes, and first looks.",
+        "You are now on the Omela early access list for patients. Laura will reach out as access opens for your care experience. Follow us on X @joinomela for launch drops, product notes, and first looks.",
     };
   }
 
@@ -635,8 +675,8 @@ function SuccessModal({
             inset: 0,
             zIndex: 220,
             background: "rgba(9,10,13,0.34)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
+            backdropFilter: "blur(14px)",
+            WebkitBackdropFilter: "blur(14px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -644,7 +684,7 @@ function SuccessModal({
           }}
         >
           <motion.div
-            initial={{ opacity: 0, y: 16, scale: 0.985 }}
+            initial={{ opacity: 0, y: 18, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.985 }}
             transition={{ duration: 0.26, ease: [0.25, 0.1, 0.25, 1] }}
@@ -652,9 +692,9 @@ function SuccessModal({
             style={{
               width: "100%",
               maxWidth: "580px",
-              background: "rgba(255,255,255,0.92)",
+              background: "rgba(255,255,255,0.94)",
               border: `1px solid ${colors.border}`,
-              borderRadius: "30px",
+              borderRadius: "32px",
               padding: "28px",
               boxShadow: "0 34px 90px rgba(0,0,0,0.18)",
             }}
@@ -664,7 +704,7 @@ function SuccessModal({
                 width: "62px",
                 height: "62px",
                 borderRadius: "22px",
-                background: "linear-gradient(180deg, #F7FBFF 0%, #EEF4FF 100%)",
+                background: "linear-gradient(180deg, #F8FBFF 0%, #EDF3FF 100%)",
                 border: `1px solid ${colors.border}`,
                 display: "flex",
                 alignItems: "center",
@@ -672,13 +712,7 @@ function SuccessModal({
                 color: colors.success,
               }}
             >
-              <svg
-                width="26"
-                height="26"
-                viewBox="0 0 32 32"
-                fill="none"
-                aria-hidden="true"
-              >
+              <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
                 <path
                   d="M7 16.5L12.8 22L25 9.5"
                   stroke={colors.success}
@@ -707,7 +741,7 @@ function SuccessModal({
               style={{
                 fontSize: "clamp(30px, 5vw, 44px)",
                 lineHeight: 1.02,
-                letterSpacing: "-0.045em",
+                letterSpacing: "-0.05em",
                 marginTop: "10px",
                 color: colors.text,
               }}
@@ -774,6 +808,7 @@ function SuccessModal({
 
 export default function Page() {
   const [role, setRole] = useState<RoleKey>("patient");
+  const [submittedRole, setSubmittedRole] = useState<RoleKey>("patient");
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -781,109 +816,14 @@ export default function Page() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
 
-  const navItems = ["People", "Providers", "Developers", "Pricing"];
-
-  const audienceCards = [
-    {
-      title: "For people",
-      desc: "Use Laura directly for symptom understanding, everyday health guidance, care navigation, booking support, and medication questions.",
-      bullets: ["Symptom guidance", "Health questions", "Care navigation", "24/7 access"],
-    },
-    {
-      title: "For providers",
-      desc: "Use Laura to reduce front desk load, guide intake, support appointment workflows, and improve access at scale.",
-      bullets: ["Voice and chat intake", "Scheduling support", "Triage support", "Multilingual access"],
-    },
-    {
-      title: "For developers",
-      desc: "Embed Laura into apps, patient journeys, marketplaces, and health platforms through APIs, SDKs, and widgets.",
-      bullets: ["API and SDK access", "Embeddable widgets", "Workflow triggers", "Secure logs"],
-    },
-  ];
-
-  const publicUseCases = [
-    "Understand symptoms before deciding the next step",
-    "Ask Laura everyday health questions in plain language",
-    "Get help booking appointments and navigating services",
-  ];
-
-  const developerFeatures = [
-    "REST API and SDK access",
-    "Embeddable chat and voice widgets",
-    "Patient workflow triggers",
-    "Secure auth, logging, and audit trails",
-  ];
-
-  const workflowItems = [
-    {
-      title: "People ask Laura",
-      body: "Users describe symptoms, ask health questions, or request help with care access.",
-    },
-    {
-      title: "Laura guides the next step",
-      body: "She provides structured guidance, routes intent, and supports booking or navigation.",
-    },
-    {
-      title: "Care teams move faster",
-      body: "Teams receive cleaner demand, better intake quality, and lower operational friction.",
-    },
-  ];
-
-  const metrics = [
-    { value: "24/7", label: "always on access" },
-    { value: "40+", label: "supported languages" },
-    { value: "<2s", label: "average response time" },
-    { value: "3x", label: "broader market reach" },
-  ];
-
-  const pricingPlans = [
-    {
-      name: "Public Access",
-      price: "£3.99",
-      period: "/mo",
-      desc: "For people who want direct access to Laura for guidance, health questions, and care navigation.",
-      features: ["Symptom guidance", "Everyday health questions", "Care navigation", "Booking support"],
-      highlighted: false,
-      cta: "Join waitlist",
-    },
-    {
-      name: "Provider",
-      price: "£1,250",
-      period: "/mo",
-      desc: "For clinics and practices using Laura in operations.",
-      features: ["Voice and chat intake", "Scheduling workflows", "Multilingual support", "Provider dashboard"],
-      highlighted: true,
-      badge: "Best for care teams",
-      cta: "Request demo",
-    },
-    {
-      name: "Developer",
-      price: "Custom",
-      period: "",
-      desc: "For teams embedding Laura into products and services.",
-      features: ["API and SDK access", "Embeddable components", "Usage analytics", "Technical onboarding"],
-      highlighted: false,
-      cta: "Talk to us",
-    },
-  ];
-
-  const ecosystemLogos: EcosystemLogoItem[] = [
-    { name: "AWS", src: "/logos/aws-logo.png" },
-    { name: "Microsoft", src: "/logos/microsoft-logo.png" },
-    { name: "Google", src: "/logos/google-logo.png" },
-    { name: "Salesforce", src: "/logos/salesforce-logo.png" },
-    { name: "Twilio", src: "/logos/twilio-logo.png" },
-    { name: "Epic", src: "/logos/epic-logo.png" },
-    { name: "Veradigm", src: "/logos/veradigm-logo.png" },
-    { name: "GitHub", src: "/logos/github-logo.png", blend: true },
-  ];
-
   async function handleWaitlistSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     setIsSubmitting(true);
     setSuccessMessage("");
     setErrorMessage("");
+
+    const currentRole = role;
 
     try {
       const res = await fetch("/api/waitlist", {
@@ -893,7 +833,7 @@ export default function Page() {
         },
         body: JSON.stringify({
           email,
-          role,
+          role: currentRole,
           website,
           source: "landing-page",
           marketingOptIn: false,
@@ -907,6 +847,7 @@ export default function Page() {
         return;
       }
 
+      setSubmittedRole(currentRole);
       setSuccessMessage(
         data.message || "You are in. Laura will reach out as early access opens."
       );
@@ -933,7 +874,10 @@ export default function Page() {
         }
 
         body {
-          background: ${colors.bg};
+          background:
+            radial-gradient(circle at top left, rgba(139,92,246,0.06), transparent 26%),
+            radial-gradient(circle at top right, rgba(41,100,234,0.06), transparent 22%),
+            ${colors.bg};
           color: ${colors.text};
           font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
           -webkit-font-smoothing: antialiased;
@@ -956,14 +900,43 @@ export default function Page() {
         .siteWrap {
           width: 100%;
           overflow-x: clip;
+          position: relative;
+        }
+
+        .siteWrap::before,
+        .siteWrap::after {
+          content: "";
+          position: absolute;
+          pointer-events: none;
+          filter: blur(70px);
+          opacity: 0.5;
+          z-index: 0;
+        }
+
+        .siteWrap::before {
+          width: 280px;
+          height: 280px;
+          top: 120px;
+          left: -80px;
+          background: rgba(139,92,246,0.08);
+        }
+
+        .siteWrap::after {
+          width: 340px;
+          height: 340px;
+          top: 540px;
+          right: -120px;
+          background: rgba(41,100,234,0.08);
         }
 
         .container {
           width: 100%;
-          max-width: 1200px;
+          max-width: 1220px;
           margin: 0 auto;
           padding-left: 24px;
           padding-right: 24px;
+          position: relative;
+          z-index: 1;
         }
 
         .btnPrimary {
@@ -977,17 +950,18 @@ export default function Page() {
           border-radius: 999px;
           padding: 15px 24px;
           font-size: 15px;
-          font-weight: 700;
+          font-weight: 800;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
           max-width: 100%;
           text-align: center;
+          white-space: nowrap;
         }
 
         .btnPrimary:hover {
           transform: translateY(-1px);
-          background: #14161B;
-          box-shadow: 0 10px 26px rgba(0,0,0,0.12);
+          background: #141821;
+          box-shadow: 0 14px 30px rgba(0,0,0,0.14);
         }
 
         .btnPrimary:disabled {
@@ -1008,76 +982,86 @@ export default function Page() {
           border-radius: 999px;
           padding: 15px 24px;
           font-size: 15px;
-          font-weight: 700;
+          font-weight: 800;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
           max-width: 100%;
           text-align: center;
+          white-space: nowrap;
         }
 
         .btnSecondary:hover {
-          background: ${colors.bgCard};
-          border-color: #D8D1C5;
+          transform: translateY(-1px);
+          background: rgba(255,255,255,0.72);
+          border-color: ${colors.borderStrong};
         }
 
         .section {
-          padding: 88px 0;
+          padding: 92px 0;
           overflow-x: clip;
+          position: relative;
         }
 
         .grid3 {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 20px;
+          gap: 22px;
         }
 
         .grid2 {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 24px;
+          gap: 28px;
         }
 
         .card {
-          background: ${colors.bgCard};
+          background: ${colors.bgCardSoft};
           border: 1px solid ${colors.border};
-          border-radius: 28px;
-          padding: 28px;
-          min-width: 0;
-          overflow: hidden;
-        }
-
-        .darkCard {
-          background: ${colors.bgDarkCard};
-          border: 1px solid ${colors.borderDark};
-          border-radius: 28px;
+          border-radius: 30px;
           padding: 30px;
           min-width: 0;
           overflow: hidden;
+          box-shadow: 0 14px 34px rgba(10,14,22,0.04);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+        }
+
+        .darkCard {
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%),
+            ${colors.bgDarkSoft};
+          border: 1px solid ${colors.borderDark};
+          border-radius: 30px;
+          padding: 30px;
+          min-width: 0;
+          overflow: hidden;
+          box-shadow: 0 24px 60px rgba(0,0,0,0.18);
         }
 
         .heroWrap {
           display: grid;
-          grid-template-columns: 1.08fr 0.92fr;
-          gap: 54px;
+          grid-template-columns: 1.05fr 0.95fr;
+          gap: 56px;
           align-items: center;
         }
 
         .heroTitle {
-          font-size: clamp(52px, 7vw, 92px);
-          line-height: 0.95;
-          letter-spacing: -0.055em;
+          font-size: clamp(54px, 7vw, 98px);
+          line-height: 0.94;
+          letter-spacing: -0.058em;
+          color: ${colors.text};
         }
 
         .heroAccent {
-          color: ${colors.accent};
+          color: rgba(41,100,234,0.62);
           font-style: italic;
           display: block;
         }
 
         .heroBody {
-          margin-top: 22px;
+          margin-top: 24px;
           font-size: 19px;
-          line-height: 1.82;
+          line-height: 1.88;
           color: ${colors.textMuted};
           max-width: 690px;
         }
@@ -1086,15 +1070,59 @@ export default function Page() {
           display: flex;
           gap: 12px;
           flex-wrap: wrap;
-          margin-top: 32px;
+          margin-top: 34px;
+        }
+
+        .heroPills {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          margin-top: 22px;
+        }
+
+        .heroPill {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 14px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.66);
+          border: 1px solid ${colors.border};
+          color: ${colors.textMuted};
+          font-size: 13px;
+          font-weight: 700;
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+        }
+
+        .heroPillDot {
+          width: 7px;
+          height: 7px;
+          border-radius: 999px;
+          background: ${colors.accent};
+          display: inline-block;
+        }
+
+        .heroVisualPanel {
+          position: relative;
+          border-radius: 38px;
+          padding: 22px;
+          border: 1px solid ${colors.border};
+          background:
+            radial-gradient(circle at top, rgba(139,92,246,0.06), transparent 30%),
+            linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.66) 100%);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          box-shadow: 0 30px 80px rgba(10,14,22,0.08);
+          min-width: 0;
         }
 
         .trustedHeader {
-          margin-top: 30px;
+          margin-top: 34px;
           text-align: center;
           font-size: 12px;
           font-weight: 800;
-          letter-spacing: 0.12em;
+          letter-spacing: 0.14em;
           text-transform: uppercase;
           color: ${colors.textLight};
         }
@@ -1112,28 +1140,28 @@ export default function Page() {
           align-items: center;
           gap: 14px;
           width: max-content;
-          padding: 6px 0;
+          padding: 8px 0;
         }
 
         .ecosystemCard {
           display: flex;
           align-items: center;
           justify-content: center;
-          min-width: 220px;
+          min-width: 224px;
           min-height: 88px;
           border: 1px solid ${colors.border};
-          background: rgba(255,255,255,0.84);
-          border-radius: 22px;
+          background: rgba(255,255,255,0.86);
+          border-radius: 24px;
           padding: 18px 20px;
-          box-shadow: 0 10px 28px rgba(0,0,0,0.04);
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
+          box-shadow: 0 12px 28px rgba(10,14,22,0.05);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
         }
 
         .ecosystemLogoWrap {
           position: relative;
           width: 100%;
-          height: 40px;
+          height: 42px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1141,7 +1169,7 @@ export default function Page() {
 
         .ecosystemLogo {
           width: auto;
-          max-width: 132px;
+          max-width: 136px;
           height: auto;
           max-height: 34px;
           object-fit: contain;
@@ -1149,65 +1177,101 @@ export default function Page() {
 
         .ecosystemLogoBlend {
           mix-blend-mode: multiply;
-          opacity: 0.96;
+          opacity: 0.94;
         }
 
         .ecosystemCaption {
-          margin-top: 14px;
+          margin-top: 16px;
           text-align: center;
           font-size: 13px;
-          line-height: 1.76;
+          line-height: 1.82;
           color: ${colors.textLight};
-          max-width: 760px;
+          max-width: 780px;
           margin-left: auto;
           margin-right: auto;
         }
 
-        .phoneWrap {
+        .phoneShell {
+          position: relative;
           width: 100%;
           display: flex;
           justify-content: center;
           min-width: 0;
         }
 
+        .phoneFloatTag {
+          position: absolute;
+          z-index: 2;
+          display: inline-flex;
+          align-items: center;
+          padding: 10px 14px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.92);
+          border: 1px solid ${colors.border};
+          color: ${colors.textMuted};
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: 0.02em;
+          box-shadow: 0 14px 28px rgba(10,14,22,0.08);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          white-space: nowrap;
+        }
+
+        .phoneFloatTagLeft {
+          top: 16px;
+          left: -2px;
+        }
+
+        .phoneFloatTagRight {
+          bottom: 20px;
+          right: -4px;
+        }
+
         .phoneFrame {
-          width: min(100%, 360px);
-          background: white;
-          border: 2px solid ${colors.border};
-          border-radius: 44px;
+          width: min(100%, 374px);
+          border-radius: 46px;
           padding: 12px;
-          box-shadow: 0 34px 80px rgba(0,0,0,0.1);
+          border: 1.5px solid ${colors.border};
+          background: linear-gradient(180deg, #FFFFFF 0%, #FAF9F6 100%);
+          box-shadow:
+            0 24px 70px rgba(10,14,22,0.14),
+            inset 0 1px 0 rgba(255,255,255,0.85);
+          position: relative;
           flex-shrink: 1;
         }
 
         .phoneNotch {
-          width: 118px;
+          width: 122px;
           height: 28px;
           border-radius: 999px;
           background: ${colors.bgDark};
-          margin: 0 auto 8px;
+          margin: 0 auto 10px;
         }
 
         .phoneScreen {
-          background: #F7F7FB;
-          border-radius: 30px;
-          padding-bottom: 8px;
+          background: linear-gradient(180deg, #F8F8FC 0%, #F1F2F8 100%);
+          border-radius: 32px;
           overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          height: 600px;
         }
 
         .phoneHeader {
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 16px 18px;
-          background: ${colors.bgCard};
+          padding: 18px 18px 16px;
+          background: rgba(255,255,255,0.92);
           border-bottom: 1px solid ${colors.border};
+          flex: 0 0 auto;
         }
 
-        .phoneAvatarReal {
+        .phoneAvatar {
           position: relative;
-          width: 44px;
-          height: 44px;
+          width: 46px;
+          height: 46px;
           border-radius: 999px;
           overflow: hidden;
           flex-shrink: 0;
@@ -1215,11 +1279,184 @@ export default function Page() {
           background: #EDEFF5;
         }
 
-        .phoneBody {
+        .verifiedBadge {
+          width: 24px;
+          height: 24px;
+          border-radius: 999px;
+          background: ${colors.successSoft};
+          border: 1px solid rgba(22,163,74,0.16);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .liveStatus {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-top: 4px;
+          font-size: 11px;
+          color: ${colors.success};
+          font-weight: 700;
+        }
+
+        .liveDot {
+          width: 8px;
+          height: 8px;
+          border-radius: 999px;
+          background: ${colors.success};
+          display: inline-block;
+        }
+
+        .phoneConversation {
+          flex: 1 1 auto;
+          min-height: 0;
+          overflow: hidden;
+          padding: 16px 14px 8px;
+          display: flex;
+          align-items: flex-end;
+        }
+
+        .phoneConversationInner {
+          width: 100%;
+          height: 100%;
           display: flex;
           flex-direction: column;
+          justify-content: flex-end;
           gap: 10px;
-          padding: 16px;
+          overflow: hidden;
+        }
+
+        .phoneComposer {
+          flex: 0 0 auto;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 14px 14px;
+          background: rgba(255,255,255,0.82);
+          border-top: 1px solid rgba(228,222,209,0.8);
+        }
+
+        .phoneComposerPill {
+          flex: 1 1 auto;
+          min-width: 0;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          height: 44px;
+          border-radius: 999px;
+          background: rgba(248,249,252,0.96);
+          border: 1px solid ${colors.border};
+          padding: 0 14px;
+          color: ${colors.textLight};
+          font-size: 13px;
+          font-weight: 600;
+        }
+
+        .phoneComposerPlus {
+          width: 22px;
+          height: 22px;
+          border-radius: 999px;
+          background: ${colors.accentSoft};
+          color: ${colors.accent};
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 800;
+          flex-shrink: 0;
+        }
+
+        .phoneComposerText {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .phoneMic {
+          width: 44px;
+          height: 44px;
+          border-radius: 999px;
+          background: ${colors.bgDark};
+          color: white;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          box-shadow: 0 10px 22px rgba(10,14,22,0.18);
+        }
+
+        .promptCard {
+          background: rgba(255,255,255,0.82);
+          border: 1px solid ${colors.border};
+          border-radius: 30px;
+          padding: 24px;
+          box-shadow: 0 16px 34px rgba(10,14,22,0.05);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+        }
+
+        .promptTop {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        .promptTopLabel {
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: ${colors.textLight};
+        }
+
+        .promptTopHint {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 9px 12px;
+          border-radius: 999px;
+          background: ${colors.bgSoft};
+          border: 1px solid ${colors.border};
+          color: ${colors.textMuted};
+          font-size: 12px;
+          font-weight: 700;
+        }
+
+        .promptStage {
+          margin-top: 16px;
+          border: 1px solid ${colors.border};
+          background: linear-gradient(180deg, #FCFBF8 0%, #F8F6F0 100%);
+          border-radius: 22px;
+          height: 144px;
+          padding: 22px 20px;
+          display: flex;
+          align-items: flex-start;
+        }
+
+        .promptTyped {
+          font-size: 18px;
+          line-height: 1.72;
+          color: ${colors.text};
+          word-break: break-word;
+          overflow-wrap: anywhere;
+        }
+
+        .promptCaret {
+          display: inline-block;
+          width: 10px;
+          margin-left: 2px;
+          color: ${colors.accent};
+          animation: blink 1s step-end infinite;
+        }
+
+        .promptFooter {
+          margin-top: 14px;
+          font-size: 13px;
+          line-height: 1.8;
+          color: ${colors.textLight};
         }
 
         .featureList {
@@ -1264,17 +1501,19 @@ export default function Page() {
           grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 18px;
           align-items: stretch;
-          margin-top: 46px;
+          margin-top: 48px;
         }
 
         .workflowItem {
-          background: ${colors.bgCard};
+          background: rgba(255,255,255,0.82);
           border: 1px solid ${colors.border};
-          border-radius: 24px;
-          padding: 24px;
+          border-radius: 26px;
+          padding: 26px;
           position: relative;
           min-width: 0;
-          box-shadow: 0 10px 28px rgba(0,0,0,0.03);
+          box-shadow: 0 12px 28px rgba(10,14,22,0.04);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
         }
 
         .workflowArrow {
@@ -1300,7 +1539,7 @@ export default function Page() {
           background: #07080B;
           color: #E5E7EB;
           border: 1px solid #1F2330;
-          border-radius: 24px;
+          border-radius: 26px;
           overflow: hidden;
           box-shadow: 0 24px 60px rgba(0,0,0,0.22);
         }
@@ -1366,45 +1605,57 @@ export default function Page() {
         }
 
         .waitlistWrap {
-          background: rgba(255,255,255,0.9);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
+          background:
+            radial-gradient(circle at top right, rgba(41,100,234,0.05), transparent 24%),
+            radial-gradient(circle at top left, rgba(139,92,246,0.05), transparent 20%),
+            rgba(255,255,255,0.9);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
           border: 1px solid ${colors.border};
-          border-radius: 32px;
-          padding: 32px;
-          max-width: 900px;
+          border-radius: 34px;
+          padding: 34px;
+          max-width: 920px;
           margin: 0 auto;
           width: 100%;
           overflow: hidden;
           position: relative;
-          box-shadow: 0 24px 60px rgba(0,0,0,0.05);
+          box-shadow: 0 24px 60px rgba(10,14,22,0.06);
         }
 
         .waitlistForm {
           display: grid;
           grid-template-columns: 1.2fr 0.9fr auto;
           gap: 12px;
-          margin-top: 24px;
+          margin-top: 26px;
           width: 100%;
         }
 
         .inputBase {
           width: 100%;
           max-width: 100%;
-          height: 56px;
-          border-radius: 16px;
+          height: 58px;
+          border-radius: 18px;
           border: 1px solid ${colors.border};
-          background: ${colors.bgCard};
+          background: rgba(255,255,255,0.88);
           padding: 0 16px;
           font-size: 15px;
           color: ${colors.text};
           outline: none;
           min-width: 0;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
         }
 
         .inputBase:focus {
           border-color: ${colors.accent};
-          box-shadow: 0 0 0 4px rgba(37,99,235,0.08);
+          box-shadow: 0 0 0 4px rgba(41,100,234,0.08);
+        }
+
+        .roleNote {
+          margin-top: 14px;
+          text-align: center;
+          color: ${colors.textLight};
+          font-size: 13px;
+          line-height: 1.8;
         }
 
         .metricsGrid {
@@ -1413,15 +1664,17 @@ export default function Page() {
           gap: 1px;
           background: ${colors.border};
           border: 1px solid ${colors.border};
-          border-radius: 24px;
+          border-radius: 26px;
           overflow: hidden;
         }
 
         .metricCard {
-          background: ${colors.bgCard};
-          padding: 28px 20px;
+          background: rgba(255,255,255,0.82);
+          padding: 30px 20px;
           text-align: center;
           min-width: 0;
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
         }
 
         .footerRow {
@@ -1432,13 +1685,17 @@ export default function Page() {
           flex-wrap: wrap;
         }
 
-        .navCta {
-          min-width: 0;
-        }
+        .navCta { min-width: 0; }
+        .navCtaMobile { display: none; }
 
         @media (max-width: 1100px) {
           .heroWrap {
             grid-template-columns: 1fr;
+          }
+
+          .heroVisualPanel {
+            max-width: 520px;
+            margin: 0 auto;
           }
         }
 
@@ -1459,7 +1716,7 @@ export default function Page() {
           }
 
           .ecosystemCard {
-            min-width: 190px;
+            min-width: 194px;
             min-height: 82px;
           }
         }
@@ -1471,7 +1728,7 @@ export default function Page() {
           }
 
           .section {
-            padding: 70px 0;
+            padding: 74px 0;
           }
 
           .navLinks {
@@ -1479,7 +1736,7 @@ export default function Page() {
           }
 
           .heroTitle {
-            font-size: clamp(42px, 14vw, 66px);
+            font-size: clamp(44px, 14vw, 68px);
           }
 
           .heroBody {
@@ -1496,8 +1753,21 @@ export default function Page() {
             width: 100%;
           }
 
+          .heroVisualPanel {
+            padding: 16px;
+            border-radius: 30px;
+          }
+
           .phoneFrame {
-            width: min(100%, 344px);
+            width: min(100%, 350px);
+          }
+
+          .phoneScreen {
+            height: 560px;
+          }
+
+          .phoneFloatTag {
+            display: none;
           }
 
           .terminalCard,
@@ -1521,31 +1791,35 @@ export default function Page() {
           }
 
           .waitlistWrap {
-            padding: 22px;
+            padding: 24px;
+            border-radius: 28px;
           }
 
           .navCta {
             width: auto !important;
-            min-width: 162px;
+            min-width: 164px;
             max-width: 52vw;
             padding: 12px 16px !important;
             font-size: 14px !important;
             white-space: nowrap;
           }
 
+          .navCtaDesktop { display: none; }
+          .navCtaMobile { display: inline; }
+
           .ecosystemTrack {
             gap: 12px;
           }
 
           .ecosystemCard {
-            min-width: 168px;
+            min-width: 170px;
             min-height: 76px;
             padding: 14px 16px;
             border-radius: 18px;
           }
 
           .ecosystemLogo {
-            max-width: 110px;
+            max-width: 112px;
             max-height: 28px;
           }
         }
@@ -1563,6 +1837,34 @@ export default function Page() {
             font-size: 13px !important;
           }
 
+          .heroPills {
+            gap: 8px;
+          }
+
+          .heroPill {
+            width: 100%;
+            justify-content: center;
+          }
+
+          .phoneFrame {
+            width: min(100%, 338px);
+            padding: 10px;
+          }
+
+          .phoneScreen {
+            height: 540px;
+            border-radius: 28px;
+          }
+
+          .phoneNotch {
+            width: 112px;
+            height: 26px;
+          }
+
+          .promptStage {
+            height: 156px;
+          }
+
           .ecosystemCard {
             min-width: 152px;
           }
@@ -1571,7 +1873,7 @@ export default function Page() {
 
       <SuccessModal
         open={isSuccessOpen}
-        role={role}
+        role={submittedRole}
         onClose={() => setIsSuccessOpen(false)}
       />
 
@@ -1584,7 +1886,7 @@ export default function Page() {
             position: "sticky",
             top: 0,
             zIndex: 100,
-            background: `${colors.bg}EE`,
+            background: `${colors.bg}E8`,
             backdropFilter: "blur(14px)",
             WebkitBackdropFilter: "blur(14px)",
             borderBottom: `1px solid ${colors.border}`,
@@ -1622,7 +1924,7 @@ export default function Page() {
                   justifyContent: "center",
                   flexShrink: 0,
                   overflow: "hidden",
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                  boxShadow: "0 8px 24px rgba(10,14,22,0.08)",
                 }}
               >
                 <Image
@@ -1676,15 +1978,15 @@ export default function Page() {
             >
               {navItems.map((item) => (
                 <a
-                  key={item}
-                  href={`#${item.toLowerCase()}`}
+                  key={item.label}
+                  href={item.href}
                   style={{
                     fontSize: "14px",
                     fontWeight: 600,
                     color: colors.textMuted,
                   }}
                 >
-                  {item}
+                  {item.label}
                 </a>
               ))}
             </div>
@@ -1713,15 +2015,7 @@ export default function Page() {
           </div>
         </motion.nav>
 
-        <style>{`
-          .navCtaMobile { display: none; }
-          @media (max-width: 720px) {
-            .navCtaDesktop { display: none; }
-            .navCtaMobile { display: inline; }
-          }
-        `}</style>
-
-        <section className="section" style={{ paddingTop: "88px", paddingBottom: "46px" }}>
+        <section className="section" style={{ paddingTop: "92px", paddingBottom: "54px" }}>
           <div className="container">
             <div className="heroWrap">
               <div>
@@ -1736,7 +2030,7 @@ export default function Page() {
                         display: "inline-block",
                       }}
                     />
-                    Now onboarding people, providers, and developers
+                    Now onboarding patients, providers, and developers
                   </Badge>
                 </FadeIn>
 
@@ -1750,12 +2044,29 @@ export default function Page() {
                 <FadeIn delay={0.16}>
                   <p className="heroBody">
                     Laura gives people a clearer starting point, gives care teams faster intake and
-                    routing, and gives developers a care ready AI layer for products, workflows,
-                    and digital experiences.
+                    calmer routing, and gives developers a care ready AI layer for products,
+                    workflows, and modern digital experiences.
                   </p>
                 </FadeIn>
 
-                <FadeIn delay={0.24}>
+                <FadeIn delay={0.22}>
+                  <div className="heroPills">
+                    <div className="heroPill">
+                      <span className="heroPillDot" />
+                      Voice and chat ready
+                    </div>
+                    <div className="heroPill">
+                      <span className="heroPillDot" />
+                      Care navigation support
+                    </div>
+                    <div className="heroPill">
+                      <span className="heroPillDot" />
+                      Built for modern infrastructure
+                    </div>
+                  </div>
+                </FadeIn>
+
+                <FadeIn delay={0.28}>
                   <div className="heroButtons">
                     <a href="#waitlist" className="btnPrimary">
                       Get early access
@@ -1781,12 +2092,14 @@ export default function Page() {
                 </FadeIn>
               </div>
 
-              <FadeIn delay={0.16}>
-                <PhoneMockup />
+              <FadeIn delay={0.14}>
+                <div className="heroVisualPanel">
+                  <PhoneMockup />
+                </div>
               </FadeIn>
             </div>
 
-            <FadeIn delay={0.28}>
+            <FadeIn delay={0.32}>
               <div className="trustedHeader">Designed for the systems behind modern care</div>
 
               <EcosystemMarquee logos={ecosystemLogos} />
@@ -1799,7 +2112,7 @@ export default function Page() {
           </div>
         </section>
 
-        <section className="section" style={{ paddingTop: "36px" }}>
+        <section className="section" style={{ paddingTop: "38px" }}>
           <div className="container">
             <FadeIn>
               <SectionHeading
@@ -1809,17 +2122,27 @@ export default function Page() {
               />
             </FadeIn>
 
-            <div className="grid3" style={{ marginTop: "48px" }}>
-              {audienceCards.map((card, i) => (
-                <FadeIn key={card.title} delay={i * 0.08}>
+            <div className="grid3" style={{ marginTop: "50px" }}>
+              {audienceCards.map((card, index) => (
+                <FadeIn key={card.title} delay={index * 0.08}>
                   <div className="card">
                     <div
                       style={{
-                        width: "48px",
-                        height: "48px",
-                        borderRadius: "16px",
-                        background: colors.accentSoft,
-                        color: colors.accent,
+                        width: "50px",
+                        height: "50px",
+                        borderRadius: "18px",
+                        background:
+                          index === 1
+                            ? colors.purpleSoft
+                            : index === 2
+                            ? colors.bgSoft
+                            : colors.accentSoft,
+                        color:
+                          index === 1
+                            ? colors.purple
+                            : index === 2
+                            ? colors.textMuted
+                            : colors.accent,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -1827,7 +2150,7 @@ export default function Page() {
                         fontWeight: 800,
                       }}
                     >
-                      {i + 1}
+                      {index + 1}
                     </div>
 
                     <h3
@@ -1846,7 +2169,7 @@ export default function Page() {
                         marginTop: "10px",
                         color: colors.textMuted,
                         fontSize: "15px",
-                        lineHeight: 1.8,
+                        lineHeight: 1.84,
                       }}
                     >
                       {card.desc}
@@ -1878,8 +2201,8 @@ export default function Page() {
                     className="serif"
                     style={{
                       fontSize: "clamp(30px, 5vw, 54px)",
-                      lineHeight: 1.06,
-                      letterSpacing: "-0.04em",
+                      lineHeight: 1.05,
+                      letterSpacing: "-0.045em",
                       marginTop: "18px",
                     }}
                   >
@@ -1891,11 +2214,11 @@ export default function Page() {
                       marginTop: "16px",
                       color: colors.textMuted,
                       fontSize: "17px",
-                      lineHeight: 1.84,
+                      lineHeight: 1.88,
                       maxWidth: "560px",
                     }}
                   >
-                    Laura gives people a clear starting point. Ask questions in plain language,
+                    Laura gives people a calmer first step. Ask questions in plain language,
                     understand what may matter, get guided next steps, and move faster toward the
                     right kind of care.
                   </p>
@@ -1918,7 +2241,7 @@ export default function Page() {
           </div>
         </section>
 
-        <section id="providers" className="section" style={{ paddingTop: "22px" }}>
+        <section id="providers" className="section" style={{ paddingTop: "26px" }}>
           <div className="container">
             <FadeIn>
               <SectionHeading
@@ -1929,10 +2252,10 @@ export default function Page() {
             </FadeIn>
 
             <div className="workflowGrid">
-              {workflowItems.map((item, i) => (
-                <FadeIn key={item.title} delay={i * 0.08}>
+              {workflowItems.map((item, index) => (
+                <FadeIn key={item.title} delay={index * 0.08}>
                   <div className="workflowItem">
-                    {i < workflowItems.length - 1 ? (
+                    {index < workflowItems.length - 1 ? (
                       <div className="workflowArrow">
                         <svg
                           width="16"
@@ -1959,7 +2282,7 @@ export default function Page() {
                         color: colors.textLight,
                       }}
                     >
-                      Step {i + 1}
+                      Step {index + 1}
                     </div>
 
                     <h3
@@ -1979,7 +2302,7 @@ export default function Page() {
                         marginTop: "12px",
                         color: colors.textMuted,
                         fontSize: "15px",
-                        lineHeight: 1.82,
+                        lineHeight: 1.84,
                       }}
                     >
                       {item.body}
@@ -1994,7 +2317,7 @@ export default function Page() {
         <section
           id="developers"
           className="section"
-          style={{ background: colors.bgDark, color: "#fff" }}
+          style={{ background: colors.bgDark, color: "#FFFFFF" }}
         >
           <div className="container">
             <FadeIn>
@@ -2011,7 +2334,7 @@ export default function Page() {
               />
             </FadeIn>
 
-            <div className="grid2" style={{ marginTop: "48px", alignItems: "center" }}>
+            <div className="grid2" style={{ marginTop: "50px", alignItems: "center" }}>
               <FadeIn>
                 <CodeBlock />
               </FadeIn>
@@ -2032,7 +2355,7 @@ export default function Page() {
                   <p
                     style={{
                       marginTop: "14px",
-                      color: "rgba(255,255,255,0.68)",
+                      color: "rgba(255,255,255,0.7)",
                       fontSize: "15px",
                       lineHeight: 1.96,
                       maxWidth: "560px",
@@ -2052,7 +2375,7 @@ export default function Page() {
                       >
                         <span
                           className="dotCheck"
-                          style={{ background: "rgba(37,99,235,0.16)", color: "#60A5FA" }}
+                          style={{ background: "rgba(41,100,234,0.16)", color: "#7FB0FF" }}
                         >
                           ✓
                         </span>
@@ -2071,7 +2394,7 @@ export default function Page() {
                       borderRadius: "999px",
                       border: "1px solid rgba(255,255,255,0.1)",
                       background: "rgba(255,255,255,0.04)",
-                      color: "rgba(255,255,255,0.8)",
+                      color: "rgba(255,255,255,0.82)",
                       fontSize: "13px",
                       fontWeight: 700,
                       maxWidth: "100%",
@@ -2095,16 +2418,18 @@ export default function Page() {
               />
             </FadeIn>
 
-            <div className="grid3" style={{ marginTop: "48px" }}>
-              {pricingPlans.map((plan, i) => (
-                <FadeIn key={plan.name} delay={i * 0.08}>
+            <div className="grid3" style={{ marginTop: "50px" }}>
+              {pricingPlans.map((plan, index) => (
+                <FadeIn key={plan.name} delay={index * 0.08}>
                   <div
                     className="card"
                     style={{
-                      background: plan.highlighted ? colors.bgDark : colors.bgCard,
-                      color: plan.highlighted ? "#fff" : colors.text,
+                      background: plan.highlighted
+                        ? "linear-gradient(180deg, #0C0F16 0%, #151A25 100%)"
+                        : "rgba(255,255,255,0.82)",
+                      color: plan.highlighted ? "#FFFFFF" : colors.text,
                       border: plan.highlighted ? "none" : `1px solid ${colors.border}`,
-                      boxShadow: plan.highlighted ? "0 24px 60px rgba(0,0,0,0.16)" : "none",
+                      boxShadow: plan.highlighted ? "0 28px 60px rgba(10,14,22,0.16)" : undefined,
                       position: "relative",
                     }}
                   >
@@ -2168,7 +2493,7 @@ export default function Page() {
                         marginTop: "10px",
                         color: plan.highlighted ? "rgba(255,255,255,0.68)" : colors.textMuted,
                         fontSize: "14px",
-                        lineHeight: 1.82,
+                        lineHeight: 1.84,
                       }}
                     >
                       {plan.desc}
@@ -2200,9 +2525,9 @@ export default function Page() {
                             className="dotCheck"
                             style={{
                               background: plan.highlighted
-                                ? "rgba(96,165,250,0.12)"
+                                ? "rgba(127,176,255,0.12)"
                                 : colors.accentSoft,
-                              color: plan.highlighted ? "#60A5FA" : colors.accent,
+                              color: plan.highlighted ? "#7FB0FF" : colors.accent,
                             }}
                           >
                             ✓
@@ -2218,8 +2543,8 @@ export default function Page() {
                       style={{
                         marginTop: "24px",
                         width: "100%",
-                        background: plan.highlighted ? "#fff" : colors.bgDark,
-                        color: plan.highlighted ? colors.bgDark : "#fff",
+                        background: plan.highlighted ? "#FFFFFF" : colors.bgDark,
+                        color: plan.highlighted ? colors.bgDark : "#FFFFFF",
                         border: "none",
                       }}
                     >
@@ -2253,7 +2578,7 @@ export default function Page() {
                         marginTop: "10px",
                         fontSize: "13px",
                         color: colors.textMuted,
-                        lineHeight: 1.6,
+                        lineHeight: 1.7,
                       }}
                     >
                       {metric.label}
@@ -2272,7 +2597,7 @@ export default function Page() {
                 <SectionHeading
                   badge="Get early access"
                   title={<>Join the next wave of Laura users.</>}
-                  body="Choose how you want to use Laura. Join as a person, provider, or developer and we will tailor the next step."
+                  body="Choose how you want to use Laura. Join as a patient, provider, or developer and we will tailor the next step."
                 />
 
                 <form className="waitlistForm" onSubmit={handleWaitlistSubmit}>
@@ -2317,27 +2642,17 @@ export default function Page() {
                   <button
                     type="submit"
                     className="btnPrimary"
-                    style={{ height: "56px" }}
+                    style={{ height: "58px" }}
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? "Submitting..." : "Get early access"}
                   </button>
                 </form>
 
-                <div
-                  style={{
-                    marginTop: "14px",
-                    textAlign: "center",
-                    color: colors.textLight,
-                    fontSize: "13px",
-                    lineHeight: 1.7,
-                  }}
-                >
+                <div className="roleNote">
                   Selected role:{" "}
-                  <strong style={{ color: colors.text }}>
-                    {role.charAt(0).toUpperCase() + role.slice(1)}
-                  </strong>{" "}
-                  · Early access requests help us prioritize launch order.
+                  <strong style={{ color: colors.text }}>{roleLabels[role]}</strong> ·{" "}
+                  {roleNotes[role]}
                 </div>
 
                 {successMessage ? (
@@ -2416,13 +2731,13 @@ export default function Page() {
               </div>
 
               <div style={{ display: "flex", gap: "18px", flexWrap: "wrap" }}>
-                {["People", "Providers", "Developers", "Pricing"].map((item) => (
+                {navItems.map((item) => (
                   <a
-                    key={item}
-                    href={`#${item.toLowerCase()}`}
+                    key={item.label}
+                    href={item.href}
                     style={{ fontSize: "13px", color: colors.textLight, fontWeight: 600 }}
                   >
-                    {item}
+                    {item.label}
                   </a>
                 ))}
               </div>
