@@ -277,8 +277,8 @@ export default function Page() {
   const metrics = [{ v: "24/7", l: "Always-on access" }, { v: "40+", l: "Supported languages" }, { v: "<2s", l: "Average response time" }, { v: "Text first", l: "Chat-led care access" }];
   const plans = [
     { name: "Public Access", price: "\u00A33.99", period: "/mo", desc: "For people who want direct access to Laura for care guidance and provider discovery.", ft: ["Symptom guidance", "Urgency routing", "GP and dental discovery", "Callback requests"], hl: false, cta: "Join waitlist" },
-    { name: "Provider", price: "\u00A31,250", period: "/mo", desc: "For clinics and practices using Laura to manage intake and access.", ft: ["Structured intake", "Admin dashboard", "Multilingual support", "Request management"], hl: true, badge: "Best for care teams", cta: "Request demo" },
-    { name: "Developer", price: "\u00A31,999.99", period: "/mo", desc: "For teams building on Laura with API, SDK, and embeddable components.", ft: ["API and SDK access", "Embeddable components", "Usage analytics", "Technical onboarding"], hl: false, cta: "Talk to us" },
+    { name: "Provider", price: "\u00A31,999.99", period: "/mo", desc: "For clinics and practices using Laura to manage intake and access.", ft: ["Structured intake", "Admin dashboard", "Multilingual support", "Request management"], hl: true, badge: "Best for care teams", cta: "Request demo" },
+    { name: "Developer", price: "\u00A35,999.99", period: "/mo", desc: "For teams building on Laura with API, SDK, and embeddable components.", ft: ["API and SDK access", "Embeddable components", "Usage analytics", "Technical onboarding"], hl: false, cta: "Talk to us" },
   ];
   const pubUC = ["Describe symptoms and get structured guidance", "Find nearby GP or dental practices by postcode", "Request a callback or booking handoff"];
 
