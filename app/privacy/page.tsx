@@ -399,7 +399,7 @@ export default function PrivacyPage() {
                   <p style={{ marginBottom: 0 }}>
                     <strong>Contact email:</strong> notice@omela.ai
                     <br />
-                    <strong>Business address:</strong> London
+                    <strong>Business address:</strong> United Kingdom
                     <br />
                     <strong>Website:</strong> <a href="https://omela.ai">https://omela.ai</a>
                   </p>
