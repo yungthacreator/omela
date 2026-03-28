@@ -3,7 +3,6 @@
 import Image from "next/image";
 import {
   useEffect,
-  useMemo,
   useRef,
   useState,
   type FormEvent,
@@ -19,21 +18,21 @@ const colors = {
   bg: "#F7F4ED",
   bgSoft: "#F2EEE5",
   bgCard: "#FFFFFF",
-  bgCardSoft: "rgba(255,255,255,0.78)",
-  bgDark: "#090B10",
-  bgDarkSoft: "#11141C",
-  text: "#151821",
-  textMuted: "#606877",
-  textLight: "#949CAC",
-  border: "#E4DED1",
-  borderStrong: "#D8D0C0",
-  borderDark: "#232837",
-  accent: "#2964EA",
-  accentSoft: "#EDF3FF",
+  bgCardSoft: "rgba(255,255,255,0.82)",
+  bgDark: "#09111F",
+  bgDarkSoft: "#0F172A",
+  text: "#161922",
+  textMuted: "#626A79",
+  textLight: "#959DAC",
+  border: "#E5DED1",
+  borderStrong: "#D8D0C2",
+  borderDark: "rgba(255,255,255,0.1)",
+  accent: "#2F6BEA",
+  accentSoft: "#EEF4FF",
   success: "#16A34A",
   successSoft: "#EAF8EE",
   purple: "#8B5CF6",
-  purpleSoft: "#F3EEFF",
+  purpleSoft: "#F4EEFF",
 };
 
 type FadeInProps = {
@@ -43,6 +42,7 @@ type FadeInProps = {
 };
 
 type RoleKey = "patient" | "provider" | "developer";
+type Tone = "light" | "dark";
 
 type PhoneMessage = {
   from: "user" | "laura";
@@ -73,26 +73,62 @@ const roleLabels: Record<RoleKey, string> = {
 };
 
 const roleNotes: Record<RoleKey, string> = {
-  patient: "You will hear about consumer access, guided care experiences, and Laura rollout windows.",
-  provider: "You will hear about care team onboarding, workflow access, and provider demos as capacity opens.",
-  developer: "You will hear about API access, integration previews, and technical onboarding as tools become available.",
+  patient:
+    "You will hear about consumer access, guided care experiences, and Laura rollout windows.",
+  provider:
+    "You will hear about care team onboarding, workflow access, and provider demos as capacity opens.",
+  developer:
+    "You will hear about API access, integration previews, and technical onboarding as tools become available.",
 };
 
 const audienceCards = [
   {
     title: "For people",
     desc: "Laura gives people a clearer first step for symptoms, everyday health questions, care navigation, and appointment support.",
-    bullets: ["Symptom guidance", "Health questions", "Care navigation", "Booking support"],
+    bullets: [
+      "Symptom guidance",
+      "Health questions",
+      "Care navigation",
+      "Booking support",
+    ],
   },
   {
     title: "For providers",
     desc: "Laura helps care teams reduce front desk pressure, improve intake quality, and support access with calmer operations.",
-    bullets: ["Voice and chat intake", "Scheduling support", "Triage support", "Multilingual access"],
+    bullets: [
+      "Voice and chat intake",
+      "Scheduling support",
+      "Triage support",
+      "Multilingual access",
+    ],
   },
   {
     title: "For developers",
     desc: "Laura can be embedded into apps, workflows, and digital health products through APIs, SDKs, and adaptable components.",
-    bullets: ["API and SDK access", "Embeddable widgets", "Workflow triggers", "Secure logs"],
+    bullets: [
+      "API and SDK access",
+      "Embeddable widgets",
+      "Workflow triggers",
+      "Secure logs",
+    ],
+  },
+];
+
+const heroSignals = [
+  {
+    kind: "voice" as const,
+    title: "Voice and chat ready",
+    desc: "Designed for conversational care access across text and spoken interactions.",
+  },
+  {
+    kind: "care" as const,
+    title: "Care navigation support",
+    desc: "Helps guide people toward the right next step with clearer routing.",
+  },
+  {
+    kind: "infra" as const,
+    title: "Built for modern infrastructure",
+    desc: "Structured for product teams, cloud systems, and real operational workflows.",
   },
 ];
 
@@ -137,7 +173,12 @@ const pricingPlans = [
     price: "£3.99",
     period: "/mo",
     desc: "For people who want direct access to Laura for guidance, health questions, and care navigation.",
-    features: ["Symptom guidance", "Everyday health questions", "Care navigation", "Booking support"],
+    features: [
+      "Symptom guidance",
+      "Everyday health questions",
+      "Care navigation",
+      "Booking support",
+    ],
     highlighted: false,
     cta: "Join waitlist",
   },
@@ -146,7 +187,12 @@ const pricingPlans = [
     price: "£1,250",
     period: "/mo",
     desc: "For clinics and care teams using Laura in intake, routing, and patient communication workflows.",
-    features: ["Voice and chat intake", "Scheduling workflows", "Multilingual support", "Provider dashboard"],
+    features: [
+      "Voice and chat intake",
+      "Scheduling workflows",
+      "Multilingual support",
+      "Provider dashboard",
+    ],
     highlighted: true,
     badge: "Best for care teams",
     cta: "Request demo",
@@ -156,7 +202,12 @@ const pricingPlans = [
     price: "Custom",
     period: "",
     desc: "For product teams embedding Laura into apps, marketplaces, and digital healthcare experiences.",
-    features: ["API and SDK access", "Embeddable components", "Usage analytics", "Technical onboarding"],
+    features: [
+      "API and SDK access",
+      "Embeddable components",
+      "Usage analytics",
+      "Technical onboarding",
+    ],
     highlighted: false,
     cta: "Talk to us",
   },
@@ -164,13 +215,56 @@ const pricingPlans = [
 
 const ecosystemLogos: EcosystemLogoItem[] = [
   { name: "AWS", src: "/logos/aws-logo.png", width: 126, height: 34, scale: 1 },
-  { name: "Microsoft", src: "/logos/microsoft-logo.png", width: 132, height: 30, scale: 1 },
-  { name: "Google", src: "/logos/google-logo.png", width: 120, height: 38, scale: 1 },
-  { name: "Salesforce", src: "/logos/salesforce-logo.png", width: 104, height: 34, scale: 1.18 },
-  { name: "Twilio", src: "/logos/twilio-logo.png", width: 110, height: 28, scale: 1.05 },
-  { name: "Epic", src: "/logos/epic-logo.png", width: 88, height: 26, scale: 1.04 },
-  { name: "Veradigm", src: "/logos/veradigm-logo.png", width: 132, height: 28, scale: 1.02 },
-  { name: "GitHub", src: "/logos/github-logo.png", width: 108, height: 30, blend: true, scale: 1.02 },
+  {
+    name: "Microsoft",
+    src: "/logos/microsoft-logo.png",
+    width: 132,
+    height: 30,
+    scale: 1,
+  },
+  {
+    name: "Google",
+    src: "/logos/google-logo.png",
+    width: 120,
+    height: 38,
+    scale: 1,
+  },
+  {
+    name: "Salesforce",
+    src: "/logos/salesforce-logo.png",
+    width: 104,
+    height: 34,
+    scale: 1.18,
+  },
+  {
+    name: "Twilio",
+    src: "/logos/twilio-logo.png",
+    width: 110,
+    height: 28,
+    scale: 1.05,
+  },
+  {
+    name: "Epic",
+    src: "/logos/epic-logo.png",
+    width: 88,
+    height: 26,
+    scale: 1.04,
+  },
+  {
+    name: "Veradigm",
+    src: "/logos/veradigm-logo.png",
+    width: 132,
+    height: 28,
+    scale: 1.02,
+  },
+  {
+    name: "GitHub",
+    src: "/logos/github-logo.png",
+    width: 108,
+    height: 30,
+    blend: true,
+    scale: 1.02,
+  },
 ];
 
 function FadeIn({ children, delay = 0, className = "" }: FadeInProps) {
@@ -190,7 +284,15 @@ function FadeIn({ children, delay = 0, className = "" }: FadeInProps) {
   );
 }
 
-function Badge({ children }: { children: ReactNode }) {
+function Badge({
+  children,
+  tone = "light",
+}: {
+  children: ReactNode;
+  tone?: Tone;
+}) {
+  const isDark = tone === "dark";
+
   return (
     <div
       style={{
@@ -199,13 +301,13 @@ function Badge({ children }: { children: ReactNode }) {
         gap: "8px",
         padding: "10px 16px",
         borderRadius: "999px",
-        border: `1px solid ${colors.border}`,
-        background: "rgba(255,255,255,0.72)",
+        border: `1px solid ${isDark ? "rgba(255,255,255,0.14)" : colors.border}`,
+        background: isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.74)",
         backdropFilter: "blur(10px)",
         WebkitBackdropFilter: "blur(10px)",
         fontSize: "13px",
         fontWeight: 700,
-        color: colors.textMuted,
+        color: isDark ? "rgba(255,255,255,0.78)" : colors.textMuted,
         maxWidth: "100%",
       }}
     >
@@ -218,14 +320,18 @@ function SectionHeading({
   badge,
   title,
   body,
+  tone = "light",
 }: {
   badge?: string;
   title: ReactNode;
   body?: string;
+  tone?: Tone;
 }) {
+  const isDark = tone === "dark";
+
   return (
     <div style={{ textAlign: "center", maxWidth: "820px", margin: "0 auto" }}>
-      {badge ? <Badge>{badge}</Badge> : null}
+      {badge ? <Badge tone={tone}>{badge}</Badge> : null}
 
       <h2
         className="serif"
@@ -234,7 +340,7 @@ function SectionHeading({
           lineHeight: 1.02,
           letterSpacing: "-0.05em",
           marginTop: badge ? "18px" : 0,
-          color: colors.text,
+          color: isDark ? "#FFFFFF" : colors.text,
         }}
       >
         {title}
@@ -245,7 +351,7 @@ function SectionHeading({
           style={{
             fontSize: "17px",
             lineHeight: 1.88,
-            color: colors.textMuted,
+            color: isDark ? "rgba(255,255,255,0.72)" : colors.textMuted,
             marginTop: "16px",
           }}
         >
@@ -256,15 +362,59 @@ function SectionHeading({
   );
 }
 
-function TypewriterPrompts() {
-  const prompts = useMemo(
-    () => [
-      "Can you help me understand what my symptoms might mean?",
-      "Book the earliest available appointment near me.",
-      "Can you explain this prescription in simpler language?",
-    ],
-    []
+function HeroSignalIcon({
+  kind,
+}: {
+  kind: "voice" | "care" | "infra";
+}) {
+  if (kind === "voice") {
+    return (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+          d="M12 15a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+        <path
+          d="M19 11.5a7 7 0 0 1-14 0"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        <path d="M12 18.5V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (kind === "care") {
+    return (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+          d="M12 21s-6.5-4.35-8.5-8.08C1.9 10 3.2 6.5 6.6 5.7c2.1-.5 4.1.42 5.4 2.1 1.3-1.68 3.3-2.6 5.4-2.1 3.4.8 4.7 4.3 3.1 7.22C18.5 16.65 12 21 12 21Z"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="4" y="4" width="7" height="7" rx="2" stroke="currentColor" strokeWidth="2" />
+      <rect x="13" y="4" width="7" height="7" rx="2" stroke="currentColor" strokeWidth="2" />
+      <rect x="4" y="13" width="7" height="7" rx="2" stroke="currentColor" strokeWidth="2" />
+      <rect x="13" y="13" width="7" height="7" rx="2" stroke="currentColor" strokeWidth="2" />
+    </svg>
   );
+}
+
+function TypewriterPrompts() {
+  const prompts = [
+    "Can you help me understand what my symptoms might mean?",
+    "Book the earliest available appointment near me.",
+    "Can you explain this prescription in simpler language?",
+  ];
 
   const [promptIndex, setPromptIndex] = useState(0);
   const [typed, setTyped] = useState("");
@@ -294,7 +444,7 @@ function TypewriterPrompts() {
     }, speed);
 
     return () => window.clearTimeout(timer);
-  }, [typed, deleting, promptIndex, prompts]);
+  }, [typed, deleting, promptIndex]);
 
   return (
     <div className="promptCard">
@@ -311,7 +461,8 @@ function TypewriterPrompts() {
       </div>
 
       <div className="promptFooter">
-        Laura responds in plain language and helps route the next step with a calmer starting point.
+        Laura responds in plain language and helps route the next step with a calmer
+        starting point.
       </div>
     </div>
   );
@@ -370,29 +521,26 @@ function MessageMeta({
 }
 
 function PhoneMockup() {
-  const messages = useMemo<PhoneMessage[]>(
-    () => [
-      {
-        from: "user",
-        text: "I have a sore throat, fever, and I feel weak. What should I do?",
-        status: "Seen",
-      },
-      {
-        from: "laura",
-        text: "I can help you think through the next step. Based on what you shared, you may need same day clinical advice if the fever is persistent.",
-      },
-      {
-        from: "user",
-        text: "Can you book the earliest appointment near me?",
-        status: "Delivered",
-      },
-      {
-        from: "laura",
-        text: "Yes. I found an available slot tomorrow at 9:30 AM. I can also guide you on self care until then.",
-      },
-    ],
-    []
-  );
+  const messages: PhoneMessage[] = [
+    {
+      from: "user",
+      text: "I have a sore throat, fever, and I feel weak. What should I do?",
+      status: "Seen",
+    },
+    {
+      from: "laura",
+      text: "I can help you think through the next step. Based on what you shared, you may need same day clinical advice if the fever is persistent.",
+    },
+    {
+      from: "user",
+      text: "Can you book the earliest appointment near me?",
+      status: "Delivered",
+    },
+    {
+      from: "laura",
+      text: "Yes. I found an available slot tomorrow at 9:30 AM. I can also guide you on self care until then.",
+    },
+  ];
 
   const [displayed, setDisplayed] = useState<string[]>(Array(messages.length).fill(""));
   const [activeIndex, setActiveIndex] = useState(0);
@@ -424,7 +572,7 @@ function PhoneMockup() {
     }
 
     return () => window.clearTimeout(timer);
-  }, [activeIndex, displayed, messages]);
+  }, [activeIndex, displayed]);
 
   return (
     <div className="phoneShell">
@@ -593,15 +741,11 @@ function CodeBlock() {
 }
 
 function EcosystemMarquee({ logos }: { logos: EcosystemLogoItem[] }) {
-  const items = useMemo(() => [...logos, ...logos], [logos]);
+  const items = [...logos, ...logos];
 
   return (
     <div className="ecosystemMarqueeShell" aria-label="Platform ecosystem">
-      <motion.div
-        className="ecosystemTrack"
-        animate={{ x: ["0%", "-50%"] }}
-        transition={{ duration: 26, ease: "linear", repeat: Infinity }}
-      >
+      <div className="ecosystemTrack">
         {items.map((logo, index) => (
           <div key={`${logo.name}-${index}`} className="ecosystemCard" aria-label={logo.name}>
             <div className="ecosystemLogoWrap">
@@ -618,7 +762,7 @@ function EcosystemMarquee({ logos }: { logos: EcosystemLogoItem[] }) {
             </div>
           </div>
         ))}
-      </motion.div>
+      </div>
     </div>
   );
 }
@@ -849,7 +993,7 @@ export default function Page() {
 
       setSubmittedRole(currentRole);
       setSuccessMessage(
-        data.message || "You are in. Laura will reach out as early access opens."
+        data.message || "You're in. Laura will reach out as early access opens."
       );
       setEmail("");
       setRole("patient");
@@ -876,7 +1020,7 @@ export default function Page() {
         body {
           background:
             radial-gradient(circle at top left, rgba(139,92,246,0.06), transparent 26%),
-            radial-gradient(circle at top right, rgba(41,100,234,0.06), transparent 22%),
+            radial-gradient(circle at top right, rgba(47,107,234,0.06), transparent 22%),
             ${colors.bg};
           color: ${colors.text};
           font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -891,6 +1035,11 @@ export default function Page() {
         @keyframes blink {
           0%, 50% { opacity: 1; }
           50.01%, 100% { opacity: 0; }
+        }
+
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
         }
 
         .serif {
@@ -926,7 +1075,7 @@ export default function Page() {
           height: 340px;
           top: 540px;
           right: -120px;
-          background: rgba(41,100,234,0.08);
+          background: rgba(47,107,234,0.08);
         }
 
         .container {
@@ -960,7 +1109,7 @@ export default function Page() {
 
         .btnPrimary:hover {
           transform: translateY(-1px);
-          background: #141821;
+          background: #13203A;
           box-shadow: 0 14px 30px rgba(0,0,0,0.14);
         }
 
@@ -1040,7 +1189,7 @@ export default function Page() {
 
         .heroWrap {
           display: grid;
-          grid-template-columns: 1.05fr 0.95fr;
+          grid-template-columns: 1.04fr 0.96fr;
           gap: 56px;
           align-items: center;
         }
@@ -1053,7 +1202,7 @@ export default function Page() {
         }
 
         .heroAccent {
-          color: rgba(41,100,234,0.62);
+          color: rgba(47,107,234,0.64);
           font-style: italic;
           display: block;
         }
@@ -1073,34 +1222,51 @@ export default function Page() {
           margin-top: 34px;
         }
 
-        .heroPills {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          margin-top: 22px;
+        .heroSignalGrid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 14px;
+          margin-top: 24px;
         }
 
-        .heroPill {
+        .heroSignalCard {
+          display: flex;
+          gap: 12px;
+          align-items: flex-start;
+          padding: 16px;
+          border-radius: 22px;
+          border: 1px solid ${colors.border};
+          background: rgba(255,255,255,0.78);
+          box-shadow: 0 12px 28px rgba(10,14,22,0.04);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+        }
+
+        .heroSignalIcon {
+          width: 40px;
+          height: 40px;
+          min-width: 40px;
+          border-radius: 14px;
           display: inline-flex;
           align-items: center;
-          gap: 8px;
-          padding: 10px 14px;
-          border-radius: 999px;
-          background: rgba(255,255,255,0.66);
-          border: 1px solid ${colors.border};
-          color: ${colors.textMuted};
-          font-size: 13px;
-          font-weight: 700;
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
+          justify-content: center;
+          background: linear-gradient(180deg, #EFF4FF 0%, #DDE9FF 100%);
+          color: ${colors.accent};
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
         }
 
-        .heroPillDot {
-          width: 7px;
-          height: 7px;
-          border-radius: 999px;
-          background: ${colors.accent};
-          display: inline-block;
+        .heroSignalTitle {
+          font-size: 15px;
+          font-weight: 800;
+          line-height: 1.25;
+          color: ${colors.text};
+        }
+
+        .heroSignalDesc {
+          margin-top: 6px;
+          font-size: 13px;
+          line-height: 1.68;
+          color: ${colors.textMuted};
         }
 
         .heroVisualPanel {
@@ -1110,7 +1276,7 @@ export default function Page() {
           border: 1px solid ${colors.border};
           background:
             radial-gradient(circle at top, rgba(139,92,246,0.06), transparent 30%),
-            linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.66) 100%);
+            linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.68) 100%);
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
           box-shadow: 0 30px 80px rgba(10,14,22,0.08);
@@ -1141,6 +1307,8 @@ export default function Page() {
           gap: 14px;
           width: max-content;
           padding: 8px 0;
+          animation: marquee 26s linear infinite;
+          will-change: transform;
         }
 
         .ecosystemCard {
@@ -1210,7 +1378,7 @@ export default function Page() {
           border: 1px solid ${colors.border};
           color: ${colors.textMuted};
           font-size: 12px;
-          font-weight: 800;
+          fontWeight: 800;
           letter-spacing: 0.02em;
           box-shadow: 0 14px 28px rgba(10,14,22,0.08);
           backdrop-filter: blur(10px);
@@ -1533,6 +1701,14 @@ export default function Page() {
           z-index: 2;
         }
 
+        .developerSection {
+          background:
+            radial-gradient(circle at 18% 20%, rgba(47,107,234,0.18), transparent 24%),
+            radial-gradient(circle at 82% 18%, rgba(139,92,246,0.14), transparent 24%),
+            linear-gradient(180deg, #0B1220 0%, #0F1B32 100%);
+          color: #FFFFFF;
+        }
+
         .terminalCard {
           width: 100%;
           max-width: 100%;
@@ -1606,7 +1782,7 @@ export default function Page() {
 
         .waitlistWrap {
           background:
-            radial-gradient(circle at top right, rgba(41,100,234,0.05), transparent 24%),
+            radial-gradient(circle at top right, rgba(47,107,234,0.05), transparent 24%),
             radial-gradient(circle at top left, rgba(139,92,246,0.05), transparent 20%),
             rgba(255,255,255,0.9);
           backdrop-filter: blur(14px);
@@ -1647,7 +1823,7 @@ export default function Page() {
 
         .inputBase:focus {
           border-color: ${colors.accent};
-          box-shadow: 0 0 0 4px rgba(41,100,234,0.08);
+          box-shadow: 0 0 0 4px rgba(47,107,234,0.08);
         }
 
         .roleNote {
@@ -1696,6 +1872,10 @@ export default function Page() {
           .heroVisualPanel {
             max-width: 520px;
             margin: 0 auto;
+          }
+
+          .heroSignalGrid {
+            grid-template-columns: 1fr;
           }
         }
 
@@ -1756,6 +1936,31 @@ export default function Page() {
           .heroVisualPanel {
             padding: 16px;
             border-radius: 30px;
+          }
+
+          .heroSignalGrid {
+            gap: 12px;
+          }
+
+          .heroSignalCard {
+            padding: 16px 15px;
+            border-radius: 20px;
+          }
+
+          .heroSignalIcon {
+            width: 42px;
+            height: 42px;
+            min-width: 42px;
+            border-radius: 14px;
+          }
+
+          .heroSignalTitle {
+            font-size: 15px;
+          }
+
+          .heroSignalDesc {
+            font-size: 12px;
+            line-height: 1.65;
           }
 
           .phoneFrame {
@@ -1835,15 +2040,6 @@ export default function Page() {
             max-width: 48vw;
             padding: 11px 14px !important;
             font-size: 13px !important;
-          }
-
-          .heroPills {
-            gap: 8px;
-          }
-
-          .heroPill {
-            width: 100%;
-            justify-content: center;
           }
 
           .phoneFrame {
@@ -2043,26 +2239,26 @@ export default function Page() {
 
                 <FadeIn delay={0.16}>
                   <p className="heroBody">
-                    Laura gives people a clearer starting point, gives care teams faster intake and
-                    calmer routing, and gives developers a care ready AI layer for products,
+                    Laura gives people a clearer starting point, gives care teams faster intake
+                    and calmer routing, and gives developers a care ready AI layer for products,
                     workflows, and modern digital experiences.
                   </p>
                 </FadeIn>
 
                 <FadeIn delay={0.22}>
-                  <div className="heroPills">
-                    <div className="heroPill">
-                      <span className="heroPillDot" />
-                      Voice and chat ready
-                    </div>
-                    <div className="heroPill">
-                      <span className="heroPillDot" />
-                      Care navigation support
-                    </div>
-                    <div className="heroPill">
-                      <span className="heroPillDot" />
-                      Built for modern infrastructure
-                    </div>
+                  <div className="heroSignalGrid">
+                    {heroSignals.map((signal) => (
+                      <div key={signal.title} className="heroSignalCard">
+                        <div className="heroSignalIcon">
+                          <HeroSignalIcon kind={signal.kind} />
+                        </div>
+
+                        <div style={{ minWidth: 0 }}>
+                          <div className="heroSignalTitle">{signal.title}</div>
+                          <div className="heroSignalDesc">{signal.desc}</div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </FadeIn>
 
@@ -2314,11 +2510,7 @@ export default function Page() {
           </div>
         </section>
 
-        <section
-          id="developers"
-          className="section"
-          style={{ background: colors.bgDark, color: "#FFFFFF" }}
-        >
+        <section id="developers" className="section developerSection">
           <div className="container">
             <FadeIn>
               <SectionHeading
@@ -2331,6 +2523,7 @@ export default function Page() {
                   </>
                 }
                 body="Embed health guidance, conversational support, and care flows into apps, patient journeys, and internal healthcare workflows."
+                tone="dark"
               />
             </FadeIn>
 
@@ -2347,6 +2540,7 @@ export default function Page() {
                       lineHeight: 1.15,
                       letterSpacing: "-0.03em",
                       fontWeight: 800,
+                      color: "#FFFFFF",
                     }}
                   >
                     Built for modern integration teams
@@ -2355,7 +2549,7 @@ export default function Page() {
                   <p
                     style={{
                       marginTop: "14px",
-                      color: "rgba(255,255,255,0.7)",
+                      color: "rgba(255,255,255,0.74)",
                       fontSize: "15px",
                       lineHeight: 1.96,
                       maxWidth: "560px",
@@ -2375,7 +2569,7 @@ export default function Page() {
                       >
                         <span
                           className="dotCheck"
-                          style={{ background: "rgba(41,100,234,0.16)", color: "#7FB0FF" }}
+                          style={{ background: "rgba(47,107,234,0.16)", color: "#7FB0FF" }}
                         >
                           ✓
                         </span>
@@ -2425,7 +2619,7 @@ export default function Page() {
                     className="card"
                     style={{
                       background: plan.highlighted
-                        ? "linear-gradient(180deg, #0C0F16 0%, #151A25 100%)"
+                        ? "linear-gradient(180deg, #0D1524 0%, #13213D 100%)"
                         : "rgba(255,255,255,0.82)",
                       color: plan.highlighted ? "#FFFFFF" : colors.text,
                       border: plan.highlighted ? "none" : `1px solid ${colors.border}`,
@@ -2491,7 +2685,7 @@ export default function Page() {
                     <p
                       style={{
                         marginTop: "10px",
-                        color: plan.highlighted ? "rgba(255,255,255,0.68)" : colors.textMuted,
+                        color: plan.highlighted ? "rgba(255,255,255,0.7)" : colors.textMuted,
                         fontSize: "14px",
                         lineHeight: 1.84,
                       }}
@@ -2504,7 +2698,7 @@ export default function Page() {
                         marginTop: "22px",
                         paddingTop: "20px",
                         borderTop: `1px solid ${
-                          plan.highlighted ? colors.borderDark : colors.border
+                          plan.highlighted ? "rgba(255,255,255,0.1)" : colors.border
                         }`,
                         display: "flex",
                         flexDirection: "column",
