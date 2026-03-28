@@ -1,49 +1,81 @@
-# Smart Health
+# Omela
 
-Smart Health is an AI-first healthcare platform powered by Laura, an intelligent health agent built for people, providers, and developers.
+Omela is an AI-first healthcare experience powered by Laura.
 
-## What it is
+Omela is being built to make care access feel clearer, calmer, and more intelligent for patients, providers, and digital health platforms.
 
-Smart Health gives three different groups a clear way to use Laura.
+## What Omela is
 
-### For people
-Laura helps users understand symptoms, get guided next steps, ask health questions, and move faster toward the right care path.
+Laura is the AI assistant at the center of Omela.
 
-### For providers
-Laura helps clinics, practices, and healthcare teams reduce front-desk load, support intake, guide triage, handle appointment workflows, and improve access.
+The product is positioned around:
 
-### For developers
-Laura can be integrated into apps, products, patient journeys, and healthcare infrastructure through APIs, SDKs, and embeddable experiences.
+- care access
+- triage support
+- conversational guidance
+- provider workflow support
+- future developer integrations
 
-## Current repository
+Omela is designed to feel premium, modern, trustworthy, and healthcare-ready across mobile and desktop.
 
-This repository contains the Smart Health landing page built with Next.js and TypeScript.
+## Who it is for
+
+### Patients
+Omela helps people get a clearer starting point when they need guidance, support, or direction toward the next step in care.
+
+### Providers
+Omela is being shaped to support intake, navigation, communication, and operational efficiency for care teams.
+
+### Developers
+Omela is being developed with future integration in mind so conversational healthcare workflows can be embedded into digital products and services.
+
+## Current focus
+
+This repository currently represents the Omela landing page and public product introduction.
+
+It communicates the brand, product direction, and early access experience for:
+
+- patients
+- providers
+- developers
+- partners
+- investors
 
 ## Product direction
 
-Laura is positioned as a health agent and care access layer. She is not framed as a replacement for clinicians. The goal is to improve guidance, access, operational efficiency, and integration across the healthcare ecosystem.
+Omela is being built around a simple core idea:
 
-## Key sections on the landing page
+**The AI health agent for care, triage, and access.**
 
-- Hero section with broader product positioning
-- Audience section for people, providers, and developers
-- Public use case section
-- Provider workflow section
-- Developer integration section with terminal-style SDK preview
-- Pricing section
-- Early access section with role selection
-- Responsive layout for desktop and mobile
+The goal is to create an experience that feels:
 
-## Tech stack
+- warm
+- sleek
+- premium
+- credible
+- accessible
+- investor-ready
 
-- Next.js
-- React
-- TypeScript
-- Framer Motion
+## Status
 
-## Local development
+Omela is currently in its early product and brand phase.
 
-Install dependencies:
+The present experience focuses on:
 
-```bash
-npm install
+- public product positioning
+- early access capture
+- brand presentation
+- mobile and desktop polish
+
+## Brand
+
+**Product name:** Omela  
+**AI assistant:** Laura  
+**X:** @joinomela
+
+## Live presence
+
+Public product updates and brand rollout are tied to Omela and Laura.
+
+This repository reflects the current public-facing Omela landing experience.
+
