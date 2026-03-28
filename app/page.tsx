@@ -13,7 +13,7 @@ import { AnimatePresence, motion, useInView } from "framer-motion";
 import { Blocks, Heart, Mic } from "lucide-react";
 
 const FONT_IMPORT = `
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800&display=swap');
 `;
 
 const colors = {
@@ -42,6 +42,7 @@ type FadeInProps = {
 };
 
 type RoleKey = "patient" | "provider" | "developer";
+type CapabilityType = "voice" | "heart" | "infra";
 
 type PhoneMessage = {
   from: "user" | "laura";
@@ -53,8 +54,6 @@ type EcosystemLogoItem = {
   src: string;
   blend?: boolean;
 };
-
-type CapabilityType = "voice" | "heart" | "infra";
 
 function FadeIn({ children, delay = 0, className = "" }: FadeInProps) {
   const ref = useRef<HTMLDivElement | null>(null);
@@ -105,13 +104,15 @@ function SectionHeading({
   badge,
   title,
   body,
+  dark = false,
 }: {
   badge?: string;
   title: ReactNode;
   body?: string;
+  dark?: boolean;
 }) {
   return (
-    <div style={{ textAlign: "center", maxWidth: "800px", margin: "0 auto" }}>
+    <div style={{ textAlign: "center", maxWidth: "840px", margin: "0 auto" }}>
       {badge ? <Badge>{badge}</Badge> : null}
 
       <h2
@@ -121,7 +122,7 @@ function SectionHeading({
           lineHeight: 1.03,
           letterSpacing: "-0.045em",
           marginTop: badge ? "18px" : 0,
-          color: "inherit",
+          color: dark ? "#FFFFFF" : colors.text,
         }}
       >
         {title}
@@ -132,7 +133,7 @@ function SectionHeading({
           style={{
             fontSize: "17px",
             lineHeight: 1.86,
-            color: colors.textMuted,
+            color: dark ? "rgba(255,255,255,0.72)" : colors.textMuted,
             marginTop: "16px",
           }}
         >
@@ -155,7 +156,12 @@ function CapabilityIcon({ type }: { type: CapabilityType }) {
         <motion.span
           className="heroFeaturePulse pulseTwo"
           animate={{ scale: [1, 1.34, 1], opacity: [0.08, 0.18, 0.08] }}
-          transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut", delay: 0.22 }}
+          transition={{
+            duration: 2.8,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 0.22,
+          }}
         />
         <motion.div
           animate={{ y: [0, -2, 0] }}
@@ -874,6 +880,7 @@ export default function Page() {
   const [role, setRole] = useState<RoleKey>("patient");
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
+  const [agreedToPrivacy, setAgreedToPrivacy] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -997,6 +1004,8 @@ export default function Page() {
   async function handleWaitlistSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
+    if (!agreedToPrivacy) return;
+
     setIsSubmitting(true);
     setSuccessMessage("");
     setErrorMessage("");
@@ -1029,6 +1038,7 @@ export default function Page() {
       setEmail("");
       setRole("patient");
       setWebsite("");
+      setAgreedToPrivacy(false);
       setIsSuccessOpen(true);
     } catch {
       setErrorMessage("Something went wrong. Please try again.");
@@ -1054,7 +1064,7 @@ export default function Page() {
             radial-gradient(circle at 88% 18%, rgba(238,244,255,0.55) 0%, rgba(238,244,255,0) 22%),
             ${colors.bg};
           color: ${colors.text};
-          font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
           -webkit-font-smoothing: antialiased;
         }
 
@@ -1110,7 +1120,7 @@ export default function Page() {
         }
 
         .btnPrimary:disabled {
-          opacity: 0.72;
+          opacity: 0.55;
           cursor: not-allowed;
           transform: none;
           box-shadow: none;
@@ -1312,7 +1322,7 @@ export default function Page() {
           text-align: center;
           font-size: 12px;
           font-weight: 800;
-          letterSpacing: 0.14em;
+          letter-spacing: 0.14em;
           text-transform: uppercase;
           color: ${colors.textLight};
         }
@@ -1543,7 +1553,7 @@ export default function Page() {
           color: ${colors.accent};
           display: inline-flex;
           align-items: center;
-          justify-content: center;
+          justifyContent: "center";
           font-size: 12px;
           flex-shrink: 0;
         }
@@ -1661,7 +1671,7 @@ export default function Page() {
           border: 1px solid ${colors.border};
           border-radius: 32px;
           padding: 32px;
-          max-width: 900px;
+          max-width: 920px;
           margin: 0 auto;
           width: 100%;
           overflow: hidden;
@@ -1727,6 +1737,12 @@ export default function Page() {
 
         .heroStatusText {
           white-space: nowrap;
+        }
+
+        .legalLink:hover,
+        .footerLink:hover,
+        .navLink:hover {
+          color: ${colors.text};
         }
 
         @media (max-width: 1180px) {
@@ -2020,10 +2036,12 @@ export default function Page() {
                 <a
                   key={item}
                   href={`#${item.toLowerCase()}`}
+                  className="navLink"
                   style={{
                     fontSize: "14px",
                     fontWeight: 600,
                     color: colors.textMuted,
+                    transition: "color 0.2s ease",
                   }}
                 >
                   {item}
@@ -2362,36 +2380,18 @@ export default function Page() {
         >
           <div className="container">
             <FadeIn>
-              <div style={{ textAlign: "center", maxWidth: "860px", margin: "0 auto" }}>
-                <Badge>Developer platform</Badge>
-
-                <h2
-                  className="serif"
-                  style={{
-                    fontSize: "clamp(34px, 5vw, 58px)",
-                    lineHeight: 1.03,
-                    letterSpacing: "-0.045em",
-                    marginTop: "18px",
-                    color: "#FFFFFF",
-                  }}
-                >
-                  Integrate Laura
-                  <br />
-                  into your product in minutes.
-                </h2>
-
-                <p
-                  style={{
-                    marginTop: "16px",
-                    color: "rgba(255,255,255,0.72)",
-                    fontSize: "17px",
-                    lineHeight: 1.88,
-                  }}
-                >
-                  Embed health guidance, conversational support, and care flows into apps, patient
-                  journeys, and internal healthcare workflows.
-                </p>
-              </div>
+              <SectionHeading
+                badge="Developer platform"
+                title={
+                  <>
+                    Integrate Laura
+                    <br />
+                    into your product in minutes.
+                  </>
+                }
+                body="Embed health guidance, conversational support, and care flows into apps, patient journeys, and internal healthcare workflows."
+                dark
+              />
             </FadeIn>
 
             <div className="grid2" style={{ marginTop: "48px", alignItems: "center" }}>
@@ -2704,11 +2704,78 @@ export default function Page() {
                     type="submit"
                     className="btnPrimary"
                     style={{ height: "56px" }}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || !agreedToPrivacy}
                   >
                     {isSubmitting ? "Submitting..." : "Get early access"}
                   </button>
                 </form>
+
+                <div
+                  style={{
+                    marginTop: "16px",
+                    maxWidth: "780px",
+                    marginLeft: "auto",
+                    marginRight: "auto",
+                  }}
+                >
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: "12px",
+                      justifyContent: "center",
+                      textAlign: "left",
+                      color: colors.textMuted,
+                      fontSize: "13px",
+                      lineHeight: 1.75,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={agreedToPrivacy}
+                      onChange={(e) => setAgreedToPrivacy(e.target.checked)}
+                      required
+                      style={{
+                        marginTop: "3px",
+                        width: "16px",
+                        height: "16px",
+                        accentColor: colors.accent,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span>
+                      I agree that Omela may use my information to manage my early access
+                      request, contact me about access, and improve the service.{" "}
+                      <a
+                        href="/privacy"
+                        className="legalLink"
+                        style={{
+                          color: colors.text,
+                          fontWeight: 700,
+                          textDecoration: "underline",
+                          textUnderlineOffset: "3px",
+                          transition: "color 0.2s ease",
+                        }}
+                      >
+                        Read our Privacy Notice
+                      </a>
+                      .
+                    </span>
+                  </label>
+                </div>
+
+                <div
+                  style={{
+                    marginTop: "10px",
+                    textAlign: "center",
+                    color: colors.textLight,
+                    fontSize: "12px",
+                    lineHeight: 1.7,
+                  }}
+                >
+                  We will not sell your personal information.
+                </div>
 
                 <div
                   style={{
@@ -2802,15 +2869,42 @@ export default function Page() {
               </div>
 
               <div style={{ display: "flex", gap: "18px", flexWrap: "wrap" }}>
-                {["People", "Providers", "Developers", "Pricing"].map((item) => (
-                  <a
-                    key={item}
-                    href={`#${item.toLowerCase()}`}
-                    style={{ fontSize: "13px", color: colors.textLight, fontWeight: 600 }}
-                  >
-                    {item}
-                  </a>
-                ))}
+                <a
+                  href="/privacy"
+                  className="footerLink"
+                  style={{
+                    fontSize: "13px",
+                    color: colors.textLight,
+                    fontWeight: 600,
+                    transition: "color 0.2s ease",
+                  }}
+                >
+                  Privacy Notice
+                </a>
+                <a
+                  href="/terms"
+                  className="footerLink"
+                  style={{
+                    fontSize: "13px",
+                    color: colors.textLight,
+                    fontWeight: 600,
+                    transition: "color 0.2s ease",
+                  }}
+                >
+                  Terms
+                </a>
+                <a
+                  href="mailto:notice@omela.ai"
+                  className="footerLink"
+                  style={{
+                    fontSize: "13px",
+                    color: colors.textLight,
+                    fontWeight: 600,
+                    transition: "color 0.2s ease",
+                  }}
+                >
+                  Contact
+                </a>
               </div>
 
               <div style={{ fontSize: "13px", color: colors.textLight }}>
