@@ -1,255 +1,285 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
-import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { Mic, MapPin, ShieldCheck, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, Send, RotateCcw } from "lucide-react";
 
-const FONT = `@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap');`;
+const FONT = `@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap');`;
 
 const c = {
-  bg: "#F8F6F1",
-  card: "#FFFFFF",
-  dark: "#08090C",
-  text: "#141517",
-  sub: "#555B69",
-  muted: "#8B919F",
-  accent: "#2563EB",
-  accentSoft: "#ECF2FF",
+  bg: "#F8F6F1", card: "#FFFFFF", dark: "#08090C",
+  text: "#111214", sub: "#4A4F5C", muted: "#888E9C",
+  accent: "#2563EB", accentSoft: "#ECF2FF",
   border: "#E3DDD2",
-  green: "#22C55E",
-  amber: "#D97706",
-  red: "#DC2626",
+  green: "#22C55E", greenSoft: "#ECFDF3", greenDk: "#15803D",
+  amber: "#F59E0B", amberSoft: "#FFFBEB",
+  red: "#EF4444", redSoft: "#FEF2F2",
 };
 
-const scenarios = {
-  sore_throat: {
-    label: "Sore throat",
-    user: "I have a sore throat, fever, and I feel weak.",
-    laura: "This may need same-day clinical advice depending on how long the fever has lasted and whether you have difficulty swallowing or breathing.",
-    urgency: "Soon",
-    urgencyColor: c.amber,
-    nextStep: "I can help you find a nearby GP and request a callback.",
-  },
-  tooth_pain: {
-    label: "Tooth pain",
-    user: "My tooth hurts badly and my cheek feels swollen.",
-    laura: "Dental pain with swelling may need urgent dental attention, especially if the swelling is spreading or you have a fever.",
-    urgency: "Urgent",
-    urgencyColor: c.red,
-    nextStep: "I can help you locate an urgent dental practice near you.",
-  },
-  headache: {
-    label: "Headache",
-    user: "I have had a headache since yesterday and feel tired.",
-    laura: "A routine review may be appropriate if this is mild and improving, but I would ask a few more questions to rule out red flags.",
-    urgency: "Routine",
-    urgencyColor: c.green,
-    nextStep: "I can guide you through next questions and nearby options.",
-  },
+type Msg = { from: "user" | "laura"; text: string; urgency?: "routine" | "soon" | "urgent" | "emergency" };
+
+const urgencyColors = {
+  routine: { bg: c.greenSoft, text: c.greenDk, label: "Routine" },
+  soon: { bg: c.amberSoft, text: "#92400E", label: "Book soon" },
+  urgent: { bg: "#FFF7ED", text: "#C2410C", label: "Urgent" },
+  emergency: { bg: c.redSoft, text: "#991B1B", label: "Emergency" },
 };
 
-type ScenarioKey = keyof typeof scenarios;
+function getResponse(input: string): { text: string; urgency: Msg["urgency"] } {
+  const lower = input.toLowerCase();
+
+  if (lower.match(/chest\s*pain|heart\s*attack|can'?t\s*breathe|breathing|unconscious|stroke|seizure/)) {
+    return { text: "This sounds like it could be a medical emergency. Please call 999 (UK), 911 (US), or your local emergency number immediately. Do not wait. If someone is with you, ask them to help while you call.", urgency: "emergency" };
+  }
+  if (lower.match(/fever|temperature|hot|chills|shivering/)) {
+    return { text: "A persistent fever can sometimes need same-day clinical attention, especially if it has lasted more than 48 hours or is above 39\u00B0C. I would recommend contacting your GP for a same-day consultation. Shall I find practices near you?", urgency: "urgent" };
+  }
+  if (lower.match(/headache|head\s*hurts|migraine/)) {
+    return { text: "Headaches can have many causes. If this is a sudden, severe headache unlike anything you have experienced before, seek urgent care. For recurring headaches, booking a routine appointment would be a good next step. Want me to search for GPs near your postcode?", urgency: "soon" };
+  }
+  if (lower.match(/sore\s*throat|throat|cough|cold|flu|runny\s*nose|congestion/)) {
+    return { text: "Sore throats and colds are usually manageable at home with rest, fluids, and over-the-counter remedies. If symptoms persist beyond 7 days or you develop difficulty swallowing or breathing, it would be worth seeing a GP. Would you like me to find one near you?", urgency: "routine" };
+  }
+  if (lower.match(/rash|skin|itch|hives|spots|bumps/)) {
+    return { text: "Skin concerns can vary widely. If the rash is spreading rapidly, accompanied by fever, or near your eyes or mouth, consider urgent care. For a rash that appeared gradually, a routine GP appointment should be sufficient. Shall I search for a doctor?", urgency: "soon" };
+  }
+  if (lower.match(/stomach|belly|abdomen|nausea|vomit|diarr/)) {
+    return { text: "Stomach issues are common but can sometimes signal something that needs attention. If you are experiencing severe pain, blood in your stool, or inability to keep fluids down for more than 24 hours, seek same-day advice. Otherwise, a routine appointment would help. Want me to find nearby practices?", urgency: "soon" };
+  }
+  if (lower.match(/back\s*pain|back\s*hurts|spine|lower\s*back/)) {
+    return { text: "Most back pain improves within a few weeks. Rest, gentle movement, and pain relief can help. If you have numbness in your legs, loss of bladder or bowel control, or the pain followed an injury, seek urgent care. Would you like me to find a GP near you?", urgency: "routine" };
+  }
+  if (lower.match(/anxiety|depressed|depression|mental\s*health|stressed|panic/)) {
+    return { text: "Thank you for sharing that. Mental health is just as important as physical health. I would recommend booking an appointment with your GP to discuss how you are feeling. Many practices now offer same-day mental health consultations. Want me to find support near you?", urgency: "soon" };
+  }
+  if (lower.match(/prescription|medication|refill|repeat|medicine/)) {
+    return { text: "For repeat prescriptions, your GP practice can usually process these within 48 hours. Many practices accept requests online or by phone. I can help you find your nearest practice and their prescription request process. Shall I search?", urgency: "routine" };
+  }
+  if (lower.match(/dentist|tooth|teeth|dental|gum|filling/)) {
+    return { text: "For dental concerns, you will need a dentist rather than a GP. I can search for dental practices near your postcode. If you have severe dental pain with swelling or fever, consider an emergency dental service. Want me to find dentists nearby?", urgency: "soon" };
+  }
+  if (lower.match(/appointment|book|gp|doctor|find|near|postcode|zip/)) {
+    return { text: "I can search for GP and dental practices near your location. What is your postcode or zip code? I will show you the nearest options with availability and help you request a callback.", urgency: "routine" };
+  }
+  if (lower.match(/94\d{3}|[A-Z]{1,2}\d{1,2}\s?\d[A-Z]{2}/i)) {
+    return { text: "I found 4 practices near that area. The closest is accepting new patients and has availability this week. I can request a callback for you, or provide their contact details. What would you prefer?", urgency: "routine" };
+  }
+  if (lower.match(/thank|thanks|great|perfect|yes|callback|please/)) {
+    return { text: "I have submitted a callback request on your behalf. You should receive a call within the next working day. Is there anything else I can help you with?", urgency: "routine" };
+  }
+  if (lower.match(/hello|hi|hey|good\s*(morning|afternoon|evening)/)) {
+    return { text: "Hello! I am Laura, your AI health assistant. You can tell me about any symptoms you are experiencing, ask me to find a GP or dentist near you, or check how urgent something might be. How can I help you today?", urgency: undefined };
+  }
+
+  return { text: "I understand. Could you tell me a bit more about what you are experiencing? For example, describe any symptoms, how long they have lasted, and whether anything makes them better or worse. This will help me give you better guidance.", urgency: undefined };
+}
+
+const suggestions = [
+  "I have a sore throat and fever",
+  "Find a GP near 94103",
+  "I have been feeling anxious lately",
+  "I need a repeat prescription",
+  "My child has a rash",
+  "I have chest pain",
+];
 
 export default function DemoPage() {
-  const [selected, setSelected] = useState<ScenarioKey>("sore_throat");
-  const data = useMemo(() => scenarios[selected], [selected]);
+  const [messages, setMessages] = useState<Msg[]>([
+    { from: "laura", text: "Hello! I am Laura, your AI health assistant. Tell me what you are experiencing and I will help you figure out the right next step. You can describe symptoms, ask me to find a doctor, or check how urgent something is." },
+  ]);
+  const [input, setInput] = useState("");
+  const [typing, setTyping] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, typing]);
+
+  function sendMessage(text: string) {
+    if (!text.trim()) return;
+    const userMsg: Msg = { from: "user", text: text.trim() };
+    setMessages(prev => [...prev, userMsg]);
+    setInput("");
+    setTyping(true);
+
+    const response = getResponse(text);
+    const delay = 800 + Math.random() * 1200;
+
+    setTimeout(() => {
+      setTyping(false);
+      setMessages(prev => [...prev, { from: "laura", text: response.text, urgency: response.urgency }]);
+    }, delay);
+  }
+
+  function resetChat() {
+    setMessages([{ from: "laura", text: "Hello! I am Laura, your AI health assistant. Tell me what you are experiencing and I will help you figure out the right next step." }]);
+    setInput("");
+    setTyping(false);
+  }
 
   return (
     <>
       <style>{FONT}</style>
       <style>{CSS}</style>
-
-      <div className="wrap">
-        <nav className="nav">
-          <div className="container navRow">
-            <Link href="/" className="brand">
-              <div className="logo">
-                <Image src="/omela-logo-mark.png" alt="Omela" width={34} height={34} />
-              </div>
-              <div>
-                <div className="brandName">Omela</div>
-                <div className="brandSub">Powered by Laura</div>
-              </div>
+      <div className="demoWrap">
+        {/* Nav */}
+        <nav className="demoNav">
+          <div className="container demoNavInner">
+            <Link href="/" className="demoNavBrand">
+              <div className="demoNavLogo"><Image src="/omela-logo-mark.png" alt="Omela" width={32} height={32} style={{ width: "100%", height: "100%", objectFit: "contain" }} /></div>
+              <div><div className="demoNavName">Omela</div><div className="demoNavSub serif">Try Laura</div></div>
             </Link>
-            <div className="navActions">
-              <Link href="/status" className="btnGhost">Status</Link>
-              <Link href="/quiz" className="btnGhost">Quiz</Link>
-              <a href="/#waitlist" className="btnPrimary">Get early access</a>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <button onClick={resetChat} className="demoResetBtn"><RotateCcw size={14} /> Reset</button>
+              <Link href="/#waitlist" className="btnP demoBackBtn">Get early access <ArrowRight size={13} /></Link>
             </div>
           </div>
         </nav>
 
-        <section className="hero">
-          <div className="container heroGrid">
-            <div>
-              <div className="pill">Interactive product demo</div>
-              <h1 className="serif title">Try Laura before the queue starts.</h1>
-              <p className="body">
-                Explore how Laura checks urgency, explains next steps, and routes people to the right care pathway in a calm, structured way.
-              </p>
+        {/* Disclaimer */}
+        <div className="demoDisclaimer">
+          <span className="demoDisTxt">This is a preview demo with simulated responses. Laura is not providing real medical advice. For emergencies, call 999 or 911.</span>
+        </div>
 
-              <div className="scenarioRow">
-                {(Object.keys(scenarios) as ScenarioKey[]).map((key) => (
-                  <button
-                    key={key}
-                    className={`scenarioBtn ${selected === key ? "scenarioBtnActive" : ""}`}
-                    onClick={() => setSelected(key)}
-                    type="button"
-                  >
-                    {scenarios[key].label}
-                  </button>
+        {/* Chat area */}
+        <div className="demoChatWrap">
+          <div className="demoChatInner">
+            {/* Messages */}
+            <div className="demoChatMessages">
+              <AnimatePresence initial={false}>
+                {messages.map((msg, i) => (
+                  <motion.div key={i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className={`demoMsg ${msg.from === "user" ? "demoMsgR" : "demoMsgL"}`}>
+                    {msg.from === "laura" && (
+                      <div className="demoMsgAvatar">
+                        <Image src="/laura-avatar.png" alt="Laura" fill sizes="32px" style={{ objectFit: "cover" }} />
+                      </div>
+                    )}
+                    <div className={`demoMsgContent ${msg.from === "user" ? "demoMsgU" : "demoMsgLa"}`}>
+                      <p className="demoMsgTxt">{msg.text}</p>
+                      {msg.urgency && (
+                        <div className="demoUrgency" style={{ background: urgencyColors[msg.urgency].bg, color: urgencyColors[msg.urgency].text }}>
+                          <span className="demoUrgDot" style={{ background: urgencyColors[msg.urgency].text }} />
+                          {urgencyColors[msg.urgency].label}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
                 ))}
-              </div>
+              </AnimatePresence>
 
-              <div className="trust">
-                <ShieldCheck size={16} />
-                <span>This is a simulated product demo and not live medical advice.</span>
-              </div>
-
-              <div className="ctaRow">
-                <a href="/#waitlist" className="btnPrimary">Get early access</a>
-                <Link href="/" className="btnSecondary">Back home</Link>
-              </div>
+              {typing && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="demoMsg demoMsgL">
+                  <div className="demoMsgAvatar"><Image src="/laura-avatar.png" alt="Laura" fill sizes="32px" style={{ objectFit: "cover" }} /></div>
+                  <div className="demoMsgLa demoTyping">
+                    <span /><span /><span />
+                  </div>
+                </motion.div>
+              )}
+              <div ref={bottomRef} />
             </div>
 
-            <motion.div
-              className="demoCard"
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="phone">
-                <div className="phoneTop">
-                  <div className="phoneHead">
-                    <div className="avatar">
-                      <Image src="/laura-avatar.png" alt="Laura" fill sizes="36px" style={{ objectFit: "cover" }} />
-                    </div>
-                    <div>
-                      <div className="phoneName">Laura</div>
-                      <div className="phoneSub">AI care-access assistant</div>
-                    </div>
-                  </div>
-                  <div className="micBubble">
-                    <Mic size={14} />
-                  </div>
-                </div>
-
-                <div className="chatArea">
-                  <div className="msg msgUser">{data.user}</div>
-                  <div className="msg msgLaura">{data.laura}</div>
-
-                  <div className="resultCard">
-                    <div className="resultTop">
-                      <span className="resultLabel">Urgency</span>
-                      <span className="urgency" style={{ background: `${data.urgencyColor}15`, color: data.urgencyColor }}>
-                        {data.urgency}
-                      </span>
-                    </div>
-                    <p className="resultText">{data.nextStep}</p>
-                  </div>
-
-                  <div className="providerCard">
-                    <div className="providerTop">
-                      <MapPin size={15} />
-                      <span>Nearest available option</span>
-                    </div>
-                    <div className="providerName">Riverside Medical Practice</div>
-                    <div className="providerMeta">HD1 · Callback window tomorrow 9:30 AM</div>
-                  </div>
+            {/* Suggestions */}
+            {messages.length <= 1 && (
+              <div className="demoSuggestions">
+                <p className="demoSugLabel">Try asking Laura:</p>
+                <div className="demoSugGrid">
+                  {suggestions.map(s => (
+                    <button key={s} className="demoSugBtn" onClick={() => sendMessage(s)}>{s}</button>
+                  ))}
                 </div>
               </div>
-            </motion.div>
-          </div>
-        </section>
+            )}
 
-        <section className="section">
-          <div className="container cards">
-            {[
-              {
-                title: "Symptom intake",
-                body: "Laura turns unstructured descriptions into a clearer intake flow without forcing people through a confusing form.",
-              },
-              {
-                title: "Urgency guidance",
-                body: "Laura helps people understand whether their concern sounds routine, soon, urgent, or emergency.",
-              },
-              {
-                title: "Care routing",
-                body: "Laura can help connect the person to nearby GP or dental options and support callback requests.",
-              },
-            ].map((item) => (
-              <div key={item.title} className="infoCard">
-                <div className="iconWrap"><Sparkles size={16} /></div>
-                <h3>{item.title}</h3>
-                <p>{item.body}</p>
-              </div>
-            ))}
+            {/* Input */}
+            <div className="demoInput">
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder="Describe your symptoms or ask a question..."
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter" && !typing) sendMessage(input); }}
+                disabled={typing}
+                className="demoInputField"
+              />
+              <button onClick={() => sendMessage(input)} disabled={typing || !input.trim()} className="demoSendBtn">
+                <Send size={18} />
+              </button>
+            </div>
           </div>
-        </section>
+        </div>
       </div>
     </>
   );
 }
 
 const CSS = `
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{max-width:100%;overflow-x:clip;background:${c.bg};color:${c.text};font-family:'DM Sans',sans-serif}
-a{text-decoration:none;color:inherit}
-button{font-family:inherit}
-.serif{font-family:'Instrument Serif',serif}
-.wrap{min-height:100vh}
+*{box-sizing:border-box;margin:0;padding:0}html,body{height:100%;max-width:100%;overflow:hidden}
+body{background:${c.bg};color:${c.text};font-family:'DM Sans',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}button,input{font-family:inherit}
+.serif{font-family:'Instrument Serif',Georgia,serif}
 .container{max-width:1200px;margin:0 auto;padding:0 20px}
-.nav{position:sticky;top:0;z-index:50;background:rgba(248,246,241,0.88);backdrop-filter:blur(14px);border-bottom:1px solid ${c.border}}
-.navRow{height:72px;display:flex;align-items:center;justify-content:space-between;gap:20px}
-.brand{display:flex;align-items:center;gap:10px}
-.logo{width:34px;height:34px;border-radius:10px;overflow:hidden}
-.brandName{font-weight:800;font-size:14px}
-.brandSub{font-size:11px;color:${c.muted};font-style:italic}
-.navActions{display:flex;align-items:center;gap:10px}
-.pill{display:inline-flex;padding:8px 14px;border-radius:999px;border:1px solid ${c.border};background:rgba(255,255,255,0.75);font-size:12px;font-weight:700;color:${c.sub}}
-.hero{padding:72px 0}
-.heroGrid{display:grid;grid-template-columns:1fr;gap:36px;align-items:center}
-.title{font-size:clamp(40px,7vw,76px);line-height:0.95;letter-spacing:-0.06em;margin-top:16px}
-.body{margin-top:16px;max-width:620px;font-size:17px;line-height:1.85;color:${c.sub}}
-.scenarioRow{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
-.scenarioBtn{padding:10px 14px;border-radius:999px;border:1px solid ${c.border};background:#fff;color:${c.sub};font-size:13px;font-weight:700;cursor:pointer}
-.scenarioBtnActive{background:${c.dark};color:#fff;border-color:${c.dark}}
-.trust{display:flex;align-items:center;gap:8px;margin-top:18px;color:${c.sub};font-size:13px}
-.ctaRow{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
-.btnPrimary,.btnSecondary,.btnGhost{display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 18px;border-radius:999px;font-size:13px;font-weight:700}
-.btnPrimary{background:${c.dark};color:#fff}
-.btnSecondary{background:#fff;border:1px solid ${c.border}}
-.btnGhost{background:transparent;border:1px solid ${c.border};color:${c.sub}}
-.demoCard{display:flex;justify-content:center}
-.phone{width:100%;max-width:390px;border-radius:32px;background:#111318;padding:8px;box-shadow:0 30px 70px rgba(0,0,0,0.14)}
-.phoneTop{background:#fff;border-radius:24px 24px 0 0;padding:14px 14px 10px;display:flex;align-items:center;justify-content:space-between}
-.phoneHead{display:flex;align-items:center;gap:10px}
-.avatar{position:relative;width:36px;height:36px;border-radius:999px;overflow:hidden;background:#e8e8e8}
-.phoneName{font-size:13px;font-weight:800}
-.phoneSub{font-size:11px;color:${c.muted}}
-.micBubble{width:34px;height:34px;border-radius:999px;background:${c.accentSoft};display:flex;align-items:center;justify-content:center;color:${c.accent}}
-.chatArea{background:linear-gradient(180deg,#F5F5F0,#ECE5DA);padding:14px;display:flex;flex-direction:column;gap:10px;border-radius:0 0 24px 24px}
-.msg{max-width:84%;padding:10px 12px;border-radius:16px;font-size:13px;line-height:1.6}
-.msgUser{align-self:flex-end;background:#E7FFDB}
-.msgLaura{align-self:flex-start;background:#fff}
-.resultCard,.providerCard{background:#fff;border:1px solid ${c.border};border-radius:18px;padding:14px}
-.resultTop,.providerTop{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.resultLabel{font-size:11px;font-weight:800;color:${c.muted};text-transform:uppercase;letter-spacing:0.08em}
-.urgency{padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800}
-.resultText{margin-top:10px;font-size:13px;line-height:1.7;color:${c.sub}}
-.providerTop{justify-content:flex-start;color:${c.sub};font-size:12px;font-weight:700}
-.providerName{margin-top:8px;font-weight:800}
-.providerMeta{margin-top:4px;font-size:12px;color:${c.muted}}
-.section{padding:0 0 84px}
-.cards{display:grid;grid-template-columns:1fr;gap:16px}
-.infoCard{background:rgba(255,255,255,0.9);border:1px solid ${c.border};border-radius:24px;padding:22px}
-.iconWrap{width:34px;height:34px;border-radius:12px;background:${c.accentSoft};display:flex;align-items:center;justify-content:center;color:${c.accent}}
-.infoCard h3{margin-top:14px;font-size:18px;letter-spacing:-0.03em}
-.infoCard p{margin-top:8px;font-size:14px;line-height:1.8;color:${c.sub}}
-@media(min-width:980px){
-  .heroGrid{grid-template-columns:1.05fr 0.95fr}
-  .cards{grid-template-columns:repeat(3,1fr)}
+.btnP{display:inline-flex;align-items:center;gap:6px;background:${c.dark};color:#fff;border:none;border-radius:999px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+
+.demoWrap{display:flex;flex-direction:column;height:100vh;height:100dvh}
+.demoNav{background:rgba(248,246,241,0.94);backdrop-filter:blur(16px);border-bottom:1px solid ${c.border};flex-shrink:0;z-index:10}
+.demoNavInner{display:flex;align-items:center;justify-content:space-between;height:56px;gap:10px}
+.demoNavBrand{display:flex;align-items:center;gap:8px;text-decoration:none;flex-shrink:0}
+.demoNavLogo{width:30px;height:30px;border-radius:9px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.demoNavName{font-size:13px;font-weight:800;letter-spacing:-0.03em}
+.demoNavSub{font-size:10px;color:${c.accent};font-weight:700;margin-top:1px}
+.demoResetBtn{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.8);border:1px solid ${c.border};border-radius:999px;padding:7px 14px;font-size:12px;font-weight:600;color:${c.sub};cursor:pointer}
+.demoBackBtn{padding:8px 16px!important;font-size:12px!important}
+
+.demoDisclaimer{background:${c.amberSoft};border-bottom:1px solid #FDE68A;padding:8px 20px;flex-shrink:0}
+.demoDisTxt{font-size:11px;color:#92400E;font-weight:600;display:block;text-align:center;line-height:1.5}
+
+.demoChatWrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.demoChatInner{max-width:760px;width:100%;margin:0 auto;display:flex;flex-direction:column;height:100%;padding:0 16px}
+
+.demoChatMessages{flex:1;overflow-y:auto;padding:20px 0;display:flex;flex-direction:column;gap:16px;scrollbar-width:thin;scrollbar-color:${c.border} transparent}
+.demoChatMessages::-webkit-scrollbar{width:4px}
+.demoChatMessages::-webkit-scrollbar-thumb{background:${c.border};border-radius:4px}
+
+.demoMsg{display:flex;gap:10px;align-items:flex-start}
+.demoMsgR{flex-direction:row-reverse}
+.demoMsgL{flex-direction:row}
+.demoMsgAvatar{position:relative;width:32px;height:32px;border-radius:999px;overflow:hidden;flex-shrink:0;border:1.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.demoMsgContent{max-width:75%;padding:14px 18px;border-radius:20px}
+.demoMsgU{background:${c.dark};color:#fff;border-radius:20px 20px 6px 20px}
+.demoMsgLa{background:${c.card};border:1px solid ${c.border};border-radius:20px 20px 20px 6px;box-shadow:0 2px 8px rgba(0,0,0,0.03)}
+.demoMsgTxt{font-size:14px;line-height:1.7}
+
+.demoUrgency{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:6px 12px;border-radius:999px;font-size:11px;font-weight:700}
+.demoUrgDot{width:6px;height:6px;border-radius:999px;flex-shrink:0}
+
+.demoTyping{display:flex;gap:4px;padding:16px 20px}
+.demoTyping span{width:7px;height:7px;border-radius:999px;background:${c.muted};animation:typingDot 1.2s infinite}
+.demoTyping span:nth-child(2){animation-delay:0.2s}
+.demoTyping span:nth-child(3){animation-delay:0.4s}
+@keyframes typingDot{0%,80%{opacity:0.3;transform:scale(0.8)}40%{opacity:1;transform:scale(1)}}
+
+.demoSuggestions{padding:0 0 16px;flex-shrink:0}
+.demoSugLabel{font-size:12px;font-weight:700;color:${c.muted};margin-bottom:10px;text-transform:uppercase;letter-spacing:0.1em}
+.demoSugGrid{display:flex;flex-wrap:wrap;gap:8px}
+.demoSugBtn{background:rgba(255,255,255,0.9);border:1px solid ${c.border};border-radius:12px;padding:10px 16px;font-size:13px;font-weight:600;color:${c.sub};cursor:pointer;transition:all 0.2s;text-align:left;line-height:1.4}
+.demoSugBtn:hover{background:#fff;border-color:#D0CBBD;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.06)}
+
+.demoInput{display:flex;gap:8px;padding:12px 0 20px;flex-shrink:0;border-top:1px solid ${c.border}}
+.demoInputField{flex:1;height:52px;border-radius:16px;border:1px solid ${c.border};background:#fff;padding:0 18px;font-size:15px;color:${c.text};outline:none}
+.demoInputField:focus{border-color:${c.accent};box-shadow:0 0 0 3px rgba(37,99,235,0.06)}
+.demoInputField:disabled{opacity:0.6}
+.demoSendBtn{width:52px;height:52px;border-radius:16px;background:${c.accent};color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0}
+.demoSendBtn:hover:not(:disabled){background:#1D4ED8;transform:translateY(-1px)}
+.demoSendBtn:disabled{opacity:0.4;cursor:not-allowed}
+
+@media(min-width:640px){
+  .container{padding:0 28px}
+  .demoChatInner{padding:0 28px}
+  .demoMsgContent{max-width:65%}
+  .demoNavInner{height:64px}
 }
 `;
