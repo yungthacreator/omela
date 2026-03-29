@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, RotateCcw, Share2, Heart } from "lucide-react";
+import { ArrowRight, Share2, Heart, RotateCcw } from "lucide-react";
 
 const FONT = `@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap');`;
 
@@ -17,221 +17,117 @@ const c = {
   red: "#EF4444", redSoft: "#FEF2F2", redDk: "#991B1B",
 };
 
-type Question = {
-  question: string;
-  options: string[];
-  correct: number;
-  explanation: string;
-  tip: string;
-  category: string;
-};
+type Q = { q: string; opts: string[]; correct: number; why: string; tip: string; cat: string };
 
-const questions: Question[] = [
-  {
-    question: "How long should you wash your hands to effectively remove germs?",
-    options: ["5 seconds", "10 seconds", "20 seconds", "60 seconds"],
-    correct: 2,
-    explanation: "The WHO and CDC recommend washing hands for at least 20 seconds with soap and water. This is roughly the time it takes to hum the \"Happy Birthday\" song twice.",
-    tip: "Wash your hands before eating, after using the bathroom, and after touching public surfaces.",
-    category: "Hygiene",
-  },
-  {
-    question: "What is the recommended daily water intake for an average adult?",
-    options: ["1 litre", "2 litres", "4 litres", "6 litres"],
-    correct: 1,
-    explanation: "Most health authorities recommend approximately 2 litres (8 glasses) of water per day for adults. This can vary based on activity level, climate, and individual health conditions.",
-    tip: "Carry a reusable water bottle to track your intake throughout the day.",
-    category: "Nutrition",
-  },
-  {
-    question: "How many hours of sleep do most adults need per night?",
-    options: ["4 to 5 hours", "5 to 6 hours", "7 to 9 hours", "10 to 12 hours"],
-    correct: 2,
-    explanation: "The National Sleep Foundation recommends 7 to 9 hours of sleep for adults aged 18 to 64. Consistent sleep deprivation is linked to increased risk of heart disease, obesity, and mental health issues.",
-    tip: "Keep a consistent sleep schedule, even on weekends. Avoid screens 30 minutes before bed.",
-    category: "Sleep",
-  },
-  {
-    question: "What percentage of your body weight is water?",
-    options: ["About 30%", "About 45%", "About 60%", "About 80%"],
-    correct: 2,
-    explanation: "The human body is approximately 60% water. This water is essential for regulating temperature, transporting nutrients, and removing waste products.",
-    tip: "Even mild dehydration (1-2% loss) can impair concentration, mood, and physical performance.",
-    category: "Body",
-  },
-  {
-    question: "Which vitamin does your body produce when exposed to sunlight?",
-    options: ["Vitamin A", "Vitamin B12", "Vitamin C", "Vitamin D"],
-    correct: 3,
-    explanation: "Your skin produces Vitamin D when exposed to UVB sunlight. Vitamin D is crucial for bone health, immune function, and mood regulation. Deficiency is common in northern climates.",
-    tip: "Aim for 10 to 30 minutes of midday sunlight several times per week. In winter, consider a supplement.",
-    category: "Vitamins",
-  },
-  {
-    question: "What is a normal resting heart rate for adults?",
-    options: ["40 to 50 bpm", "60 to 100 bpm", "100 to 120 bpm", "120 to 140 bpm"],
-    correct: 1,
-    explanation: "A normal resting heart rate for adults ranges from 60 to 100 beats per minute. Athletes may have a resting rate as low as 40 bpm. A consistently elevated resting rate may indicate a health concern.",
-    tip: "Check your resting heart rate first thing in the morning before getting out of bed for the most accurate reading.",
-    category: "Heart",
-  },
-  {
-    question: "How often should adults get at least 150 minutes of moderate exercise?",
-    options: ["Per day", "Per week", "Per month", "Per year"],
-    correct: 1,
-    explanation: "The WHO recommends at least 150 minutes of moderate-intensity aerobic activity per week for adults. This works out to about 22 minutes per day or 30 minutes five times a week.",
-    tip: "Walking briskly counts as moderate exercise. You do not need a gym membership to meet this target.",
-    category: "Exercise",
-  },
+const questions: Q[] = [
+  { q: "Your GP says 'take this antibiotic for 5 days.' You feel better after 3 days. Should you stop?", opts: ["Yes, if you feel better you can stop", "No, always finish the full course", "It depends on the type of antibiotic", "Ask a pharmacist first"], correct: 1, why: "Stopping antibiotics early can leave resistant bacteria behind, making future infections harder to treat. Always finish the full course unless your doctor specifically tells you otherwise.", tip: "If antibiotics give you side effects, call your GP before stopping. They can often switch you to something gentler.", cat: "Medication" },
+  { q: "You have a persistent headache. You Google it and see 'brain tumour.' How likely is that actually?", opts: ["Very likely", "About 50/50", "Less than 1% of headaches are tumours", "Impossible to say without a scan"], correct: 2, why: "Less than 1% of headaches indicate anything serious. Tension headaches and migraines are overwhelmingly the most common causes. However, a sudden, severe headache unlike any you have had before does warrant urgent attention.", tip: "Write down when headaches happen, how long they last, and what helps. This information is far more useful to your GP than anything you found online.", cat: "Myth vs Fact" },
+  { q: "A friend says 'drink 8 glasses of water a day or you will get dehydrated.' Is this true?", opts: ["Yes, everyone needs exactly 8 glasses", "No, water needs vary by person, activity, and climate", "You should drink even more than 8 glasses", "Only athletes need that much"], correct: 1, why: "The '8 glasses' rule has no strong scientific basis. Your body needs different amounts depending on your size, activity level, climate, and diet. Many fruits and vegetables also contain significant water.", tip: "The simplest way to check hydration: look at the colour of your urine. Pale yellow is good. Dark yellow means drink more.", cat: "Nutrition" },
+  { q: "You cut your finger while cooking. It is bleeding steadily but you can move the finger. What should you do first?", opts: ["Go to A&E immediately", "Apply pressure with a clean cloth for 10 minutes", "Run it under cold water only", "Put a plaster on immediately"], correct: 1, why: "For most cuts, firm pressure with a clean cloth for 10 minutes is the correct first step. This allows the blood to clot. Going to A&E for a minor cut wastes your time and theirs. However, if the bleeding does not stop after 10 minutes of pressure, the cut is very deep, or you cannot move the finger, then seek medical help.", tip: "Keep a basic first aid kit at home. Most minor injuries do not need a doctor. Knowing when they do is the real skill.", cat: "First Aid" },
+  { q: "Your elderly parent fell but says they are fine. They did not hit their head. Should you still be concerned?", opts: ["No, if they say they are fine, trust them", "Monitor for 24 hours, watch for pain or bruising", "Take them to A&E regardless", "Only worry if they cannot walk"], correct: 1, why: "Falls in elderly people can cause injuries that are not immediately obvious, including hairline fractures and internal bruising. Pain, swelling, or difficulty moving may appear hours later. Watch for changes over 24 hours.", tip: "Ask your GP about a falls risk assessment. Simple changes like grab rails, better lighting, and medication reviews can significantly reduce fall risk.", cat: "Elderly Care" },
+  { q: "You have been feeling low and unmotivated for 3 weeks. Is this something to see a GP about?", opts: ["No, everyone feels sad sometimes", "Yes, persistent low mood for 2+ weeks is worth discussing", "Only if you cannot get out of bed", "Mental health is not a GP issue"], correct: 1, why: "The NHS recommends speaking to your GP if you have been feeling low, anxious, or hopeless for more than 2 weeks. GPs are trained to help with mental health and can offer support, therapy referrals, or medication if appropriate.", tip: "You do not need to have a 'reason' to feel low. Mental health conditions are medical conditions. Asking for help is not weakness, it is self-care.", cat: "Mental Health" },
+  { q: "Your child has a temperature of 38.2. Should you give them paracetamol immediately?", opts: ["Yes, always bring the fever down as fast as possible", "Only if they seem uncomfortable or distressed", "Never give children paracetamol", "Only if the temperature is above 40"], correct: 1, why: "Fever is the body's natural response to infection. The goal is not to eliminate the fever but to keep the child comfortable. If they are eating, drinking, and playing normally, medication may not be needed even with a mild fever.", tip: "Never give aspirin to children under 16. Use children's paracetamol or ibuprofen, and always check the dosage for their age and weight.", cat: "Children" },
+  { q: "You read that you should not eat after 8pm to lose weight. Is this supported by science?", opts: ["Yes, eating late causes weight gain", "No, total calories matter more than timing", "It depends on your metabolism", "You should not eat after 6pm"], correct: 1, why: "Weight gain is primarily about total calorie intake versus expenditure, not when you eat. A calorie at 9pm is the same as a calorie at 9am. However, late-night eating can disrupt sleep quality, which can indirectly affect weight.", tip: "Instead of timing rules, focus on eating when you are genuinely hungry and stopping when you are satisfied. Sustainable habits beat strict rules every time.", cat: "Nutrition" },
+  { q: "You notice a new mole on your arm. When should you be concerned?", opts: ["All new moles are dangerous", "If it is asymmetrical, has uneven borders, multiple colours, or is growing", "Only if it hurts", "New moles after 30 are always fine"], correct: 1, why: "Use the ABCDE rule: Asymmetry, Border irregularity, Colour variation, Diameter larger than 6mm, and Evolving (changing shape, size, or colour). Most moles are harmless, but any mole that changes should be checked by a GP.", tip: "Take photos of moles you want to monitor. When you see your GP, having a 'before' photo makes it much easier for them to assess whether it has changed.", cat: "Skin Health" },
 ];
 
 export default function QuizPage() {
-  const todayIndex = useMemo(() => {
-    const day = new Date();
-    return (day.getFullYear() * 366 + day.getMonth() * 31 + day.getDate()) % questions.length;
+  const todayIdx = useMemo(() => {
+    const d = new Date();
+    return (d.getFullYear() * 366 + d.getMonth() * 31 + d.getDate()) % questions.length;
   }, []);
 
-  const [qIndex, setQIndex] = useState(todayIndex);
-  const [selected, setSelected] = useState<number | null>(null);
+  const [qi, setQi] = useState(todayIdx);
+  const [sel, setSel] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [score, setScore] = useState(0);
   const [total, setTotal] = useState(0);
 
-  const q = questions[qIndex];
-  const isCorrect = selected === q.correct;
+  const q = questions[qi];
+  const correct = sel === q.correct;
 
-  function handleSelect(idx: number) {
-    if (revealed) return;
-    setSelected(idx);
-  }
-
-  function handleReveal() {
-    if (selected === null || revealed) return;
+  function pick(i: number) { if (!revealed) setSel(i); }
+  function reveal() {
+    if (sel === null || revealed) return;
     setRevealed(true);
-    setTotal(prev => prev + 1);
-    if (selected === q.correct) setScore(prev => prev + 1);
+    setTotal(p => p + 1);
+    if (sel === q.correct) setScore(p => p + 1);
   }
-
-  function handleNext() {
-    setQIndex(prev => (prev + 1) % questions.length);
-    setSelected(null);
-    setRevealed(false);
-  }
+  function next() { setQi(p => (p + 1) % questions.length); setSel(null); setRevealed(false); }
 
   return (
     <>
       <style>{FONT}</style>
       <style>{CSS}</style>
-      <div className="quizWrap">
-        <nav className="quizNav">
-          <div className="container quizNavInner">
-            <Link href="/" className="quizNavBrand">
-              <div className="quizNavLogo"><Image src="/omela-logo-mark.png" alt="Omela" width={32} height={32} style={{ width: "100%", height: "100%", objectFit: "contain" }} /></div>
-              <div><div className="quizNavName">Omela</div><div className="quizNavSub serif">Health Quiz</div></div>
+      <div className="qzWrap">
+        <nav className="qzNav">
+          <div className="container qzNavIn">
+            <Link href="/" className="qzBrand">
+              <div className="qzLogo"><Image src="/omela-logo-mark.png" alt="Omela" width={30} height={30} style={{ width: "100%", height: "100%", objectFit: "contain" }} /></div>
+              <div><div className="qzBrandN">Omela</div><div className="qzBrandS serif">Health Quiz</div></div>
             </Link>
-            <Link href="/" className="btnP quizBackBtn">Back to Omela <ArrowRight size={13} /></Link>
+            <Link href="/" className="btnP qzBack">Back to Omela <ArrowRight size={12} /></Link>
           </div>
         </nav>
 
-        <main className="quizMain">
+        <main className="qzMain">
           <div className="container">
-            {/* Header */}
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="quizHeader">
-              <div className="quizHeaderLeft">
-                <span className="quizPill"><Heart size={14} color={c.accent} /> Daily Health Check</span>
-                <h1 className="serif quizPageTitle">Test your health knowledge.</h1>
-                <p className="quizPageBody">One question at a time. Learn something new about your health in 30 seconds.</p>
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="qzHeader">
+              <div>
+                <div className="qzPill"><Heart size={13} color={c.accent} /> Health Knowledge Check</div>
+                <h1 className="serif qzTitle">Would you know what to do?</h1>
+                <p className="qzBody">Real health scenarios. See if you would make the right call.</p>
               </div>
-              {total > 0 && (
-                <div className="quizScore">
-                  <div className="quizScoreNum">{score}/{total}</div>
-                  <div className="quizScoreLabel">correct</div>
-                </div>
-              )}
+              {total > 0 && <div className="qzScore"><div className="qzScoreN">{score}/{total}</div><div className="qzScoreL">correct</div></div>}
             </motion.div>
 
-            {/* Question card */}
             <AnimatePresence mode="wait">
-              <motion.div key={qIndex} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.35 }} className="qCard">
-                <div className="qCategory">{q.category}</div>
-                <h2 className="qQuestion">{q.question}</h2>
-
-                <div className="qOptions">
-                  {q.options.map((opt, i) => {
-                    let optClass = "qOpt";
-                    if (revealed) {
-                      if (i === q.correct) optClass += " qOptCorrect";
-                      else if (i === selected) optClass += " qOptWrong";
-                      else optClass += " qOptDim";
-                    } else if (i === selected) {
-                      optClass += " qOptSelected";
-                    }
-
+              <motion.div key={qi} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }} className="qzCard">
+                <div className="qzCat">{q.cat}</div>
+                <h2 className="qzQ">{q.q}</h2>
+                <div className="qzOpts">
+                  {q.opts.map((opt, i) => {
+                    let cls = "qzOpt";
+                    if (revealed) { if (i === q.correct) cls += " qzOptOk"; else if (i === sel) cls += " qzOptBad"; else cls += " qzOptDim"; }
+                    else if (i === sel) cls += " qzOptSel";
                     return (
-                      <motion.button key={i} className={optClass} onClick={() => handleSelect(i)} whileHover={!revealed ? { scale: 1.01 } : {}} whileTap={!revealed ? { scale: 0.99 } : {}}>
-                        <span className="qOptLetter">{String.fromCharCode(65 + i)}</span>
-                        <span className="qOptText">{opt}</span>
-                        {revealed && i === q.correct && <span className="qOptCheck">&#10003;</span>}
-                        {revealed && i === selected && i !== q.correct && <span className="qOptX">&#10007;</span>}
-                      </motion.button>
+                      <button key={i} className={cls} onClick={() => pick(i)}>
+                        <span className="qzOptL">{String.fromCharCode(65 + i)}</span>
+                        <span className="qzOptT">{opt}</span>
+                        {revealed && i === q.correct && <span className="qzOptI" style={{ color: c.green }}>&#10003;</span>}
+                        {revealed && i === sel && i !== q.correct && <span className="qzOptI" style={{ color: c.red }}>&#10007;</span>}
+                      </button>
                     );
                   })}
                 </div>
 
-                {/* Action button */}
                 {!revealed ? (
-                  <button className="btnP qSubmit" onClick={handleReveal} disabled={selected === null}>
-                    Check answer
-                  </button>
+                  <button className="btnP qzSubmit" onClick={reveal} disabled={sel === null}>Check my answer</button>
                 ) : (
-                  <div className="qResult">
-                    <div className={`qResultBanner ${isCorrect ? "qResultOk" : "qResultWrong"}`}>
-                      <span className="qResultIcon">{isCorrect ? "&#10003;" : "&#10007;"}</span>
-                      <span className="qResultTxt">{isCorrect ? "Correct!" : "Not quite."}</span>
+                  <div className="qzResult">
+                    <div className={`qzBanner ${correct ? "qzBannerOk" : "qzBannerBad"}`}>
+                      <span>{correct ? "&#10003;" : "&#10007;"}</span>
+                      <span>{correct ? "You got it right." : "Not this time."}</span>
                     </div>
-
-                    <div className="qExplanation">
-                      <h3 className="qExpTitle">Why?</h3>
-                      <p className="qExpText">{q.explanation}</p>
-                    </div>
-
-                    <div className="qTip">
-                      <h3 className="qTipTitle">Health tip</h3>
-                      <p className="qTipText">{q.tip}</p>
-                    </div>
-
-                    <div className="qActions">
-                      <button className="btnP" onClick={handleNext}>Next question <ArrowRight size={14} /></button>
-                      <button className="btnS qShareBtn" onClick={() => {
-                        if (navigator.share) {
-                          navigator.share({ title: "Omela Health Quiz", text: `I scored ${score}/${total} on the Omela health quiz! Try it:`, url: "https://omela-rho.vercel.app/quiz" });
-                        }
-                      }}>
-                        <Share2 size={14} /> Share
-                      </button>
+                    <div className="qzExplain"><h3>Why?</h3><p>{q.why}</p></div>
+                    <div className="qzTip"><h3>Practical tip</h3><p>{q.tip}</p></div>
+                    <div className="qzActions">
+                      <button className="btnP" onClick={next}>Next question <ArrowRight size={13} /></button>
+                      <button className="btnS" onClick={() => { if (navigator.share) navigator.share({ title: "Omela Health Quiz", text: `I scored ${score}/${total} on the Omela health quiz!`, url: "https://omela-rho.vercel.app/quiz" }); }}><Share2 size={13} /> Share</button>
                     </div>
                   </div>
                 )}
               </motion.div>
             </AnimatePresence>
 
-            {/* Laura promo */}
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="quizPromo">
-              <p className="quizPromoTxt">Have a real health concern? Laura can help you check your symptoms and find a doctor near you.</p>
-              <Link href="/demo" className="btnP quizPromoBtn">Try Laura <ArrowRight size={13} /></Link>
-            </motion.div>
+            <div className="qzPromo">
+              <p>Have a real health concern? Laura can help you figure out the right next step.</p>
+              <Link href="/demo" className="btnP qzPromoBtn">Try Laura <ArrowRight size={12} /></Link>
+            </div>
           </div>
         </main>
 
-        <footer className="quizFooter">
-          <div className="container quizFooterInner">
-            <p className="quizFooterTxt">&copy; 2026 Omela</p>
-            <div style={{ display: "flex", gap: "14px" }}>
-              <Link href="/privacy" className="quizFooterLink">Privacy</Link>
-              <Link href="/terms" className="quizFooterLink">Terms</Link>
-            </div>
-          </div>
-        </footer>
+        <footer className="qzFt"><div className="container qzFtIn"><p>&copy; 2026 Omela</p><div style={{ display: "flex", gap: "12px" }}><Link href="/privacy" className="qzFtL">Privacy</Link><Link href="/terms" className="qzFtL">Terms</Link></div></div></footer>
       </div>
     </>
   );
@@ -242,81 +138,65 @@ const CSS = `
 body{background:${c.bg};color:${c.text};font-family:'DM Sans',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
 a{color:inherit;text-decoration:none}button,input{font-family:inherit}
 .serif{font-family:'Instrument Serif',Georgia,serif}
-.container{max-width:700px;margin:0 auto;padding:0 20px}
-.btnP{display:inline-flex;align-items:center;gap:7px;background:${c.dark};color:#fff;border:none;border-radius:999px;padding:13px 22px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all 0.2s}
-.btnP:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,0.12)}
+.container{max-width:680px;margin:0 auto;padding:0 16px}
+.btnP{display:inline-flex;align-items:center;gap:6px;background:${c.dark};color:#fff;border:none;border-radius:999px;padding:12px 20px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all 0.2s}
+.btnP:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,0,0,0.12)}
 .btnP:disabled{opacity:0.4;cursor:not-allowed}
-.btnS{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,0.85);color:${c.text};border:1px solid ${c.border};border-radius:999px;padding:13px 22px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s}
-.btnS:hover{background:#fff}
+.btnS{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.85);color:${c.text};border:1px solid ${c.border};border-radius:999px;padding:12px 20px;font-size:14px;font-weight:700;cursor:pointer}
 
-.quizWrap{min-height:100vh;display:flex;flex-direction:column}
-.quizNav{background:rgba(248,246,241,0.94);backdrop-filter:blur(16px);border-bottom:1px solid ${c.border};flex-shrink:0}
-.quizNavInner{display:flex;align-items:center;justify-content:space-between;height:60px;gap:10px}
-.quizNavBrand{display:flex;align-items:center;gap:8px;text-decoration:none}
-.quizNavLogo{width:30px;height:30px;border-radius:9px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
-.quizNavName{font-size:13px;font-weight:800}
-.quizNavSub{font-size:10px;color:${c.accent};font-weight:700;margin-top:1px}
-.quizBackBtn{padding:8px 16px!important;font-size:12px!important}
+.qzWrap{min-height:100vh;display:flex;flex-direction:column}
+.qzNav{background:rgba(248,246,241,0.94);backdrop-filter:blur(16px);border-bottom:1px solid ${c.border}}
+.qzNavIn{display:flex;align-items:center;justify-content:space-between;height:56px;gap:8px}
+.qzBrand{display:flex;align-items:center;gap:7px;text-decoration:none}
+.qzLogo{width:28px;height:28px;border-radius:8px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.06)}
+.qzBrandN{font-size:12px;font-weight:800}.qzBrandS{font-size:9px;color:${c.accent};font-weight:700}
+.qzBack{padding:7px 14px!important;font-size:11px!important}
 
-.quizMain{flex:1;padding:36px 0 48px}
+.qzMain{flex:1;padding:28px 0 40px}
 
-.quizHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:32px}
-.quizHeaderLeft{flex:1}
-.quizPill{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;border:1px solid ${c.border};background:rgba(255,255,255,0.8);font-size:12px;font-weight:700;color:${c.sub}}
-.quizPageTitle{font-size:clamp(28px,6vw,44px);letter-spacing:-0.04em;line-height:1.08;margin-top:14px}
-.quizPageBody{font-size:15px;color:${c.sub};line-height:1.7;margin-top:8px}
-.quizScore{text-align:center;flex-shrink:0;background:${c.card};border:1px solid ${c.border};border-radius:16px;padding:14px 20px;box-shadow:0 4px 12px rgba(0,0,0,0.03)}
-.quizScoreNum{font-size:28px;font-weight:800;letter-spacing:-0.04em;color:${c.accent}}
-.quizScoreLabel{font-size:11px;color:${c.muted};font-weight:600;margin-top:2px}
+.qzHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px}
+.qzPill{display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;border:1px solid ${c.border};background:rgba(255,255,255,0.8);font-size:11px;font-weight:700;color:${c.sub}}
+.qzTitle{font-size:clamp(26px,6vw,40px);letter-spacing:-0.04em;line-height:1.08;margin-top:10px}
+.qzBody{font-size:14px;color:${c.sub};line-height:1.6;margin-top:6px}
+.qzScore{text-align:center;flex-shrink:0;background:#fff;border:1px solid ${c.border};border-radius:14px;padding:12px 16px;box-shadow:0 3px 10px rgba(0,0,0,0.03)}
+.qzScoreN{font-size:24px;font-weight:800;color:${c.accent}}.qzScoreL{font-size:10px;color:${c.muted};font-weight:600}
 
-.qCard{background:${c.card};border:1px solid ${c.border};border-radius:24px;padding:28px;box-shadow:0 8px 28px rgba(0,0,0,0.03)}
-.qCategory{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:${c.accent};margin-bottom:12px}
-.qQuestion{font-size:clamp(20px,4vw,28px);font-weight:800;letter-spacing:-0.03em;line-height:1.25}
+.qzCard{background:#fff;border:1px solid ${c.border};border-radius:22px;padding:24px;box-shadow:0 6px 24px rgba(0,0,0,0.03)}
+.qzCat{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:${c.accent};margin-bottom:10px}
+.qzQ{font-size:clamp(18px,4vw,24px);font-weight:800;letter-spacing:-0.02em;line-height:1.3}
+.qzOpts{display:flex;flex-direction:column;gap:8px;margin-top:20px}
+.qzOpt{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;background:rgba(255,255,255,0.6);border:2px solid ${c.border};border-radius:14px;cursor:pointer;text-align:left;font-family:inherit;transition:all 0.2s}
+.qzOpt:hover{border-color:#D0CBBD;background:#fff}
+.qzOptSel{border-color:${c.accent};background:${c.accentSoft}}
+.qzOptOk{border-color:${c.green};background:${c.greenSoft};cursor:default}
+.qzOptBad{border-color:${c.red};background:${c.redSoft};cursor:default}
+.qzOptDim{opacity:0.45;cursor:default}
+.qzOptL{width:28px;height:28px;border-radius:8px;background:${c.bg};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:${c.muted};flex-shrink:0}
+.qzOptT{font-size:14px;font-weight:600;color:${c.text};flex:1}
+.qzOptI{font-size:18px;font-weight:800;flex-shrink:0}
 
-.qOptions{display:flex;flex-direction:column;gap:10px;margin-top:24px}
-.qOpt{display:flex;align-items:center;gap:14px;width:100%;padding:16px 20px;background:rgba(255,255,255,0.6);border:2px solid ${c.border};border-radius:16px;cursor:pointer;transition:all 0.2s;text-align:left;font-family:inherit}
-.qOpt:hover{border-color:#D0CBBD;background:#fff}
-.qOptSelected{border-color:${c.accent};background:${c.accentSoft}}
-.qOptCorrect{border-color:${c.green};background:${c.greenSoft};cursor:default}
-.qOptWrong{border-color:${c.red};background:${c.redSoft};cursor:default}
-.qOptDim{opacity:0.5;cursor:default}
-.qOptLetter{width:32px;height:32px;border-radius:10px;background:${c.bg};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:${c.muted};flex-shrink:0}
-.qOptText{font-size:15px;font-weight:600;color:${c.text};flex:1}
-.qOptCheck{font-size:18px;color:${c.green};font-weight:800}
-.qOptX{font-size:18px;color:${c.red};font-weight:800}
+.qzSubmit{margin-top:20px;width:100%}
 
-.qSubmit{margin-top:24px;width:100%}
+.qzResult{margin-top:20px}
+.qzBanner{display:flex;align-items:center;gap:8px;padding:14px 18px;border-radius:12px;font-size:15px;font-weight:800}
+.qzBannerOk{background:${c.greenSoft};color:${c.greenDk}}
+.qzBannerBad{background:${c.redSoft};color:${c.redDk}}
+.qzExplain{margin-top:16px;padding:18px;background:${c.bg};border-radius:12px}
+.qzExplain h3{font-size:13px;font-weight:800;margin-bottom:6px}
+.qzExplain p{font-size:14px;line-height:1.72;color:${c.sub}}
+.qzTip{margin-top:12px;padding:18px;background:${c.accentSoft};border-radius:12px;border:1px solid rgba(37,99,235,0.08)}
+.qzTip h3{font-size:13px;font-weight:800;color:${c.accent};margin-bottom:6px}
+.qzTip p{font-size:14px;line-height:1.72;color:${c.sub}}
+.qzActions{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
 
-.qResult{margin-top:24px}
-.qResultBanner{display:flex;align-items:center;gap:10px;padding:16px 20px;border-radius:14px;font-size:16px;font-weight:800}
-.qResultOk{background:${c.greenSoft};color:${c.greenDk}}
-.qResultWrong{background:${c.redSoft};color:${c.redDk}}
-.qResultIcon{font-size:20px}
+.qzPromo{margin-top:28px;padding:20px;background:#fff;border:1px solid ${c.border};border-radius:16px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.qzPromo p{font-size:13px;color:${c.sub};line-height:1.6;flex:1;min-width:180px}
+.qzPromoBtn{padding:9px 16px!important;font-size:12px!important;flex-shrink:0}
 
-.qExplanation{margin-top:20px;padding:20px;background:${c.bg};border-radius:14px}
-.qExpTitle{font-size:14px;font-weight:800;margin-bottom:6px}
-.qExpText{font-size:14px;line-height:1.7;color:${c.sub}}
+.qzFt{border-top:1px solid ${c.border};padding:16px 0}
+.qzFtIn{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.qzFtIn p{font-size:10px;color:${c.muted}}
+.qzFtL{font-size:10px;color:${c.muted};font-weight:600}
 
-.qTip{margin-top:14px;padding:20px;background:${c.accentSoft};border-radius:14px;border:1px solid rgba(37,99,235,0.1)}
-.qTipTitle{font-size:14px;font-weight:800;color:${c.accent};margin-bottom:6px}
-.qTipText{font-size:14px;line-height:1.7;color:${c.sub}}
-
-.qActions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
-
-.quizPromo{margin-top:32px;padding:24px;background:${c.card};border:1px solid ${c.border};border-radius:18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;box-shadow:0 4px 12px rgba(0,0,0,0.02)}
-.quizPromoTxt{font-size:14px;color:${c.sub};line-height:1.6;flex:1;min-width:200px}
-.quizPromoBtn{flex-shrink:0;padding:10px 18px!important;font-size:13px!important}
-
-.quizFooter{border-top:1px solid ${c.border};padding:18px 0}
-.quizFooterInner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
-.quizFooterTxt{font-size:11px;color:${c.muted}}
-.quizFooterLink{font-size:11px;color:${c.muted};font-weight:600;transition:color 0.2s}
-.quizFooterLink:hover{color:${c.text}}
-
-@media(min-width:640px){
-  .container{padding:0 28px}
-  .quizMain{padding:48px 0 64px}
-  .qCard{padding:36px}
-  .quizHeader{margin-bottom:40px}
-}
+@media(min-width:640px){.container{padding:0 24px}.qzMain{padding:36px 0 52px}.qzCard{padding:32px}}
 `;
