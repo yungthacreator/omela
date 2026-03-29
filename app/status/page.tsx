@@ -2,20 +2,19 @@
 
 import Link from "next/link";
 import Image from "next/image";
-
-const FONT = `@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap');`;
+import { brand, fontImport } from "../../lib/brand";
 
 const c = {
-  bg: "#F8F6F1",
-  text: "#141517",
-  sub: "#555B69",
-  muted: "#8B919F",
-  border: "#E3DDD2",
-  green: "#22C55E",
-  greenSoft: "#ECFDF3",
+  bg: brand.bg,
+  text: brand.text,
+  sub: brand.sub,
+  muted: brand.muted,
+  border: brand.border,
+  green: brand.green,
+  greenSoft: brand.greenSoft,
   amber: "#D97706",
   amberSoft: "#FFF7ED",
-  dark: "#08090C",
+  dark: brand.dark,
 };
 
 const systems = [
@@ -30,7 +29,7 @@ const systems = [
 export default function StatusPage() {
   return (
     <>
-      <style>{FONT}</style>
+      <style>{fontImport}</style>
       <style>{CSS}</style>
 
       <div className="wrap">
@@ -146,10 +145,10 @@ a{text-decoration:none;color:inherit}
 .logo{width:34px;height:34px;border-radius:10px;overflow:hidden}
 .brandName{font-weight:800;font-size:14px}
 .brandSub{font-size:11px;color:${c.muted}}
-.navActions{display:flex;gap:10px}
-.btnPrimary,.btnGhost{display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 18px;border-radius:999px;font-size:13px;font-weight:700}
+.navActions{display:flex;gap:10px;flex-wrap:wrap}
+.btnPrimary,.btnGhost{display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 18px;border-radius:999px;font-size:13px;font-weight:700;white-space:nowrap}
 .btnPrimary{background:${c.dark};color:#fff}
-.btnGhost{border:1px solid ${c.border};color:${c.sub}}
+.btnGhost{border:1px solid ${c.border};color:${c.sub};background:rgba(255,255,255,0.7)}
 .hero{padding:72px 0 28px}
 .pillRow{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:${c.greenSoft};color:${c.green};font-size:12px;font-weight:800}
 .dot{width:8px;height:8px;border-radius:999px;background:${c.green};display:inline-block}
