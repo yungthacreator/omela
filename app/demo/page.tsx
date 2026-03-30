@@ -4,309 +4,170 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Send, RotateCcw, Pill, MapPin, Clock, Phone, Globe, FileText, Baby } from "lucide-react";
+import { ArrowRight, Send, RotateCcw, Pill, MapPin, Clock, Phone, Globe, FileText } from "lucide-react";
 
 const FONT = `@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap');`;
 
-const c = {
-  bg: "#F8F6F1", card: "#FFFFFF", dark: "#08090C",
-  text: "#111214", sub: "#4A4F5C", muted: "#888E9C",
-  accent: "#2563EB", accentSoft: "#ECF2FF",
-  border: "#E3DDD2",
-  green: "#22C55E", greenSoft: "#ECFDF3", greenDk: "#15803D",
-  amber: "#F59E0B", amberSoft: "#FFFBEB",
-  red: "#EF4444", redSoft: "#FEF2F2",
-};
+const c = { bg:"#F8F6F1",card:"#FFFFFF",dark:"#08090C",text:"#111214",sub:"#4A4F5C",muted:"#888E9C",accent:"#2563EB",accentSoft:"#ECF2FF",border:"#E3DDD2",green:"#22C55E",greenSoft:"#ECFDF3",greenDk:"#15803D",amber:"#F59E0B",amberSoft:"#FFFBEB",red:"#EF4444",redSoft:"#FEF2F2" };
 
-type Msg = { from: "user" | "laura"; text: string; urgency?: "routine" | "soon" | "urgent" | "emergency"; action?: string };
+type Msg = { from:"user"|"laura"; text:string; urgency?:"routine"|"soon"|"urgent"|"emergency"; action?:string };
+type Scenario = { id:string; label:string; emoji:string; desc:string; cta:string; conversation:Msg[] };
 
-type Scenario = {
-  id: string;
-  icon: React.ReactNode;
-  label: string;
-  emoji: string;
-  desc: string;
-  color: string;
-  conversation: Msg[];
+const urgencyColors = {
+  routine:{bg:c.greenSoft,text:c.greenDk,label:"Routine"},
+  soon:{bg:c.amberSoft,text:"#92400E",label:"Book soon"},
+  urgent:{bg:"#FFF7ED",text:"#C2410C",label:"Needs attention"},
+  emergency:{bg:c.redSoft,text:"#991B1B",label:"Emergency"},
 };
 
 const scenarios: Scenario[] = [
-  {
-    id: "prescription",
-    icon: <Pill size={16} />,
-    label: "Repeat prescription",
-    emoji: "💊",
-    desc: "You need a refill but the GP line is busy",
-    color: "#7C3AED",
-    conversation: [
-      { from: "user", text: "I need to refill my blood pressure medication. I have been trying to call my GP for two days but the line is always busy." },
-      { from: "laura", text: "I understand how frustrating that is, especially for medication you depend on daily. Let me help you get this sorted without the phone queue.\n\nFirst, which medication do you need refilled?", urgency: "routine" },
-      { from: "user", text: "Amlodipine 5mg. I take it every morning. I have about 3 days left." },
-      { from: "laura", text: "Got it. Amlodipine 5mg, daily. With 3 days remaining, we have a short window but enough time to get this processed.\n\nI have found your registered practice: Parkside Medical Centre (0.4 miles from you). They accept repeat prescription requests online and by phone.\n\nI can do two things right now:\n\n1. Draft a refill request message you can submit through their online portal\n2. Request a callback from the dispensary team\n\nWhich would you prefer?", action: "Provider found: Parkside Medical Centre" },
-      { from: "user", text: "Can you draft the request? That would save me so much time." },
-      { from: "laura", text: "Here is your draft refill request:\n\n\"Dear Parkside Medical Centre,\n\nI would like to request a repeat prescription for Amlodipine 5mg (once daily). I have approximately 3 days of supply remaining. My date of birth is [your DOB] and my NHS number is [your number].\n\nPlease let me know if anything further is needed.\n\nThank you.\"\n\nYou can submit this through their online portal or email it to prescriptions@parkside.nhs.uk. Most practices process repeats within 48 hours.\n\nWould you also like me to set a reminder for your next refill so you never have to chase this again?" },
-    ],
-  },
-  {
-    id: "moved",
-    icon: <MapPin size={16} />,
-    label: "Just moved, need a GP",
-    emoji: "📍",
-    desc: "New city, no doctor, no idea where to start",
-    color: "#059669",
-    conversation: [
-      { from: "user", text: "I just moved to Manchester from Lagos two weeks ago. I do not have a GP here and I am not sure how the system works. I also need to get my asthma inhaler." },
-      { from: "laura", text: "Welcome to Manchester. I know navigating a new healthcare system in a new country can feel overwhelming, so let me walk you through this step by step.\n\nIn the UK, everyone is entitled to register with a GP practice near where they live. This is free through the NHS. You do not need to have settled status or pay anything upfront.\n\nWhat is your postcode or the area you are living in?" },
-      { from: "user", text: "I am in M1, near Piccadilly." },
-      { from: "laura", text: "I found 5 GP practices near M1 that are currently accepting new patients:\n\n1. City Health Centre (0.3 miles) - Open registration\n2. Piccadilly Medical Practice (0.5 miles) - Open registration\n3. Northern Quarter Surgery (0.6 miles) - Open registration\n\nTo register, you will need:\n- Proof of address (utility bill, tenancy agreement)\n- Photo ID (passport or BRP card)\n- Your previous medical records are helpful but not required\n\nOnce registered, you can request your asthma inhaler as a new patient. Most practices can process this within your first appointment.\n\nWould you like me to request a registration callback from City Health Centre? They can guide you through the rest.", action: "3 practices found near M1", urgency: "routine" },
-      { from: "user", text: "Yes please. Also, is there anything I should know before I go?" },
-      { from: "laura", text: "A few things that will make your first visit smoother:\n\n- Appointments are usually 10 minutes. Write down your main concerns beforehand so you cover everything.\n- Mention your asthma history and which inhaler you use (brand and strength). If you have the packaging, bring it.\n- Ask about repeat prescriptions so next time you can request refills without booking an appointment.\n- If you need an interpreter, the practice can arrange one for free. You have the right to this.\n\nI have submitted a registration callback request to City Health Centre. They typically respond within 1-2 working days.\n\nIs there anything else I can help with as you settle in?" },
-    ],
-  },
-  {
-    id: "afterhours",
-    icon: <Clock size={16} />,
-    label: "It is 11pm and I am worried",
-    emoji: "🌙",
-    desc: "After-hours anxiety about your child",
-    color: "#DC2626",
-    conversation: [
-      { from: "user", text: "My 3 year old has had a temperature of 38.5 for two days. She is not eating much. It is 11pm and I do not know if I should go to A&E or wait until morning." },
-      { from: "laura", text: "I can hear how worried you are, and you are doing the right thing by asking. Let me help you think through this carefully.\n\nA temperature of 38.5 in a 3-year-old for two days is worth monitoring closely. Before I suggest next steps, can you tell me:\n\n- Is she responsive and making eye contact when you talk to her?\n- Is she drinking any fluids?\n- Does she have a rash? (Press a glass against any spots and see if they fade)", urgency: "urgent" },
-      { from: "user", text: "She is responding to me but seems tired. She had some water an hour ago. No rash that I can see." },
-      { from: "laura", text: "That is reassuring. A child who is responsive, making eye contact, and taking some fluids is a good sign, even when they have a fever.\n\nBased on what you have described, this does not sound like an emergency that needs A&E tonight. However, it does need clinical attention soon.\n\nHere is what I recommend:\n\n1. Tonight: Keep her comfortable, offer small sips of water, and use children's paracetamol if you have not already (check the dosage for her age).\n\n2. Tomorrow morning: Call your GP at 8am for a same-day appointment. Tell them about the 2-day fever.\n\n3. If anything changes tonight (she becomes difficult to wake, develops a rash that does not fade under glass, has trouble breathing, or seems confused), go straight to A&E or call 999.\n\nWould you like me to find the nearest out-of-hours GP service near you, just in case you need it overnight?", urgency: "urgent", action: "Urgency: monitor tonight, GP in the morning" },
-      { from: "user", text: "Yes, and can you set a reminder for me to call the GP at 8am?" },
-      { from: "laura", text: "I have found your nearest out-of-hours service:\n\nManchester Urgent Care Centre\nOpen until midnight, reopens at 7am\nPhone: 0161 XXX XXXX\nAddress: Oxford Road, M13\n\nIf her condition worsens before the GP opens, call them or go to A&E.\n\nI will send you a reminder at 7:50am to call your GP. When you call, here is exactly what to say:\n\n\"My 3-year-old daughter has had a temperature of 38.5 for two days. She is drinking a little but not eating. I need a same-day appointment please.\"\n\nYou are doing a great job looking after her. Try to rest when she does." },
-    ],
-  },
-  {
-    id: "referral",
-    icon: <FileText size={16} />,
-    label: "Hospital referral confusion",
-    emoji: "📋",
-    desc: "You got a letter but do not understand what happens next",
-    color: "#0284C7",
-    conversation: [
-      { from: "user", text: "I received a hospital referral letter for a cardiology appointment but I do not understand most of it. It mentions an echocardiogram. What does that mean? What do I need to do?" },
-      { from: "laura", text: "Referral letters can feel confusing, especially when they use medical terms. Let me help you understand everything.\n\nAn echocardiogram is an ultrasound scan of your heart. It is completely painless and non-invasive. A technician places a small device on your chest that uses sound waves to create images of your heart. The whole thing usually takes 15-30 minutes.\n\nThere is nothing to be anxious about. You do not need any needles, you stay fully awake, and you can drive home afterwards.\n\nDo you have the appointment date and hospital name from the letter?" },
-      { from: "user", text: "It says Royal Infirmary, 15 April, Outpatient Cardiology. But I do not know where to go when I get there or what to bring." },
-      { from: "laura", text: "Here is everything you need to know for that day:\n\nWhat to bring:\n- The referral letter itself\n- A list of any medications you take (names and doses)\n- Your NHS number (usually on the letter)\n- Photo ID\n\nWhen you arrive at Royal Infirmary:\n- Follow signs to Outpatient Cardiology (usually has its own reception desk)\n- Check in at the reception. Give them your name and appointment time.\n- You will be called to a waiting area. Typical wait is 15-30 minutes past your appointment time.\n\nWhat to wear:\n- Something easy to remove from the waist up, since they need to place the device on your chest.\n\nAfter the scan:\n- Results go to your referring doctor, usually within 1-2 weeks\n- If anything needs attention sooner, they will contact you directly\n\nWould you like me to save these instructions and send you a reminder the day before your appointment?", action: "Appointment guide: Royal Infirmary, 15 April" },
-    ],
-  },
-  {
-    id: "language",
-    icon: <Globe size={16} />,
-    label: "I do not speak English well",
-    emoji: "🌍",
-    desc: "Language barrier when trying to access care",
-    color: "#7C3AED",
-    conversation: [
-      { from: "user", text: "Bonjour, j'ai besoin d'un medecin mais je ne parle pas bien anglais. Je suis a Londres depuis une semaine et j'ai tres mal au ventre." },
-      { from: "laura", text: "Bonjour. Je vais vous aider en francais, ne vous inquietez pas.\n\nJe comprends que vous avez des douleurs au ventre et que vous etes a Londres depuis une semaine. Quelques questions pour mieux vous orienter:\n\n- Depuis combien de temps avez-vous mal au ventre?\n- La douleur est-elle constante ou va-t-elle et vient-elle?\n- Avez-vous de la fievre, des nausees ou des vomissements?", urgency: "soon" },
-      { from: "user", text: "Ca fait 3 jours. La douleur va et vient. Pas de fievre mais un peu de nausees." },
-      { from: "laura", text: "Merci. Des douleurs abdominales intermittentes avec nausees depuis 3 jours meritent une consultation, mais ce n'est probablement pas une urgence.\n\nVoici ce que je peux faire pour vous:\n\n1. Trouver un cabinet medical pres de chez vous qui accepte les patients sans rendez-vous\n2. Demander un rappel pour vous, avec une note en anglais expliquant vos symptomes pour le medecin\n\nImportant: en tant que ressortissant europeen au Royaume-Uni, vous avez le droit a un interprete gratuit dans les cabinets NHS. Vous n'avez pas besoin de parler anglais pour etre soigne.\n\nQuel est votre code postal a Londres?", action: "Langue: Francais. Interprete disponible." },
-      { from: "user", text: "Je suis pres de SE1." },
-      { from: "laura", text: "J'ai trouve 3 cabinets pres de SE1 qui acceptent les visites sans rendez-vous:\n\n1. Waterloo Health Centre (0.2 miles) - Sans rendez-vous le matin\n2. Borough Medical Centre (0.4 miles) - Sans rendez-vous toute la journee\n\nJe vais preparer une note en anglais que vous pourrez montrer a l'accueil:\n\n\"This patient has had intermittent abdominal pain with mild nausea for 3 days. No fever. They speak French and would benefit from an interpreter if available.\"\n\nVoulez-vous que je demande un rappel de Waterloo Health Centre pour vous?" },
-    ],
-  },
-  {
-    id: "callback",
-    icon: <Phone size={16} />,
-    label: "They keep telling me to call back",
-    emoji: "😤",
-    desc: "Stuck in callback hell for weeks",
-    color: "#EA580C",
-    conversation: [
-      { from: "user", text: "I have been trying to get a doctor appointment for 3 weeks. Every time I call they say there are no slots and to try again tomorrow. I have a knee problem that is getting worse and I cannot keep taking time off work to sit on the phone." },
-      { from: "laura", text: "That is genuinely exhausting, and you should not have to fight this hard to be seen. Three weeks of daily calling for a worsening knee is unacceptable, and I want to help you break out of this cycle.\n\nLet me ask a few things so I can find the fastest route for you:\n\n- Is your knee swollen, red, or warm to the touch?\n- Can you put weight on it?\n- Did this start after an injury, or did it come on gradually?", urgency: "soon" },
-      { from: "user", text: "It is a bit swollen. I can walk on it but it hurts going up stairs. No injury, it just started getting worse over the last month." },
-      { from: "laura", text: "A gradually worsening, swollen knee that has been getting worse for a month needs to be seen, but it is not an emergency. The problem is clearly the access bottleneck, not the urgency.\n\nHere are three ways to get past the phone queue:\n\n1. Online booking: Many GP practices now have online appointment systems. Does your practice have an NHS app or online portal? You can often book same-day or next-day slots at midnight when they release.\n\n2. Alternative route: I found a walk-in clinic near you (City Walk-In Centre, 0.6 miles) that sees patients without appointments. Wait times are typically 30-60 minutes. This might be faster than 3 more weeks of calling.\n\n3. Callback request: I can submit a structured request to your GP on your behalf, flagging that you have been trying for 3 weeks and the condition is worsening. Practices take these more seriously than phone queue requests.\n\nWhich option works best for you?", action: "3 access routes identified" },
-      { from: "user", text: "Please submit the callback request. And the walk-in centre sounds good as a backup." },
-      { from: "laura", text: "Done. I have submitted a callback request to your practice with the following summary:\n\n\"Patient has been attempting to book for 3 weeks without success. Gradually worsening knee pain with visible swelling for 1 month. Able to weight-bear but pain increasing, especially on stairs. No acute injury. Requesting same-day or next-day appointment.\"\n\nI have also saved the walk-in centre details:\nCity Walk-In Centre\nOpen 8am-8pm, 7 days\n0.6 miles from you\nNo appointment needed\n\nIf you do not hear back from your GP within 24 hours, I would recommend going to the walk-in centre. You should not have to wait any longer.\n\nI will check in with you tomorrow. Would that be helpful?" },
-    ],
-  },
+  { id:"prescription", label:"Repeat prescription", emoji:"\u{1F48A}", desc:"The GP line is busy and you need your medication", cta:"Watch Laura draft a refill", conversation:[
+    {from:"user",text:"I need to refill my blood pressure medication. I have been trying to call my GP for two days but the line is always busy."},
+    {from:"laura",text:"I understand how frustrating that is, especially for medication you depend on daily. Let me help you get this sorted without the phone queue.\n\nWhich medication do you need refilled?",urgency:"routine"},
+    {from:"user",text:"Amlodipine 5mg. I take it every morning. I have about 3 days left."},
+    {from:"laura",text:"Got it. Amlodipine 5mg, daily. With 3 days remaining, we have a short window but enough time.\n\nI found your practice: Parkside Medical Centre (0.4 miles). They accept repeat prescription requests online.\n\nHere is your draft refill request:\n\n\"Dear Parkside Medical Centre,\nI would like to request a repeat prescription for Amlodipine 5mg (once daily). I have approximately 3 days of supply remaining.\nThank you.\"\n\nShall I also set a reminder for your next refill?",action:"Refill request drafted for Parkside Medical Centre"},
+  ]},
+  { id:"moved", label:"New city, no doctor", emoji:"\u{1F4CD}", desc:"You just arrived and need to register", cta:"Watch Laura guide registration", conversation:[
+    {from:"user",text:"I just moved to Manchester from Lagos. I do not have a GP and I need my asthma inhaler."},
+    {from:"laura",text:"Welcome to Manchester. In the UK, everyone can register with a GP practice near where they live. This is free through the NHS.\n\nWhat is your postcode or area?"},
+    {from:"user",text:"I am in M1, near Piccadilly."},
+    {from:"laura",text:"I found 3 GP practices near M1 accepting new patients:\n\n1. City Health Centre (0.3 miles)\n2. Piccadilly Medical Practice (0.5 miles)\n3. Northern Quarter Surgery (0.6 miles)\n\nTo register, bring: proof of address, photo ID. Your previous records are helpful but not required.\n\nOnce registered, you can request your inhaler at your first appointment. If you need an interpreter, the practice arranges one for free.\n\nShall I request a registration callback from City Health Centre?",action:"3 practices found near M1",urgency:"routine"},
+  ]},
+  { id:"afterhours", label:"11pm and worried", emoji:"\u{1F319}", desc:"Your child has a fever and you are unsure what to do", cta:"Watch Laura assess calmly", conversation:[
+    {from:"user",text:"My 3 year old has had a temperature of 38.5 for two days. She is not eating much. It is 11pm and I do not know if I should go to A&E."},
+    {from:"laura",text:"I can hear how worried you are. Let me help you think through this.\n\nCan you tell me:\n- Is she responsive and making eye contact?\n- Is she drinking any fluids?\n- Does she have a rash?",urgency:"urgent"},
+    {from:"user",text:"She is responding to me but seems tired. She had some water an hour ago. No rash."},
+    {from:"laura",text:"That is reassuring. A child who is responsive and taking fluids is a good sign.\n\nThis does not sound like an A&E emergency tonight, but it does need attention soon.\n\nTonight: Keep her comfortable, offer small sips of water, use children's paracetamol.\n\nTomorrow at 8am: Call your GP for a same-day appointment.\n\nIf anything changes tonight (difficult to wake, rash that does not fade, trouble breathing), go straight to A&E.\n\nI found your nearest out-of-hours service:\nManchester Urgent Care Centre\nOpen until midnight, reopens 7am\n\nYou are doing a great job looking after her.",action:"Out-of-hours service found",urgency:"urgent"},
+  ]},
+  { id:"referral", label:"Hospital letter confusion", emoji:"\u{1F4CB}", desc:"Medical jargon you do not understand", cta:"Watch Laura explain clearly", conversation:[
+    {from:"user",text:"I received a hospital referral for a cardiology appointment. It mentions an echocardiogram. What does that mean?"},
+    {from:"laura",text:"An echocardiogram is an ultrasound scan of your heart. Completely painless and non-invasive. A technician places a small device on your chest that uses sound waves to create images. Takes 15-30 minutes.\n\nNo needles, you stay awake, you can drive home after.\n\nDo you have the appointment date and hospital?"},
+    {from:"user",text:"Royal Infirmary, 15 April, Outpatient Cardiology."},
+    {from:"laura",text:"Here is everything you need:\n\nBring: The referral letter, medication list, NHS number, photo ID.\n\nWear: Something easy to remove from the waist up.\n\nWhen you arrive: Follow signs to Outpatient Cardiology, check in at reception.\n\nResults go to your referring doctor within 1-2 weeks.\n\nWant me to send you a reminder the day before?",action:"Appointment guide prepared"},
+  ]},
+  { id:"language", label:"Language barrier", emoji:"\u{1F30D}", desc:"You cannot explain your symptoms in English", cta:"Watch Laura speak French", conversation:[
+    {from:"user",text:"Bonjour, j'ai besoin d'un medecin mais je ne parle pas bien anglais. J'ai tres mal au ventre."},
+    {from:"laura",text:"Bonjour. Je vais vous aider en francais.\n\nDepuis combien de temps avez-vous mal au ventre? La douleur est-elle constante? Avez-vous de la fievre ou des nausees?",urgency:"soon"},
+    {from:"user",text:"Ca fait 3 jours. Pas de fievre mais un peu de nausees."},
+    {from:"laura",text:"Merci. Je vais chercher un cabinet medical pres de chez vous.\n\nJ'ai trouve: Waterloo Health Centre (0.2 miles) - Sans rendez-vous le matin.\n\nVoici une note en anglais pour l'accueil:\n\n\"This patient has had intermittent abdominal pain with mild nausea for 3 days. No fever. They speak French and would benefit from an interpreter.\"\n\nVoulez-vous que je demande un rappel?",action:"Bilingual note prepared"},
+  ]},
+  { id:"callback", label:"Stuck in callback hell", emoji:"\u{1F624}", desc:"Three weeks of being told to try again tomorrow", cta:"Watch Laura find alternatives", conversation:[
+    {from:"user",text:"I have been trying to get an appointment for 3 weeks. Every time I call they say no slots. My knee is getting worse and I cannot keep taking time off work."},
+    {from:"laura",text:"Three weeks is unacceptable. Let me help you break out of this cycle.\n\nIs your knee swollen or red? Can you put weight on it? Did this start after an injury?",urgency:"soon"},
+    {from:"user",text:"A bit swollen. I can walk but it hurts on stairs. No injury, it just got worse over a month."},
+    {from:"laura",text:"Here are three ways past the phone queue:\n\n1. Online booking: Many practices release same-day slots at midnight through their portal.\n\n2. Walk-in clinic: City Walk-In Centre (0.6 miles), open 8am-8pm, no appointment needed.\n\n3. Structured request: I can submit a callback request to your GP flagging 3 weeks of failed attempts and worsening symptoms.\n\nWhich works best for you?",action:"3 alternative access routes identified"},
+    {from:"user",text:"Submit the callback request please."},
+    {from:"laura",text:"Done. I submitted:\n\n\"Patient has attempted to book for 3 weeks without success. Gradually worsening knee pain with visible swelling for 1 month. Requesting same-day or next-day appointment.\"\n\nIf you do not hear back within 24 hours, go to the walk-in centre. You should not wait any longer.\n\nI will check in with you tomorrow.",action:"Callback request submitted"},
+  ]},
 ];
 
-const urgencyColors = {
-  routine: { bg: c.greenSoft, text: c.greenDk, label: "Routine" },
-  soon: { bg: c.amberSoft, text: "#92400E", label: "Book soon" },
-  urgent: { bg: "#FFF7ED", text: "#C2410C", label: "Needs attention" },
-  emergency: { bg: c.redSoft, text: "#991B1B", label: "Emergency" },
-};
-
 export default function DemoPage() {
-  const [activeScenario, setActiveScenario] = useState<Scenario | null>(null);
+  const [activeScenario, setActiveScenario] = useState<Scenario|null>(null);
   const [visibleMsgs, setVisibleMsgs] = useState(0);
   const [typing, setTyping] = useState(false);
   const [freeInput, setFreeInput] = useState("");
-  const [freeMessages, setFreeMessages] = useState<Msg[]>([
-    { from: "laura", text: "Hello. I am Laura. Tell me what you are dealing with and I will help you figure out the next step. You can describe symptoms, ask about prescriptions, find a doctor near you, or just tell me what is stressing you out about getting care." },
-  ]);
-  const [mode, setMode] = useState<"scenarios" | "free">("scenarios");
+  const [freeMessages, setFreeMessages] = useState<Msg[]>([{from:"laura",text:"Hello. I am Laura. Tell me what you are dealing with and I will help you figure out the next step."}]);
+  const [mode, setMode] = useState<"scenarios"|"free">("scenarios");
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [visibleMsgs, freeMessages, typing]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({behavior:"smooth"}); }, [visibleMsgs,freeMessages,typing]);
 
-  function startScenario(s: Scenario) {
-    setActiveScenario(s);
-    setVisibleMsgs(0);
-    setMode("scenarios");
-    advanceScenario(s, 0);
+  function startScenario(s:Scenario) { setActiveScenario(s); setVisibleMsgs(0); setMode("scenarios"); advanceScenario(s,0); }
+
+  function advanceScenario(s:Scenario,idx:number) {
+    if(idx>=s.conversation.length) return;
+    const msg=s.conversation[idx];
+    if(msg.from==="user"){ setVisibleMsgs(idx+1); setTimeout(()=>{ setTyping(true); setTimeout(()=>{ setTyping(false); setVisibleMsgs(idx+2); setTimeout(()=>advanceScenario(s,idx+2),1200); },800+Math.random()*1000); },600); }
+    else{ setVisibleMsgs(idx+1); setTimeout(()=>advanceScenario(s,idx+1),1200); }
   }
 
-  function advanceScenario(s: Scenario, idx: number) {
-    if (idx >= s.conversation.length) return;
-    const msg = s.conversation[idx];
-    if (msg.from === "user") {
-      setVisibleMsgs(idx + 1);
-      setTimeout(() => {
-        setTyping(true);
-        setTimeout(() => {
-          setTyping(false);
-          setVisibleMsgs(idx + 2);
-          setTimeout(() => advanceScenario(s, idx + 2), 1200);
-        }, 800 + Math.random() * 1000);
-      }, 600);
-    } else {
-      setVisibleMsgs(idx + 1);
-      setTimeout(() => advanceScenario(s, idx + 1), 1200);
-    }
+  function getResponse(input:string):Msg {
+    const l=input.toLowerCase();
+    if(l.match(/chest|breathe|unconscious|stroke|seizure/)) return {from:"laura",text:"This sounds like it could be a medical emergency. Please call 999 (UK) or 911 (US) immediately.",urgency:"emergency"};
+    if(l.match(/prescription|refill|medication|medicine|inhaler/)) return {from:"laura",text:"I can help with that. Let me find your practice and check if they accept online refill requests. What medication do you need?",urgency:"routine"};
+    if(l.match(/move|new|register|no\s*gp|no\s*doctor/)) return {from:"laura",text:"I can find GP practices near you that accept new patients. What is your postcode?",urgency:"routine"};
+    if(l.match(/referral|hospital|letter|scan|mri/)) return {from:"laura",text:"I can help you understand referral letters. Could you tell me what the referral is for?",urgency:"routine"};
+    if(l.match(/callback|call\s*back|no\s*slots|waiting|weeks|busy/)) return {from:"laura",text:"Being stuck in callback hell is exhausting. I can find alternative routes: walk-in clinics, online portals, or a structured request. What have you been trying to get seen for?",urgency:"soon"};
+    if(l.match(/fever|child|baby|kid|son|daughter/)) return {from:"laura",text:"I understand the worry. Can you tell me their age, temperature, and how long it has been going on?",urgency:"urgent"};
+    if(l.match(/anxious|depressed|mental|stressed|panic/)) return {from:"laura",text:"Thank you for sharing that. What you are feeling matters. I can help you find a GP appointment. Many practices now offer same-day mental health consultations.",urgency:"soon"};
+    if(l.match(/hello|hi|hey|morning/)) return {from:"laura",text:"Hello. I am here to help. Tell me about any health concern, or I can find a doctor near you, help with prescriptions, or explain a hospital letter."};
+    return {from:"laura",text:"Could you tell me more about what you are experiencing? I can help with symptoms, finding a doctor, prescriptions, hospital referrals, or navigating the system."};
   }
 
-  function getResponse(input: string): Msg {
-    const lower = input.toLowerCase();
-    if (lower.match(/chest\s*pain|can'?t\s*breathe|unconscious|stroke|seizure/)) return { from: "laura", text: "This sounds like it could be a medical emergency. Please call 999 (UK) or 911 (US) immediately. Do not wait.", urgency: "emergency" };
-    if (lower.match(/prescription|refill|medication|medicine|inhaler|repeat/)) return { from: "laura", text: "I can help with that. Chasing repeat prescriptions is one of the most frustrating parts of the system.\n\nLet me find your registered practice and check if they accept online refill requests. What medication do you need, and roughly how many days of supply do you have left?", urgency: "routine" };
-    if (lower.match(/move|moved|new|register|no\s*gp|no\s*doctor/)) return { from: "laura", text: "Welcome. Moving to a new area and not having a doctor can feel stressful, especially when you actually need one.\n\nI can find GP practices near you that are accepting new patients and walk you through the registration process step by step. What is your postcode or area?", urgency: "routine" };
-    if (lower.match(/referral|hospital|letter|appointment|specialist|echo|scan|mri/)) return { from: "laura", text: "Hospital referral letters can feel confusing. I can help you understand what the appointment involves, what to bring, where to go, and what to expect on the day.\n\nCould you tell me a bit more about what the referral is for?", urgency: "routine" };
-    if (lower.match(/callback|call\s*back|no\s*slots|can'?t\s*get|waiting|weeks|busy/)) return { from: "laura", text: "Being stuck in the phone queue cycle is genuinely exhausting. You should not have to call every morning just to be told there is nothing available.\n\nI can help you find alternative routes: walk-in clinics, online booking portals, or I can submit a structured callback request to your practice that is harder to ignore. What have you been trying to get seen for?", urgency: "soon" };
-    if (lower.match(/fever|temperature|child|baby|kid|son|daughter/)) return { from: "laura", text: "I understand the worry. Let me help you figure out whether this needs attention tonight or can wait until morning.\n\nCan you tell me their age, how high the temperature is, and how long it has been going on?", urgency: "urgent" };
-    if (lower.match(/dentist|tooth|teeth|dental/)) return { from: "laura", text: "Dental pain is awful. I can find dentists near you that are accepting patients, including emergency dental services if the pain is severe.\n\nIs this an emergency (severe pain, swelling, or bleeding) or something you can wait a day or two for?", urgency: "soon" };
-    if (lower.match(/anxious|anxiety|depressed|depression|mental|stressed|panic|lonely|sad/)) return { from: "laura", text: "Thank you for sharing that. What you are feeling matters, and you deserve support.\n\nI can help you find a GP appointment to talk about how you are feeling. Many practices now offer same-day mental health consultations. I can also point you to free helplines that are available right now.\n\nWhat feels most helpful to you?", urgency: "soon" };
-    if (lower.match(/hello|hi|hey|morning|afternoon|evening/)) return { from: "laura", text: "Hello. I am here to help. You can tell me about any health concern, ask me to find a doctor near you, help with a repeat prescription, explain a hospital letter, or just describe what is going on. What do you need today?" };
-    return { from: "laura", text: "I understand. Could you tell me a bit more about what you are experiencing or what you need help with? I can help with symptoms, finding a doctor, repeat prescriptions, hospital referrals, or just getting through a frustrating system." };
+  function sendFree(text:string) {
+    if(!text.trim()) return;
+    setFreeMessages(prev=>[...prev,{from:"user",text:text.trim()}]); setFreeInput(""); setTyping(true);
+    setTimeout(()=>{ setTyping(false); setFreeMessages(prev=>[...prev,getResponse(text)]); },800+Math.random()*1000);
   }
 
-  function sendFree(text: string) {
-    if (!text.trim()) return;
-    setFreeMessages(prev => [...prev, { from: "user", text: text.trim() }]);
-    setFreeInput("");
-    setTyping(true);
-    setTimeout(() => {
-      setTyping(false);
-      setFreeMessages(prev => [...prev, getResponse(text)]);
-    }, 800 + Math.random() * 1000);
-  }
+  function resetAll() { setActiveScenario(null); setVisibleMsgs(0); setMode("scenarios"); setFreeMessages([{from:"laura",text:"Hello. I am Laura. Tell me what you need help with."}]); setFreeInput(""); setTyping(false); }
 
-  function resetAll() {
-    setActiveScenario(null);
-    setVisibleMsgs(0);
-    setMode("scenarios");
-    setFreeMessages([{ from: "laura", text: "Hello. I am Laura. Tell me what you are dealing with and I will help you figure out the next step." }]);
-    setFreeInput("");
-    setTyping(false);
-  }
-
-  const currentMsgs = mode === "scenarios" && activeScenario ? activeScenario.conversation.slice(0, visibleMsgs) : freeMessages;
+  const currentMsgs = mode==="scenarios"&&activeScenario ? activeScenario.conversation.slice(0,visibleMsgs) : freeMessages;
 
   return (
     <>
       <style>{FONT}</style>
       <style>{CSS}</style>
-      <div className="dWrap">
-        <nav className="dNav">
-          <div className="container dNavIn">
-            <Link href="/" className="dBrand">
-              <div className="dLogo"><Image src="/omela-logo-mark.png" alt="Omela" width={30} height={30} style={{ width: "100%", height: "100%", objectFit: "contain" }} /></div>
-              <div><div className="dBrandN">Omela</div><div className="dBrandS serif">Try Laura</div></div>
-            </Link>
-            <div className="dNavR">
-              <button onClick={resetAll} className="dResetBtn"><RotateCcw size={13} /> Reset</button>
-              <Link href="/#waitlist" className="btnP dNavCta">Get early access <ArrowRight size={13} /></Link>
-            </div>
+      <div className="dW">
+        <nav className="dN"><div className="container dNI">
+          <Link href="/" className="dBr"><div className="dLo"><Image src="/omela-logo-mark.png" alt="Omela" width={30} height={30} style={{width:"100%",height:"100%",objectFit:"contain"}} /></div><div><div className="dBrN">Omela</div><div className="dBrS serif">Try Laura</div></div></Link>
+          <div className="dNR"><button onClick={resetAll} className="dRst"><RotateCcw size={13}/> Reset</button><Link href="/#waitlist" className="btnP dNC">Get early access <ArrowRight size={13}/></Link></div>
+        </div></nav>
+
+        {/* Product status banner */}
+        <div className="dBanner">
+          <div className="dBannerInner">
+            <span className="dBannerDot" />
+            <span>This is a <b>simulation preview</b>. The full product with real AI is launching soon.</span>
+            <span className="dBannerTag">Product coming soon</span>
           </div>
-        </nav>
+        </div>
 
-        <div className="dDisclaimer">This is a preview demo with simulated responses. Laura is not providing real medical advice.</div>
-
-        <div className="dMain">
-          <div className="dInner">
-            {/* Scenario picker */}
-            {!activeScenario && mode === "scenarios" && (
-              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="dScenarios">
-                <h2 className="serif dScTitle">Real problems. Real help.</h2>
-                <p className="dScBody">Choose a scenario to see how Laura handles everyday healthcare frustrations.</p>
-                <div className="dScGrid">
+        <div className="dM">
+          <div className="dIn">
+            {!activeScenario && mode==="scenarios" && (
+              <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} className="dSc">
+                <h2 className="serif dScT">Real problems. Real help.</h2>
+                <p className="dScB">Choose a scenario to see how Laura handles everyday healthcare frustrations. These are simulated conversations showing what the full product will do.</p>
+                <div className="dScG">
                   {scenarios.map(s => (
-                    <button key={s.id} className="dScCard" onClick={() => startScenario(s)}>
-                      <span className="dScEmoji">{s.emoji}</span>
-                      <span className="dScLabel">{s.label}</span>
-                      <span className="dScDesc">{s.desc}</span>
+                    <button key={s.id} className="dScC" onClick={()=>startScenario(s)}>
+                      <span className="dScE">{s.emoji}</span>
+                      <div className="dScCT"><span className="dScL">{s.label}</span><span className="dScD">{s.desc}</span></div>
+                      <span className="dScCta">{s.cta} <ArrowRight size={12}/></span>
                     </button>
                   ))}
                 </div>
-                <button className="dFreeBtn" onClick={() => setMode("free")}>Or just type your own question <ArrowRight size={14} /></button>
+                <button className="dFr" onClick={()=>setMode("free")}>Or type your own question <ArrowRight size={14}/></button>
               </motion.div>
             )}
 
-            {/* Chat messages */}
-            {(activeScenario || mode === "free") && (
-              <div className="dChat">
-                {activeScenario && mode === "scenarios" && (
-                  <div className="dScenarioLabel">
-                    <span>{activeScenario.emoji}</span>
-                    <span>{activeScenario.label}</span>
-                  </div>
-                )}
-
-                <div className="dMessages">
+            {(activeScenario||mode==="free") && (
+              <div className="dCh">
+                {activeScenario&&mode==="scenarios"&&<div className="dChL"><span>{activeScenario.emoji}</span> {activeScenario.label}</div>}
+                <div className="dMs">
                   <AnimatePresence initial={false}>
-                    {currentMsgs.map((msg, i) => (
-                      <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className={`dMsg ${msg.from === "user" ? "dMsgR" : "dMsgL"}`}>
-                        {msg.from === "laura" && <div className="dMsgAv"><Image src="/laura-avatar.png" alt="Laura" fill sizes="30px" style={{ objectFit: "cover" }} /></div>}
-                        <div className={`dMsgC ${msg.from === "user" ? "dMsgU" : "dMsgLa"}`}>
-                          <p className="dMsgTxt" style={{ whiteSpace: "pre-line" }}>{msg.text}</p>
-                          {msg.urgency && (
-                            <div className="dUrg" style={{ background: urgencyColors[msg.urgency].bg, color: urgencyColors[msg.urgency].text }}>
-                              <span className="dUrgDot" style={{ background: urgencyColors[msg.urgency].text }} />
-                              {urgencyColors[msg.urgency].label}
-                            </div>
-                          )}
-                          {msg.action && <div className="dAction">{msg.action}</div>}
+                    {currentMsgs.map((msg,i) => (
+                      <motion.div key={i} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{duration:0.3}} className={`dMg ${msg.from==="user"?"dMgR":"dMgL"}`}>
+                        {msg.from==="laura"&&<div className="dMgAv"><Image src="/laura-avatar.png" alt="Laura" fill sizes="32px" style={{objectFit:"cover"}}/></div>}
+                        <div className={`dMgC ${msg.from==="user"?"dMgU":"dMgLa"}`}>
+                          <p className="dMgT" style={{whiteSpace:"pre-line"}}>{msg.text}</p>
+                          {msg.urgency&&<div className="dUr" style={{background:urgencyColors[msg.urgency].bg,color:urgencyColors[msg.urgency].text}}><span className="dUrD" style={{background:urgencyColors[msg.urgency].text}}/>{urgencyColors[msg.urgency].label}</div>}
+                          {msg.action&&<div className="dAc">{msg.action}</div>}
                         </div>
                       </motion.div>
                     ))}
                   </AnimatePresence>
-
-                  {typing && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="dMsg dMsgL">
-                      <div className="dMsgAv"><Image src="/laura-avatar.png" alt="Laura" fill sizes="30px" style={{ objectFit: "cover" }} /></div>
-                      <div className="dMsgLa dTyping"><span /><span /><span /></div>
-                    </motion.div>
-                  )}
-                  <div ref={bottomRef} />
+                  {typing&&<motion.div initial={{opacity:0}} animate={{opacity:1}} className="dMg dMgL"><div className="dMgAv"><Image src="/laura-avatar.png" alt="Laura" fill sizes="32px" style={{objectFit:"cover"}}/></div><div className="dMgLa dTy"><span/><span/><span/></div></motion.div>}
+                  <div ref={bottomRef}/>
                 </div>
-
-                {/* Scenario end */}
-                {mode === "scenarios" && activeScenario && visibleMsgs >= activeScenario.conversation.length && !typing && (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="dEnd">
-                    <p className="dEndTxt">End of scenario. Try another or type your own question.</p>
-                    <div className="dEndBtns">
-                      <button className="btnP" onClick={resetAll}>Try another scenario</button>
-                      <button className="btnS" onClick={() => { setActiveScenario(null); setMode("free"); }}>Type my own question</button>
-                    </div>
+                {mode==="scenarios"&&activeScenario&&visibleMsgs>=activeScenario.conversation.length&&!typing&&(
+                  <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} className="dEn">
+                    <p className="dEnT">End of scenario preview.</p>
+                    <div className="dEnB"><button className="btnP" onClick={resetAll}>Try another scenario</button><button className="btnS" onClick={()=>{setActiveScenario(null);setMode("free");}}>Type my own question</button></div>
                   </motion.div>
                 )}
-
-                {/* Free input */}
-                {mode === "free" && (
-                  <div className="dInput">
-                    <input type="text" placeholder="Tell Laura what you need help with..." value={freeInput} onChange={e => setFreeInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !typing) sendFree(freeInput); }} disabled={typing} className="dInputField" />
-                    <button onClick={() => sendFree(freeInput)} disabled={typing || !freeInput.trim()} className="dSendBtn"><Send size={16} /></button>
-                  </div>
-                )}
+                {mode==="free"&&<div className="dIp"><input type="text" placeholder="Tell Laura what you need help with..." value={freeInput} onChange={e=>setFreeInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!typing)sendFree(freeInput);}} disabled={typing} className="dIpF"/><button onClick={()=>sendFree(freeInput)} disabled={typing||!freeInput.trim()} className="dSd"><Send size={16}/></button></div>}
               </div>
             )}
           </div>
@@ -321,81 +182,71 @@ const CSS = `
 body{background:${c.bg};color:${c.text};font-family:'DM Sans',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
 a{color:inherit;text-decoration:none}button,input{font-family:inherit}
 .serif{font-family:'Instrument Serif',Georgia,serif}
-.container{max-width:1200px;margin:0 auto;padding:0 16px}
-.btnP{display:inline-flex;align-items:center;gap:6px;background:${c.dark};color:#fff;border:none;border-radius:999px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
-.btnS{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.85);color:${c.text};border:1px solid ${c.border};border-radius:999px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.container{max-width:1200px;margin:0 auto;padding:0 20px}
+.btnP{display:inline-flex;align-items:center;gap:6px;background:${c.dark};color:#fff;border:none;border-radius:999px;padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap}
+.btnS{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.85);color:${c.text};border:1px solid ${c.border};border-radius:999px;padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap}
 
-.dWrap{display:flex;flex-direction:column;height:100vh;height:100dvh}
-.dNav{background:rgba(248,246,241,0.94);backdrop-filter:blur(16px);border-bottom:1px solid ${c.border};flex-shrink:0}
-.dNavIn{display:flex;align-items:center;justify-content:space-between;height:52px;gap:8px}
-.dBrand{display:flex;align-items:center;gap:7px;text-decoration:none;flex-shrink:0}
-.dLogo{width:28px;height:28px;border-radius:8px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.06)}
-.dBrandN{font-size:12px;font-weight:800}.dBrandS{font-size:9px;color:${c.accent};font-weight:700}
-.dNavR{display:flex;gap:6px;align-items:center}
-.dResetBtn{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.8);border:1px solid ${c.border};border-radius:999px;padding:6px 12px;font-size:11px;font-weight:600;color:${c.sub};cursor:pointer}
-.dNavCta{padding:7px 14px!important;font-size:11px!important}
+.dW{display:flex;flex-direction:column;height:100vh;height:100dvh}
+.dN{background:rgba(248,246,241,0.94);backdrop-filter:blur(16px);border-bottom:1px solid ${c.border};flex-shrink:0}
+.dNI{display:flex;align-items:center;justify-content:space-between;height:56px;gap:8px}
+.dBr{display:flex;align-items:center;gap:7px;text-decoration:none;flex-shrink:0}
+.dLo{width:28px;height:28px;border-radius:8px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.06)}
+.dBrN{font-size:13px;font-weight:800}.dBrS{font-size:10px;color:${c.accent};font-weight:700}
+.dNR{display:flex;gap:6px;align-items:center}
+.dRst{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.8);border:1px solid ${c.border};border-radius:999px;padding:7px 14px;font-size:12px;font-weight:600;color:${c.sub};cursor:pointer}
+.dNC{padding:8px 16px!important;font-size:12px!important}
 
-.dDisclaimer{background:${c.amberSoft};border-bottom:1px solid #FDE68A;padding:6px 16px;flex-shrink:0;font-size:10px;color:#92400E;font-weight:600;text-align:center;line-height:1.5}
+/* Product banner */
+.dBanner{background:linear-gradient(135deg,${c.accentSoft},#F0F4FF);border-bottom:1px solid rgba(37,99,235,0.1);padding:10px 16px;flex-shrink:0}
+.dBannerInner{display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;color:${c.sub};flex-wrap:wrap;text-align:center;line-height:1.5}
+.dBannerDot{width:6px;height:6px;border-radius:999px;background:${c.accent};flex-shrink:0}
+.dBannerTag{padding:3px 10px;border-radius:999px;background:${c.accent};color:#fff;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap}
 
-.dMain{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.dInner{max-width:720px;width:100%;margin:0 auto;display:flex;flex-direction:column;height:100%;padding:0 12px}
+.dM{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.dIn{max-width:760px;width:100%;margin:0 auto;display:flex;flex-direction:column;height:100%;padding:0 16px}
 
-/* Scenarios */
-.dScenarios{padding:20px 0;overflow-y:auto;flex:1}
-.dScTitle{font-size:clamp(24px,5vw,36px);letter-spacing:-0.04em;line-height:1.1}
-.dScBody{font-size:14px;color:${c.sub};line-height:1.6;margin-top:6px}
-.dScGrid{display:grid;grid-template-columns:1fr;gap:8px;margin-top:20px}
-.dScCard{display:flex;align-items:flex-start;gap:12px;width:100%;padding:16px;background:${c.card};border:1px solid ${c.border};border-radius:16px;cursor:pointer;text-align:left;font-family:inherit;transition:all 0.2s;flex-wrap:wrap}
-.dScCard:hover{border-color:#D0CBBD;box-shadow:0 6px 20px rgba(0,0,0,0.05);transform:translateY(-1px)}
-.dScEmoji{font-size:24px;flex-shrink:0;margin-top:2px}
-.dScLabel{font-size:14px;font-weight:700;color:${c.text};flex:1;min-width:120px}
-.dScDesc{font-size:12px;color:${c.muted};width:100%;margin-top:2px}
-.dFreeBtn{display:flex;align-items:center;gap:6px;margin-top:16px;background:none;border:none;color:${c.accent};font-size:14px;font-weight:700;cursor:pointer;padding:0}
+.dSc{padding:20px 0;overflow-y:auto;flex:1}
+.dScT{font-size:clamp(26px,6vw,40px);letter-spacing:-0.04em;line-height:1.1}
+.dScB{font-size:15px;color:${c.sub};line-height:1.6;margin-top:8px}
+.dScG{display:flex;flex-direction:column;gap:10px;margin-top:24px}
+.dScC{display:flex;align-items:center;gap:14px;width:100%;padding:18px 20px;background:${c.card};border:1px solid ${c.border};border-radius:18px;cursor:pointer;text-align:left;font-family:inherit;transition:all 0.25s}
+.dScC:hover{border-color:#D0CBBD;box-shadow:0 8px 24px rgba(0,0,0,0.05);transform:translateY(-2px)}
+.dScE{font-size:28px;flex-shrink:0}
+.dScCT{flex:1;min-width:0}
+.dScL{font-size:16px;font-weight:700;color:${c.text};display:block}
+.dScD{font-size:13px;color:${c.muted};margin-top:2px;display:block}
+.dScCta{font-size:12px;font-weight:700;color:${c.accent};display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0}
+.dFr{display:flex;align-items:center;gap:6px;margin-top:20px;background:none;border:none;color:${c.accent};font-size:15px;font-weight:700;cursor:pointer;padding:0}
 
-/* Chat */
-.dChat{flex:1;display:flex;flex-direction:column;overflow:hidden;padding-top:8px}
-.dScenarioLabel{display:flex;align-items:center;gap:6px;padding:8px 14px;background:${c.accentSoft};border-radius:12px;font-size:12px;font-weight:700;color:${c.accent};margin-bottom:8px;flex-shrink:0}
-.dMessages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding:8px 0;scrollbar-width:thin;scrollbar-color:${c.border} transparent}
-.dMessages::-webkit-scrollbar{width:4px}.dMessages::-webkit-scrollbar-thumb{background:${c.border};border-radius:4px}
+.dCh{flex:1;display:flex;flex-direction:column;overflow:hidden;padding-top:8px}
+.dChL{display:flex;align-items:center;gap:6px;padding:10px 16px;background:${c.accentSoft};border-radius:14px;font-size:13px;font-weight:700;color:${c.accent};margin-bottom:10px;flex-shrink:0}
+.dMs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:16px;padding:10px 0;scrollbar-width:thin;scrollbar-color:${c.border} transparent}
+.dMs::-webkit-scrollbar{width:4px}.dMs::-webkit-scrollbar-thumb{background:${c.border};border-radius:4px}
 
-.dMsg{display:flex;gap:8px;align-items:flex-start}
-.dMsgR{flex-direction:row-reverse}
-.dMsgL{flex-direction:row}
-.dMsgAv{position:relative;width:30px;height:30px;border-radius:999px;overflow:hidden;flex-shrink:0;border:1.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
-.dMsgC{max-width:80%;padding:14px 16px;border-radius:18px}
-.dMsgU{background:${c.dark};color:#fff;border-radius:18px 18px 6px 18px}
-.dMsgLa{background:${c.card};border:1px solid ${c.border};border-radius:18px 18px 18px 6px;box-shadow:0 2px 8px rgba(0,0,0,0.03)}
-.dMsgTxt{font-size:14px;line-height:1.72}
+.dMg{display:flex;gap:10px;align-items:flex-start}.dMgR{flex-direction:row-reverse}.dMgL{flex-direction:row}
+.dMgAv{position:relative;width:32px;height:32px;border-radius:999px;overflow:hidden;flex-shrink:0;border:1.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.dMgC{max-width:78%;padding:16px 18px;border-radius:20px}
+.dMgU{background:${c.dark};color:#fff;border-radius:20px 20px 6px 20px}
+.dMgLa{background:${c.card};border:1px solid ${c.border};border-radius:20px 20px 20px 6px;box-shadow:0 2px 8px rgba(0,0,0,0.03)}
+.dMgT{font-size:15px;line-height:1.72}
 
-.dUrg{display:inline-flex;align-items:center;gap:5px;margin-top:10px;padding:5px 11px;border-radius:999px;font-size:11px;font-weight:700}
-.dUrgDot{width:5px;height:5px;border-radius:999px;flex-shrink:0}
+.dUr{display:inline-flex;align-items:center;gap:5px;margin-top:10px;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:700}
+.dUrD{width:5px;height:5px;border-radius:999px;flex-shrink:0}
+.dAc{margin-top:10px;padding:10px 14px;border-radius:12px;background:${c.accentSoft};color:${c.accent};font-size:12px;font-weight:700;border:1px solid rgba(37,99,235,0.1)}
 
-.dAction{margin-top:8px;padding:8px 12px;border-radius:10px;background:${c.accentSoft};color:${c.accent};font-size:11px;font-weight:700;border:1px solid rgba(37,99,235,0.1)}
+.dTy{display:flex;gap:4px;padding:16px 20px}
+.dTy span{width:7px;height:7px;border-radius:999px;background:${c.muted};animation:tD 1.2s infinite}
+.dTy span:nth-child(2){animation-delay:0.2s}.dTy span:nth-child(3){animation-delay:0.4s}
+@keyframes tD{0%,80%{opacity:0.3;transform:scale(0.8)}40%{opacity:1;transform:scale(1)}}
 
-.dTyping{display:flex;gap:4px;padding:14px 18px}
-.dTyping span{width:6px;height:6px;border-radius:999px;background:${c.muted};animation:tDot 1.2s infinite}
-.dTyping span:nth-child(2){animation-delay:0.2s}
-.dTyping span:nth-child(3){animation-delay:0.4s}
-@keyframes tDot{0%,80%{opacity:0.3;transform:scale(0.8)}40%{opacity:1;transform:scale(1)}}
+.dEn{padding:16px 0;flex-shrink:0;border-top:1px solid ${c.border}}.dEnT{font-size:14px;color:${c.muted};margin-bottom:10px}.dEnB{display:flex;gap:8px;flex-wrap:wrap}
 
-.dEnd{padding:14px 0;flex-shrink:0;border-top:1px solid ${c.border}}
-.dEndTxt{font-size:13px;color:${c.muted};margin-bottom:10px}
-.dEndBtns{display:flex;gap:8px;flex-wrap:wrap}
+.dIp{display:flex;gap:8px;padding:12px 0 18px;flex-shrink:0;border-top:1px solid ${c.border}}
+.dIpF{flex:1;height:52px;border-radius:16px;border:1px solid ${c.border};background:#fff;padding:0 18px;font-size:15px;color:${c.text};outline:none}
+.dIpF:focus{border-color:${c.accent};box-shadow:0 0 0 3px rgba(37,99,235,0.06)}.dIpF:disabled{opacity:0.5}
+.dSd{width:52px;height:52px;border-radius:16px;background:${c.accent};color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.dSd:disabled{opacity:0.3;cursor:not-allowed}
 
-.dInput{display:flex;gap:6px;padding:10px 0 16px;flex-shrink:0;border-top:1px solid ${c.border}}
-.dInputField{flex:1;height:48px;border-radius:14px;border:1px solid ${c.border};background:#fff;padding:0 16px;font-size:14px;color:${c.text};outline:none}
-.dInputField:focus{border-color:${c.accent};box-shadow:0 0 0 3px rgba(37,99,235,0.06)}
-.dInputField:disabled{opacity:0.5}
-.dSendBtn{width:48px;height:48px;border-radius:14px;background:${c.accent};color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.dSendBtn:disabled{opacity:0.3;cursor:not-allowed}
-
-@media(min-width:640px){
-  .container{padding:0 24px}.dInner{padding:0 20px}
-  .dScGrid{grid-template-columns:repeat(2,1fr);gap:10px}
-  .dMsgC{max-width:70%}
-  .dNavIn{height:60px}
-}
-@media(min-width:960px){
-  .dScGrid{grid-template-columns:repeat(3,1fr)}
-}
+@media(min-width:640px){.container{padding:0 28px}.dIn{padding:0 24px}.dMgC{max-width:68%}.dNI{height:64px}.dScG{display:grid;grid-template-columns:repeat(2,1fr)}}
+@media(min-width:960px){.dScG{grid-template-columns:repeat(3,1fr)}}
 `;
