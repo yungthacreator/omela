@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useCallback, type ReactNode } from "react";
-import { AnimatePresence, motion, useInView, useScroll, useTransform } from "framer-motion";
+import { AnimatePresence, motion, useInView } from "framer-motion";
 import { Mic, Globe, ArrowRight, Phone, FileText, Clock, MapPin, Pill as PillIcon, ChevronLeft, ChevronRight } from "lucide-react";
 
 const FONT = `@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap');`;
@@ -116,7 +116,7 @@ const globeStories = [
 
 function GlobeSection() {
   const [active, setActive] = useState(0);
-  const timerRef = useRef<NodeJS.Timeout>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const resetTimer = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
