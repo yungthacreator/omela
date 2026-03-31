@@ -317,7 +317,7 @@ export default function DemoPage() {
       };
     }
 
-    if (l.match(/move|new|register|no\\s*gp|no\\s*doctor/)) {
+    if (l.match(/move|new|register|no\s*gp|no\s*doctor/)) {
       return {
         from: "laura",
         text: "I can find GP practices near you that accept new patients. What is your postcode?",
@@ -333,7 +333,7 @@ export default function DemoPage() {
       };
     }
 
-    if (l.match(/callback|call\\s*back|no\\s*slots|waiting|weeks|busy/)) {
+    if (l.match(/callback|call\s*back|no\s*slots|waiting|weeks|busy/)) {
       return {
         from: "laura",
         text: "Being stuck in callback hell is exhausting. I can find alternative routes: walk-in clinics, online portals, or a structured request. What have you been trying to get seen for?",
@@ -483,7 +483,7 @@ export default function DemoPage() {
                   <div className="dSwitch">
                     <button
                       type="button"
-                      className={`dSw ${mode === "scenarios" ? "dSwA" : ""}`}
+                      className="dSw dSwA"
                       onClick={() => {
                         setActiveScenario(null);
                         setMode("scenarios");
@@ -493,7 +493,7 @@ export default function DemoPage() {
                     </button>
                     <button
                       type="button"
-                      className={`dSw ${mode === "free" ? "dSwA" : ""}`}
+                      className="dSw"
                       onClick={() => {
                         setActiveScenario(null);
                         setMode("free");
@@ -558,9 +558,7 @@ export default function DemoPage() {
                   <span>Free demo</span>
                 </div>
 
-                <h1 className="serif dHeT">
-                  Ask Laura your own question.
-                </h1>
+                <h1 className="serif dHeT">Ask Laura your own question.</h1>
 
                 <p className="dHeB">
                   Try a symptom, a referral question, a prescription issue, or
@@ -665,7 +663,11 @@ export default function DemoPage() {
                   </AnimatePresence>
 
                   {typing && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="dMg dMgL">
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="dMg dMgL"
+                    >
                       <div className="dMgAv">
                         <Image
                           src="/laura-avatar.png"
