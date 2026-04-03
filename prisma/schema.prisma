@@ -17,6 +17,13 @@ model WaitlistEntry {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  // Referral system
+  referralCode   String   @unique @default(cuid())
+  referredBy     String?
+  referralCount  Int      @default(0)
+  rewardUnlocked Boolean  @default(false)
+
   @@index([role])
   @@index([createdAt])
+  @@index([referralCode])
 }

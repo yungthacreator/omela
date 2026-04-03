@@ -58,3 +58,4 @@ export async function limitWaitlist(
     return { success: true };
   }
 }
+export const rateLimit = limitWaitlist;
