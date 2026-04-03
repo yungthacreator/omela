@@ -471,7 +471,6 @@ export default function Page() {
                 </FI>
               ))}
             </div>
-            <FI delay={0.3}><p className="roadNote">Laura currently works through the website. WhatsApp and other access channels are part of the roadmap.</p></FI>
           </div>
         </section>
 
@@ -536,8 +535,6 @@ export default function Page() {
                   <span>I agree to the <Link href="/privacy" className="pvLk">Privacy Notice</Link> and <Link href="/terms" className="pvLk">Terms</Link>.</span>
                 </label>
                 <div className="wlBadges">
-                  <span className="wlBadge"><Shield size={11} />Privacy-first by design</span>
-                  <span className="wlBadge"><Shield size={11} />Built with UK data protection in mind</span>
                 </div>
                 {success && <div className="fmOk">{success}</div>}
                 {error && <div className="fmEr">{error}</div>}
