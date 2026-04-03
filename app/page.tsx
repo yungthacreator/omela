@@ -222,7 +222,7 @@ export default function Page(){
 
       <footer className="ft"><div className="container ftIn">
         <div className="ftTop">
-          <div><Link href="/" className="ftBr"><div className="navLo" style={{width:"26px",height:"26px"}}><Image src="/omela-logo-mark.png" alt="Omela" width={26} height={26} style={{width:"100%",height:"100%",objectFit:"contain"}}/></div><div><div className="ftBrN">Omela</div><div className="ftBrS">POWERED BY LAURA</div></div></Link><p className="ftFd">by Opeyemi Akinbohun</p></div>
+          <div><Link href="/" className="ftBr"><div className="navLo" style={{width:"26px",height:"26px"}}><Image src="/omela-logo-mark.png" alt="Omela" width={26} height={26} style={{width:"100%",height:"100%",objectFit:"contain"}}/></div><div><div className="ftBrN">Omela</div><div className="ftBrS">POWERED BY LAURA</div></div></Link></div>
           <div className="ftCols">
             <div className="ftCol"><div className="ftColT">Product</div><Link href="/demo" className="ftLk">Try Laura</Link><Link href="/how-laura-helps" className="ftLk">Use cases</Link><Link href="/quiz" className="ftLk">Health Quiz</Link><Link href="/status" className="ftLk">Status</Link></div>
             <div className="ftCol"><div className="ftColT">Legal</div><Link href="/privacy" className="ftLk">Privacy</Link><Link href="/terms" className="ftLk">Terms</Link><a href="mailto:notice@omela.ai" className="ftLk">Contact</a></div>
