@@ -1319,34 +1319,16 @@ function InfraLogo({ name }: { name: (typeof infraLogos)[number]["name"] }) {
   }
 
   if (name === "openai") {
-    return (
-      <svg
-        viewBox="0 0 156 30"
-        className="infraSvg infraSvg--openai"
-        aria-label="OpenAI"
-        role="img"
-      >
-        <g
-          transform="translate(4 4)"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.55"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="12" cy="5.2" r="4.2" />
-          <circle cx="17.4" cy="8.3" r="4.2" />
-          <circle cx="17.4" cy="14.7" r="4.2" />
-          <circle cx="12" cy="17.8" r="4.2" />
-          <circle cx="6.6" cy="14.7" r="4.2" />
-          <circle cx="6.6" cy="8.3" r="4.2" />
-        </g>
-        <text x="40" y="20" fontSize="14" fontWeight="700" fontFamily="DM Sans, sans-serif">
-          OpenAI
-        </text>
-      </svg>
-    );
-  }
+  return (
+    <div className="infraRealLogo" aria-label="OpenAI" role="img">
+      <img
+        src="/openai-wordmark.svg"
+        alt="OpenAI"
+        className="infraRealLogoImg"
+      />
+    </div>
+  );
+}
 
   return (
     <svg
@@ -2705,10 +2687,12 @@ button,input,select{font-family:inherit}
   opacity:0.72;
   transition:opacity 0.28s ease,transform 0.28s ease,color 0.28s ease;
 }
+
 .infraItem:hover{
   opacity:1;
   transform:translateY(-1px);
 }
+
 .infraSvg{
   width:auto;
   height:26px;
@@ -2716,11 +2700,39 @@ button,input,select{font-family:inherit}
   display:block;
   overflow:visible;
 }
-.infraSvg--openai{height:28px}
-.infraFade{position:absolute;top:0;bottom:0;width:88px;z-index:2;pointer-events:none}
-.infraFadeL{left:0;background:linear-gradient(90deg,${c.bg} 10%,rgba(248,246,241,0) 100%)}
-.infraFadeR{right:0;background:linear-gradient(270deg,${c.bg} 10%,rgba(248,246,241,0) 100%)}
 
+.infraRealLogo{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.infraRealLogoImg{
+  display:block;
+  height:28px;
+  width:auto;
+  max-width:140px;
+  object-fit:contain;
+}
+
+.infraFade{
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:88px;
+  z-index:2;
+  pointer-events:none;
+}
+
+.infraFadeL{
+  left:0;
+  background:linear-gradient(90deg,${c.bg} 10%,rgba(248,246,241,0) 100%);
+}
+
+.infraFadeR{
+  right:0;
+  background:linear-gradient(270deg,${c.bg} 10%,rgba(248,246,241,0) 100%);
+}
 .prGrid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:36px}
 .prCard{
   background:rgba(255,255,255,0.96);border:1px solid rgba(227,221,210,0.92);border-radius:24px;padding:32px;
@@ -3068,7 +3080,11 @@ button,input,select{font-family:inherit}
   .modRefBts{grid-template-columns:1fr}
   .infraSet{gap:28px;padding-right:28px}
   .infraSvg{height:22px}
-  .infraSvg--openai{height:24px}
+
+ .infraRealLogoImg{
+    height:24px;
+    max-width:120px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce){
