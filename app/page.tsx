@@ -103,75 +103,6 @@ function Chk({ dark = false }: { dark?: boolean }) {
   );
 }
 
-function Typewriter() {
-  const lines = useMemo(
-    () => [
-      "You sit on hold for 45 minutes.",
-      "You chase prescriptions for days.",
-      "You get a letter you do not understand.",
-      "You move cities with no doctor.",
-    ],
-    []
-  );
-
-  const [li, setLi] = useState(0);
-  const [ci, setCi] = useState(0);
-  const [del, setDel] = useState(false);
-  const [pause, setPause] = useState(false);
-
-  useEffect(() => {
-    if (pause) {
-      const t = window.setTimeout(() => {
-        setPause(false);
-        setDel(true);
-      }, 1300);
-      return () => window.clearTimeout(t);
-    }
-
-    const current = lines[li];
-
-    if (!del) {
-      if (ci < current.length) {
-        const t = window.setTimeout(() => setCi((p) => p + 1), 24);
-        return () => window.clearTimeout(t);
-      }
-      setPause(true);
-    } else {
-      if (ci > 0) {
-        const t = window.setTimeout(() => setCi((p) => p - 1), 12);
-        return () => window.clearTimeout(t);
-      }
-      setDel(false);
-      setLi((p) => (p + 1) % lines.length);
-    }
-  }, [li, ci, del, pause, lines]);
-
-  return (
-    <span className="tw">
-      {lines[li].slice(0, ci)}
-      <span className="twC">|</span>
-    </span>
-  );
-}
-
-function StatusBar() {
-  return (
-    <div className="stBar">
-      <div className="container stIn">
-        <motion.span
-          animate={{ scale: [1, 1.28, 1] }}
-          transition={{ duration: 2.4, repeat: Infinity }}
-          className="stDot"
-        />
-        <span className="stLbl">All systems operational</span>
-        <Link href="/status" className="stLnk">
-          View status
-        </Link>
-      </div>
-    </div>
-  );
-}
-
 function ProductBadge({
   kind,
   size = "md",
@@ -464,7 +395,7 @@ function FeatureCard({
       transition={{
         opacity: { duration: 0.6, delay },
         y: {
-          duration: 6.4 + delay,
+          duration: 6.2 + delay,
           repeat: Infinity,
           ease: "easeInOut",
           delay: delay * 0.5,
@@ -481,9 +412,79 @@ function FeatureCard({
   );
 }
 
+function Typewriter() {
+  const lines = useMemo(
+    () => [
+      "You sit on hold for 45 minutes.",
+      "You chase prescriptions for days.",
+      "You get a letter you do not understand.",
+      "You move cities with no doctor.",
+    ],
+    []
+  );
+
+  const [li, setLi] = useState(0);
+  const [ci, setCi] = useState(0);
+  const [del, setDel] = useState(false);
+  const [pause, setPause] = useState(false);
+
+  useEffect(() => {
+    if (pause) {
+      const t = window.setTimeout(() => {
+        setPause(false);
+        setDel(true);
+      }, 1300);
+      return () => window.clearTimeout(t);
+    }
+
+    const current = lines[li];
+
+    if (!del) {
+      if (ci < current.length) {
+        const t = window.setTimeout(() => setCi((p) => p + 1), 24);
+        return () => window.clearTimeout(t);
+      }
+      setPause(true);
+    } else {
+      if (ci > 0) {
+        const t = window.setTimeout(() => setCi((p) => p - 1), 12);
+        return () => window.clearTimeout(t);
+      }
+      setDel(false);
+      setLi((p) => (p + 1) % lines.length);
+    }
+  }, [li, ci, del, pause, lines]);
+
+  return (
+    <span className="tw">
+      {lines[li].slice(0, ci)}
+      <span className="twC">|</span>
+    </span>
+  );
+}
+
+function StatusBar() {
+  return (
+    <div className="stBar">
+      <div className="container stIn">
+        <motion.span
+          animate={{ scale: [1, 1.28, 1] }}
+          transition={{ duration: 2.4, repeat: Infinity }}
+          className="stDot"
+        />
+        <span className="stLbl">All systems operational</span>
+        <Link href="/status" className="stLnk">
+          View status
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 const convos = [
   {
     label: "English · EN",
+    flag: "🇬🇧",
     msgs: [
       { f: "u", t: "I just moved to Manchester and need to register with a GP." },
       { f: "l", t: "I will find practices near you. What is your postcode?" },
@@ -496,6 +497,7 @@ const convos = [
   },
   {
     label: "Français · FR",
+    flag: "🇫🇷",
     msgs: [
       { f: "u", t: "J'ai besoin de renouveler mon ordonnance." },
       { f: "l", t: "Combien de jours de stock vous reste-t-il?" },
@@ -507,6 +509,7 @@ const convos = [
   },
   {
     label: "Yorùbá · YO",
+    flag: "🇳🇬",
     msgs: [
       { f: "u", t: "Mo ni iba ati efori lati ana. Mo wa ni HD1." },
       { f: "l", t: "Mo ti ri ile-iwosan meji nitosi re." },
@@ -610,7 +613,8 @@ function PhoneMockup() {
                 exit={{ opacity: 0 }}
                 className="phLang"
               >
-                {cv.label}
+                <span className="flagEmoji phFlag">{cv.flag}</span>
+                <span>{cv.label}</span>
               </motion.div>
             </AnimatePresence>
 
@@ -691,13 +695,11 @@ function HeroStage() {
         animate={{ opacity: [0.16, 0.28, 0.16], scale: [1, 1.08, 1] }}
         transition={{ duration: 9.2, repeat: Infinity, ease: "easeInOut" }}
       />
-
       <motion.div
         className="heroRing"
         animate={{ rotate: 360 }}
         transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
       />
-
       <motion.span
         className="heroDust heroDustA"
         animate={{ y: [0, -8, 0], opacity: [0.3, 0.7, 0.3] }}
@@ -708,10 +710,6 @@ function HeroStage() {
         animate={{ y: [0, 7, 0], opacity: [0.24, 0.55, 0.24] }}
         transition={{ duration: 6.7, repeat: Infinity, ease: "easeInOut" }}
       />
-
-      <div className="heroPhoneWrap">
-        <PhoneMockup />
-      </div>
 
       <FeatureCard
         kind="practice"
@@ -734,6 +732,10 @@ function HeroStage() {
         className="floatCardC"
         delay={0.24}
       />
+
+      <div className="heroPhoneWrap">
+        <PhoneMockup />
+      </div>
     </div>
   );
 }
@@ -742,6 +744,7 @@ const gs = [
   {
     country: "United Kingdom",
     code: "UK",
+    flag: "🇬🇧",
     name: "Sarah, 34, Leeds",
     quote:
       "I called at 8:01am. Busy. By 8:15 all slots were gone. Three weeks of this.",
@@ -753,6 +756,7 @@ const gs = [
   {
     country: "United States",
     code: "US",
+    flag: "🇺🇸",
     name: "Marcus, 28, Chicago",
     quote:
       "I delayed seeing a doctor for six months because I was terrified of the cost.",
@@ -764,6 +768,7 @@ const gs = [
   {
     country: "Nigeria",
     code: "NG",
+    flag: "🇳🇬",
     name: "Amina, 41, Lagos",
     quote:
       "Four doctors for ten thousand people. I spent two days trying to find someone.",
@@ -775,6 +780,7 @@ const gs = [
   {
     country: "India",
     code: "IN",
+    flag: "🇮🇳",
     name: "Priya, 55, Jaipur",
     quote:
       "My mother lives two hours from the nearest clinic. She never knows when to worry.",
@@ -786,6 +792,7 @@ const gs = [
   {
     country: "Brazil",
     code: "BR",
+    flag: "🇧🇷",
     name: "Lucas, 23, London",
     quote:
       "I moved to London and could not explain my symptoms in English.",
@@ -816,8 +823,8 @@ function CanvasGlobe({ active }: { active: number }) {
     const canvasEl = canvasRef.current;
     if (!canvasEl) return;
 
-    const context = canvasEl.getContext("2d");
-    if (!context) return;
+    const ctx = canvasEl.getContext("2d");
+    if (!ctx) return;
 
     const dpr = window.devicePixelRatio || 1;
 
@@ -855,10 +862,10 @@ function CanvasGlobe({ active }: { active: number }) {
       const cosR = Math.cos(rot);
       const sinR = Math.sin(rot);
 
-      context.setTransform(dpr, 0, 0, dpr, 0, 0);
-      context.clearRect(0, 0, w, h);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
 
-      const glow = context.createRadialGradient(
+      const glow = ctx.createRadialGradient(
         cx - R * 0.2,
         cy - R * 0.2,
         0,
@@ -869,16 +876,16 @@ function CanvasGlobe({ active }: { active: number }) {
       glow.addColorStop(0, "rgba(201,149,107,0.08)");
       glow.addColorStop(0.6, "rgba(201,149,107,0.025)");
       glow.addColorStop(1, "transparent");
-      context.fillStyle = glow;
-      context.fillRect(0, 0, w, h);
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, w, h);
 
-      context.beginPath();
-      context.arc(cx, cy, R, 0, Math.PI * 2);
-      context.strokeStyle = "rgba(192,184,164,0.28)";
-      context.lineWidth = 0.8;
-      context.stroke();
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(192,184,164,0.28)";
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
 
-      const sg = context.createRadialGradient(
+      const sg = ctx.createRadialGradient(
         cx - R * 0.24,
         cy - R * 0.24,
         R * 0.12,
@@ -888,21 +895,21 @@ function CanvasGlobe({ active }: { active: number }) {
       );
       sg.addColorStop(0, "rgba(255,255,255,0.1)");
       sg.addColorStop(1, "rgba(224,218,200,0.03)");
-      context.fillStyle = sg;
-      context.beginPath();
-      context.arc(cx, cy, R, 0, Math.PI * 2);
-      context.fill();
+      ctx.fillStyle = sg;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.fill();
 
-      context.strokeStyle = "rgba(200,192,172,0.08)";
-      context.lineWidth = 0.5;
+      ctx.strokeStyle = "rgba(200,192,172,0.08)";
+      ctx.lineWidth = 0.5;
 
       for (let lat = -60; lat <= 60; lat += 30) {
         const p = ((90 - lat) * Math.PI) / 180;
         const rr = Math.sin(p) * R;
         const ry = cy - Math.cos(p) * R;
-        context.beginPath();
-        context.ellipse(cx, ry, rr, rr * 0.12, 0, 0, Math.PI * 2);
-        context.stroke();
+        ctx.beginPath();
+        ctx.ellipse(cx, ry, rr, rr * 0.12, 0, 0, Math.PI * 2);
+        ctx.stroke();
       }
 
       for (const p of dots) {
@@ -917,10 +924,10 @@ function CanvasGlobe({ active }: { active: number }) {
         const alpha = Math.max(0, Math.min(1, (z + 0.3) * 0.6));
         const sz = 1 + z * 0.8;
 
-        context.beginPath();
-        context.arc(sx, sy, sz, 0, Math.PI * 2);
-        context.fillStyle = `rgba(180,168,148,${alpha * 0.55})`;
-        context.fill();
+        ctx.beginPath();
+        ctx.arc(sx, sy, sz, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(180,168,148,${alpha * 0.55})`;
+        ctx.fill();
       }
 
       const projected: { sx: number; sy: number; z: number }[] = [];
@@ -938,21 +945,21 @@ function CanvasGlobe({ active }: { active: number }) {
         if (z < 0) continue;
 
         if (i === active) {
-          context.beginPath();
-          context.arc(sx, sy, 8, 0, Math.PI * 2);
-          context.fillStyle = "rgba(201,149,107,0.16)";
-          context.fill();
+          ctx.beginPath();
+          ctx.arc(sx, sy, 8, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(201,149,107,0.16)";
+          ctx.fill();
 
-          context.beginPath();
-          context.arc(sx, sy, 14, 0, Math.PI * 2);
-          context.fillStyle = "rgba(201,149,107,0.06)";
-          context.fill();
+          ctx.beginPath();
+          ctx.arc(sx, sy, 14, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(201,149,107,0.06)";
+          ctx.fill();
         }
 
-        context.beginPath();
-        context.arc(sx, sy, i === active ? 4 : 2.5, 0, Math.PI * 2);
-        context.fillStyle = i === active ? c.warm : "rgba(176,168,148,0.7)";
-        context.fill();
+        ctx.beginPath();
+        ctx.arc(sx, sy, i === active ? 4 : 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = i === active ? c.warm : "rgba(176,168,148,0.7)";
+        ctx.fill();
       }
 
       for (let i = 0; i < cityXYZ.length; i++) {
@@ -965,15 +972,15 @@ function CanvasGlobe({ active }: { active: number }) {
         const mx = (a.sx + b.sx) / 2;
         const my = (a.sy + b.sy) / 2 - Math.abs(a.sx - b.sx) * 0.2;
 
-        context.beginPath();
-        context.moveTo(a.sx, a.sy);
-        context.quadraticCurveTo(mx, my, b.sx, b.sy);
-        context.strokeStyle =
+        ctx.beginPath();
+        ctx.moveTo(a.sx, a.sy);
+        ctx.quadraticCurveTo(mx, my, b.sx, b.sy);
+        ctx.strokeStyle =
           i === active ? "rgba(201,149,107,0.34)" : "rgba(201,149,107,0.06)";
-        context.lineWidth = i === active ? 1.2 : 0.5;
-        context.setLineDash(i === active ? [4, 3] : []);
-        context.stroke();
-        context.setLineDash([]);
+        ctx.lineWidth = i === active ? 1.2 : 0.5;
+        ctx.setLineDash(i === active ? [4, 3] : []);
+        ctx.stroke();
+        ctx.setLineDash([]);
       }
 
       rotRef.current += 0.002;
@@ -1048,6 +1055,7 @@ function GlobeSection() {
                 className="globeStory"
               >
                 <div className="globeCtry">
+                  <span className="flagEmoji globeFlag">{story.flag}</span>
                   <span className="globeCode">{story.code}</span>
                   <span className="globeCtryN">{story.country}</span>
                 </div>
@@ -1315,16 +1323,11 @@ function InfraLogo({ name }: { name: (typeof infraLogos)[number]["name"] }) {
 
   if (name === "openai") {
     return (
-      <svg viewBox="0 0 126 28" className="infraSvg" aria-label="OpenAI" role="img">
-        <g transform="translate(4 4)" fill="none" stroke="currentColor" strokeWidth="1.7">
-          <path d="M11 2.2C13.7 0.7 17.1 1.6 18.7 4.2L21.2 8.5" />
-          <path d="M20.8 7.2C23.5 8.7 24.5 12.1 23 14.8L20.6 19" />
-          <path d="M20.2 18.2C20.2 21.3 17.7 23.8 14.6 23.8H9.8" />
-          <path d="M10.8 23.4C8.1 24.9 4.7 24 3.1 21.4L0.6 17.1" />
-          <path d="M1 18.4C-1.7 16.9-2.7 13.5-1.2 10.8L1.2 6.6" transform="translate(2 0)" />
-          <path d="M2.2 6.4C2.2 3.3 4.7 0.8 7.8 0.8H12.6" transform="translate(2 0)" />
+      <svg viewBox="0 0 140 28" className="infraSvg" aria-label="OpenAI" role="img">
+        <g transform="translate(4 4)" fill="none" stroke="currentColor" strokeWidth="1.9">
+          <circle cx="10" cy="10" r="8" />
         </g>
-        <text x="34" y="19" fontSize="14" fontWeight="700" fontFamily="DM Sans, sans-serif">
+        <text x="30" y="19" fontSize="14" fontWeight="700" fontFamily="DM Sans, sans-serif">
           OpenAI
         </text>
       </svg>
@@ -1363,28 +1366,20 @@ function InfraSection() {
               Quietly reliable systems behind a calm patient experience.
             </p>
 
-            <div className="infraShell">
-              <div className="infraShellGlow" />
+            <div className="infraTrackWrap">
+              <div className="infraFade infraFadeL" />
+              <div className="infraFade infraFadeR" />
 
-              <div className="infraTrackWrap">
-                <div className="infraFade infraFadeL" />
-                <div className="infraFade infraFadeR" />
-
-                <div className="infraTrack">
-                  {Array.from({ length: 3 }).map((_, groupIndex) => (
-                    <div className="infraSet" key={groupIndex}>
-                      {infraLogos.map((logo) => (
-                        <div key={`${groupIndex}-${logo.name}`} className="infraItem">
-                          <div className="infraLogoCard">
-                            <div className="infraLogoInner">
-                              <InfraLogo name={logo.name} />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
+              <div className="infraTrack">
+                {Array.from({ length: 3 }).map((_, groupIndex) => (
+                  <div className="infraSet" key={groupIndex}>
+                    {infraLogos.map((logo) => (
+                      <div key={`${groupIndex}-${logo.name}`} className="infraItem">
+                        <InfraLogo name={logo.name} />
+                      </div>
+                    ))}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -1430,7 +1425,7 @@ function SuccessModal({
           url: link,
         });
       } catch {
-        // do nothing
+        // ignore
       }
     } else {
       copyLink();
@@ -1650,13 +1645,6 @@ export default function Page() {
           <div className="container">
             <div className="heroTxt">
               <FI>
-                <div className="heroEyebrowRow">
-                  <span className="heroEyebrowDot" />
-                  <span className="heroEyebrow">Laura by Omela</span>
-                </div>
-              </FI>
-
-              <FI delay={0.03}>
                 <h1 className="serif heroTi">
                   Getting care
                   <br />
@@ -1664,7 +1652,7 @@ export default function Page() {
                 </h1>
               </FI>
 
-              <FI delay={0.06}>
+              <FI delay={0.05}>
                 <p className="heroLead">Laura helps people move care access forward.</p>
               </FI>
 
@@ -1677,7 +1665,7 @@ export default function Page() {
               <FI delay={0.11}>
                 <p className="heroSub">
                   Find nearby practices, prepare prescription requests, understand referral
-                  letters, and generate structured bilingual notes — all in one calm care
+                  letters, and generate structured bilingual notes, all in one calm care
                   navigation experience.
                 </p>
               </FI>
@@ -1690,21 +1678,6 @@ export default function Page() {
                   <a href="#waitlist" className="btnS">
                     Join waitlist
                   </a>
-                </div>
-              </FI>
-
-              <FI delay={0.18}>
-                <div className="heroMeta">
-                  {[
-                    "Finds nearby practices",
-                    "Prepares requests",
-                    "Bilingual notes",
-                  ].map((item) => (
-                    <span key={item} className="heroMetaChip">
-                      <span className="heroMetaDot" />
-                      {item}
-                    </span>
-                  ))}
                 </div>
               </FI>
             </div>
@@ -1901,12 +1874,12 @@ export default function Page() {
 
                 <div className="glF">
                   {[
-                    "English · EN",
-                    "Français · FR",
-                    "Yorùbá · YO",
-                    "العربية · AR",
-                    "हिंदी · HI",
-                    "40+ more",
+                    "🇬🇧 English · EN",
+                    "🇫🇷 Français · FR",
+                    "🇳🇬 Yorùbá · YO",
+                    "🇸🇦 العربية · AR",
+                    "🇮🇳 हिंदी · HI",
+                    "🌍 40+ more",
                   ].map((f) => (
                     <span key={f} className="glFi">
                       {f}
@@ -2241,6 +2214,10 @@ button,input,select{font-family:inherit}
 @keyframes infraDrift{from{transform:translateX(0)}to{transform:translateX(-33.3333%)}}
 
 .serif{font-family:'Instrument Serif',Georgia,serif}
+.flagEmoji{
+  font-family:'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif;
+  line-height:1;
+}
 .wrap{width:100%;overflow-x:clip}
 .container{max-width:1180px;margin:0 auto;padding:0 20px}
 
@@ -2342,14 +2319,6 @@ button,input,select{font-family:inherit}
     radial-gradient(circle at 82% 26%, rgba(201,149,107,0.09), transparent 24%);
 }
 .heroTxt{max-width:560px}
-.heroEyebrowRow{display:flex;align-items:center;gap:8px;margin-bottom:14px}
-.heroEyebrowDot{
-  width:8px;height:8px;border-radius:999px;background:${c.warm};
-  box-shadow:0 0 0 6px rgba(201,149,107,0.12);
-}
-.heroEyebrow{
-  font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${c.muted};
-}
 .heroTi{font-size:clamp(36px,8.6vw,82px);line-height:0.95;letter-spacing:-0.055em}
 .heroAc{color:${c.accent};font-style:italic}
 .heroLead{
@@ -2379,18 +2348,6 @@ button,input,select{font-family:inherit}
 .heroBd{min-height:46px}
 .heroBt{display:flex;flex-direction:column;gap:10px;margin-top:24px}
 .heroBt .btnP,.heroBt .btnS{width:100%;text-align:center}
-.heroMeta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
-.heroMetaChip{
-  display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;
-  border:1px solid rgba(227,221,210,0.88);
-  background:rgba(255,255,255,0.74);
-  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-  font-size:11px;font-weight:700;color:${c.sub};
-  box-shadow:0 8px 22px rgba(17,18,20,0.04);
-}
-.heroMetaDot{
-  width:6px;height:6px;border-radius:999px;background:${c.accent};display:inline-block;flex-shrink:0;
-}
 .heroPh{margin-top:36px;width:100%;display:flex;justify-content:center;position:relative}
 
 .heroStage{
@@ -2430,30 +2387,63 @@ button,input,select{font-family:inherit}
 .heroDustA{right:64px;top:110px}
 .heroDustB{left:96px;bottom:120px}
 .heroPhoneWrap{
-  position:relative;z-index:3;transform-style:preserve-3d;
+  position:relative;
+  z-index:5;
+  transform-style:preserve-3d;
   filter:drop-shadow(0 32px 54px rgba(17,18,20,0.16));
 }
 
 .floatCard{
-  position:absolute;z-index:4;width:220px;padding:14px 15px;border-radius:22px;
+  position:absolute;
+  z-index:3;
+  width:192px;
+  padding:12px 13px;
+  border-radius:20px;
   border:1px solid rgba(227,221,210,0.86);
-  background:rgba(255,255,255,0.76);
-  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  background:rgba(255,255,255,0.78);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
   box-shadow:0 1px 0 rgba(255,255,255,0.76) inset,0 18px 38px rgba(17,18,20,0.07);
+  pointer-events:none;
 }
 .floatCardTop{display:flex;align-items:center;gap:10px}
 .floatCardEyebrow{
-  font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${c.accent};
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:${c.accent};
 }
 .floatCardTitle{
-  display:block;margin-top:10px;font-size:14px;line-height:1.28;letter-spacing:-0.03em;color:${c.text};
+  display:block;
+  margin-top:10px;
+  font-size:14px;
+  line-height:1.28;
+  letter-spacing:-0.03em;
+  color:${c.text};
 }
 .floatCardBody{
-  margin-top:5px;font-size:11.5px;line-height:1.58;color:${c.sub};
+  margin-top:5px;
+  font-size:11.5px;
+  line-height:1.58;
+  color:${c.sub};
 }
-.floatCardA{top:96px;left:10px;transform:rotate(-5deg)}
-.floatCardB{right:0;top:188px;transform:rotate(5deg)}
-.floatCardC{left:42px;bottom:84px;transform:rotate(-4deg)}
+.floatCardA{
+  top:58px;
+  left:-54px;
+  transform:rotate(-5deg);
+}
+.floatCardB{
+  top:118px;
+  right:-60px;
+  transform:rotate(5deg);
+}
+.floatCardC{
+  bottom:-8px;
+  left:50%;
+  transform:translateX(-50%);
+  width:220px;
+}
 
 .pBadge{
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
@@ -2503,9 +2493,10 @@ button,input,select{font-family:inherit}
 .phOn{display:flex;align-items:center;gap:3px;font-size:7.5px;color:${c.green};font-weight:700}
 .phOnD{width:4px;height:4px;border-radius:999px;background:${c.green};display:inline-block}
 .phLang{
-  display:flex;align-items:center;justify-content:center;gap:3px;padding:5px 0;
+  display:flex;align-items:center;justify-content:center;gap:6px;padding:5px 0;
   background:#F7F8FC;font-size:8px;font-weight:800;color:${c.accent};letter-spacing:0.03em;
 }
+.phFlag{font-size:13px}
 .phBdy{
   display:flex;flex-direction:column;gap:3px;padding:8px 7px;height:372px;overflow:hidden;justify-content:flex-end;
   background:
@@ -2571,6 +2562,7 @@ button,input,select{font-family:inherit}
 .globeC{width:100%;max-width:500px;text-align:center}
 .globeStory{min-height:190px}
 .globeCtry{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px}
+.globeFlag{font-size:16px}
 .globeCode{
   width:28px;height:28px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;
   background:rgba(255,255,255,0.8);border:1px solid rgba(227,221,210,0.9);
@@ -2687,8 +2679,12 @@ button,input,select{font-family:inherit}
 }
 
 .infraSec{
-  padding:54px 0;border-top:1px solid rgba(227,221,210,0.9);border-bottom:1px solid rgba(227,221,210,0.9);
-  background:linear-gradient(180deg,rgba(255,255,255,0.44),rgba(255,255,255,0.08)),${c.bg};position:relative;overflow:hidden;
+  padding:54px 0;
+  border-top:1px solid rgba(227,221,210,0.9);
+  border-bottom:1px solid rgba(227,221,210,0.9);
+  background:linear-gradient(180deg,rgba(255,255,255,0.44),rgba(255,255,255,0.08)),${c.bg};
+  position:relative;
+  overflow:hidden;
 }
 .infraIn{text-align:center}
 .infraHead{display:flex;align-items:center;justify-content:center;gap:10px}
@@ -2701,40 +2697,45 @@ button,input,select{font-family:inherit}
 .infraSub{
   max-width:440px;margin:10px auto 0;color:${c.sub};font-size:13px;line-height:1.75;
 }
-.infraShell{position:relative;margin-top:26px}
-.infraShellGlow{
-  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:min(900px,95%);height:150px;border-radius:999px;
-  background:radial-gradient(circle,rgba(201,149,107,0.08),rgba(201,149,107,0.018),transparent 72%);
-  pointer-events:none;filter:blur(8px);
+.infraTrackWrap{
+  position:relative;
+  overflow:hidden;
+  width:100%;
+  padding:22px 0 10px;
+  margin-top:8px;
 }
-.infraTrackWrap{position:relative;overflow:hidden;width:100%;padding:10px 0}
 .infraTrack{
-  display:flex;width:max-content;will-change:transform;animation:infraDrift 38s linear infinite;
+  display:flex;
+  width:max-content;
+  will-change:transform;
+  animation:infraDrift 34s linear infinite;
 }
 .infraTrackWrap:hover .infraTrack{animation-play-state:paused}
-.infraSet{display:flex;align-items:center;gap:16px;flex-shrink:0;padding-right:16px}
-.infraItem{flex:0 0 auto;display:flex;align-items:center;justify-content:center}
-.infraLogoCard{
-  min-width:164px;height:64px;border-radius:20px;border:1px solid rgba(227,221,210,0.88);
-  background:linear-gradient(180deg,rgba(255,255,255,0.88),rgba(255,255,255,0.72));
-  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  box-shadow:0 1px 0 rgba(255,255,255,0.78) inset,0 10px 28px rgba(17,18,20,0.04);
-  display:flex;align-items:center;justify-content:center;padding:0 24px;
-  transition:transform 0.3s ease,box-shadow 0.3s ease,border-color 0.3s ease,background 0.3s ease;
+.infraSet{
+  display:flex;
+  align-items:center;
+  gap:44px;
+  flex-shrink:0;
+  padding-right:44px;
 }
-.infraLogoCard:hover{
-  transform:translateY(-1px);border-color:rgba(201,149,107,0.3);
-  background:linear-gradient(180deg,rgba(255,255,255,0.96),rgba(255,255,255,0.82));
-  box-shadow:0 1px 0 rgba(255,255,255,0.8) inset,0 14px 34px rgba(17,18,20,0.06);
+.infraItem{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  opacity:0.72;
+  transition:opacity 0.28s ease,transform 0.28s ease,color 0.28s ease;
 }
-.infraLogoInner{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.infraItem:hover{
+  opacity:1;
+  transform:translateY(-1px);
+}
 .infraSvg{
-  width:126px;
-  height:28px;
-  color:rgba(17,18,20,0.65);
+  width:auto;
+  height:26px;
+  color:rgba(17,18,20,0.72);
+  display:block;
 }
-.infraLogoCard:hover .infraSvg{color:rgba(17,18,20,0.88)}
 .infraFade{position:absolute;top:0;bottom:0;width:88px;z-index:2;pointer-events:none}
 .infraFadeL{left:0;background:linear-gradient(90deg,${c.bg} 10%,rgba(248,246,241,0) 100%)}
 .infraFadeR{right:0;background:linear-gradient(270deg,${c.bg} 10%,rgba(248,246,241,0) 100%)}
@@ -3020,7 +3021,6 @@ button,input,select{font-family:inherit}
   .globeQ{text-align:left}
   .globeNm{text-align:left}
   .roadCard{min-width:300px}
-  .infraLogoCard{min-width:176px;height:68px;padding:0 24px}
 }
 
 @media(min-width:960px){
@@ -3041,7 +3041,6 @@ button,input,select{font-family:inherit}
   .globeV{max-width:390px}
   .heroStage{max-width:580px;min-height:640px}
   .infraTrack{animation-duration:42s}
-  .infraLogoCard{min-width:190px;height:72px;border-radius:22px}
 }
 
 @media(max-width:959px){
@@ -3057,9 +3056,14 @@ button,input,select{font-family:inherit}
     width:180px;
     padding:12px 13px;
   }
-  .floatCardA{top:74px;left:-4px}
-  .floatCardB{right:-4px;top:156px}
-  .floatCardC{left:12px;bottom:42px}
+  .floatCardA{top:74px;left:-8px}
+  .floatCardB{right:-8px;top:162px}
+  .floatCardC{
+    bottom:22px;
+    left:50%;
+    transform:translateX(-50%);
+    width:190px;
+  }
 }
 
 @media(max-width:640px){
@@ -3081,12 +3085,14 @@ button,input,select{font-family:inherit}
   .floatCardTitle{font-size:11px}
   .floatCardBody{font-size:9.5px}
   .floatCardEyebrow{font-size:8.5px}
-  .floatCardA{top:62px;left:-14px}
-  .floatCardB{right:-14px;top:128px}
-  .floatCardC{left:-2px;bottom:38px}
+  .floatCardA{top:74px;left:-8px}
+  .floatCardB{top:162px;right:-8px}
+  .floatCardC{display:none}
   .modB{padding:22px}
   .modRefHd{flex-direction:column;align-items:flex-start}
   .modRefBts{grid-template-columns:1fr}
+  .infraSet{gap:28px;padding-right:28px}
+  .infraSvg{height:22px}
 }
 
 @media (prefers-reduced-motion: reduce){
