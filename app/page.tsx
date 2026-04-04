@@ -31,7 +31,6 @@ const FONT = `@import url('https://fonts.googleapis.com/css2?family=Instrument+S
 
 const c = {
   bg: "#F8F6F1",
-  card: "#FFFFFF",
   dark: "#08090C",
   text: "#111214",
   sub: "#4A4F5C",
@@ -44,15 +43,11 @@ const c = {
   greenSoft: "#ECFDF3",
   greenDk: "#15803D",
   warm: "#C9956B",
-  warmSoft: "#FFF8F0",
-  cream: "#FCFBF7",
 };
 
 type Role = "patient" | "provider" | "developer";
-type BadgeKind =
-  | "practice"
-  | "request"
-  | "bilingual"
+type FlagCode = "gb" | "fr" | "ng" | "us" | "in" | "br" | "global";
+type ProductBadgeKind =
   | "routing"
   | "portal"
   | "message"
@@ -103,98 +98,140 @@ function Chk({ dark = false }: { dark?: boolean }) {
   );
 }
 
+function FlagMark({
+  code,
+  className = "",
+}: {
+  code: FlagCode;
+  className?: string;
+}) {
+  if (code === "gb") {
+    return (
+      <svg viewBox="0 0 24 24" className={`flagMark ${className}`} aria-hidden="true">
+        <rect width="24" height="24" rx="12" fill="#1E3A8A" />
+        <path d="M3 5L19 21" stroke="#fff" strokeWidth="4" />
+        <path d="M21 5L5 21" stroke="#fff" strokeWidth="4" />
+        <path d="M3 5L19 21" stroke="#DC2626" strokeWidth="2" />
+        <path d="M21 5L5 21" stroke="#DC2626" strokeWidth="2" />
+        <path d="M12 2V22" stroke="#fff" strokeWidth="6" />
+        <path d="M2 12H22" stroke="#fff" strokeWidth="6" />
+        <path d="M12 2V22" stroke="#DC2626" strokeWidth="3" />
+        <path d="M2 12H22" stroke="#DC2626" strokeWidth="3" />
+      </svg>
+    );
+  }
+
+  if (code === "fr") {
+    return (
+      <svg viewBox="0 0 24 24" className={`flagMark ${className}`} aria-hidden="true">
+        <rect width="24" height="24" rx="12" fill="#fff" />
+        <clipPath id="frClip">
+          <rect width="24" height="24" rx="12" />
+        </clipPath>
+        <g clipPath="url(#frClip)">
+          <rect x="0" y="0" width="8" height="24" fill="#2563EB" />
+          <rect x="8" y="0" width="8" height="24" fill="#fff" />
+          <rect x="16" y="0" width="8" height="24" fill="#DC2626" />
+        </g>
+      </svg>
+    );
+  }
+
+  if (code === "ng") {
+    return (
+      <svg viewBox="0 0 24 24" className={`flagMark ${className}`} aria-hidden="true">
+        <rect width="24" height="24" rx="12" fill="#fff" />
+        <clipPath id="ngClip">
+          <rect width="24" height="24" rx="12" />
+        </clipPath>
+        <g clipPath="url(#ngClip)">
+          <rect x="0" y="0" width="8" height="24" fill="#16A34A" />
+          <rect x="8" y="0" width="8" height="24" fill="#fff" />
+          <rect x="16" y="0" width="8" height="24" fill="#16A34A" />
+        </g>
+      </svg>
+    );
+  }
+
+  if (code === "us") {
+    return (
+      <svg viewBox="0 0 24 24" className={`flagMark ${className}`} aria-hidden="true">
+        <rect width="24" height="24" rx="12" fill="#fff" />
+        <clipPath id="usClip">
+          <rect width="24" height="24" rx="12" />
+        </clipPath>
+        <g clipPath="url(#usClip)">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <rect
+              key={i}
+              x="0"
+              y={i * 3.45}
+              width="24"
+              height="1.75"
+              fill="#DC2626"
+            />
+          ))}
+          <rect x="0" y="0" width="10.5" height="10.2" fill="#1E3A8A" />
+          <circle cx="3" cy="3" r="0.75" fill="#fff" />
+          <circle cx="6" cy="3" r="0.75" fill="#fff" />
+          <circle cx="9" cy="3" r="0.75" fill="#fff" />
+          <circle cx="4.5" cy="5.6" r="0.75" fill="#fff" />
+          <circle cx="7.5" cy="5.6" r="0.75" fill="#fff" />
+          <circle cx="3" cy="8.1" r="0.75" fill="#fff" />
+          <circle cx="6" cy="8.1" r="0.75" fill="#fff" />
+          <circle cx="9" cy="8.1" r="0.75" fill="#fff" />
+        </g>
+      </svg>
+    );
+  }
+
+  if (code === "in") {
+    return (
+      <svg viewBox="0 0 24 24" className={`flagMark ${className}`} aria-hidden="true">
+        <rect width="24" height="24" rx="12" fill="#fff" />
+        <clipPath id="inClip">
+          <rect width="24" height="24" rx="12" />
+        </clipPath>
+        <g clipPath="url(#inClip)">
+          <rect x="0" y="0" width="24" height="8" fill="#F59E0B" />
+          <rect x="0" y="8" width="24" height="8" fill="#fff" />
+          <rect x="0" y="16" width="24" height="8" fill="#16A34A" />
+          <circle cx="12" cy="12" r="2.3" fill="none" stroke="#2563EB" strokeWidth="1.4" />
+        </g>
+      </svg>
+    );
+  }
+
+  if (code === "br") {
+    return (
+      <svg viewBox="0 0 24 24" className={`flagMark ${className}`} aria-hidden="true">
+        <rect width="24" height="24" rx="12" fill="#16A34A" />
+        <path d="M12 4L19.5 12L12 20L4.5 12Z" fill="#FACC15" />
+        <circle cx="12" cy="12" r="3.6" fill="#2563EB" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" className={`flagMark ${className}`} aria-hidden="true">
+      <rect width="24" height="24" rx="12" fill="#EFF6FF" />
+      <circle cx="12" cy="12" r="7" fill="none" stroke="#2563EB" strokeWidth="1.5" />
+      <path d="M5 12H19" stroke="#2563EB" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M12 5C10 7.2 9 9.6 9 12C9 14.4 10 16.8 12 19" stroke="#2563EB" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M12 5C14 7.2 15 9.6 15 12C15 14.4 14 16.8 12 19" stroke="#2563EB" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function ProductBadge({
   kind,
   size = "md",
 }: {
-  kind: BadgeKind;
+  kind: ProductBadgeKind;
   size?: "md" | "lg";
 }) {
   return (
     <div className={`pBadge pBadge--${kind} pBadge--${size}`}>
-      {kind === "practice" && (
-        <svg viewBox="0 0 48 48" aria-hidden="true">
-          <rect x="7" y="10" width="34" height="26" rx="9" fill="#FFFFFF" />
-          <rect x="12" y="15" width="13" height="3.4" rx="1.7" fill="#DDEAFF" />
-          <circle cx="19" cy="26" r="6.5" fill="#ECF5FF" />
-          <path
-            d="M16.7 26.3L18.9 28.5L22.9 24.5"
-            stroke="#2563EB"
-            strokeWidth="1.9"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M31.5 18.5C34.6 18.5 37.1 21 37.1 24.1C37.1 28.4 31.5 33.3 31.5 33.3C31.5 33.3 25.9 28.4 25.9 24.1C25.9 21 28.4 18.5 31.5 18.5Z"
-            fill="#FFE0C4"
-            stroke="#B8723E"
-            strokeWidth="1.4"
-          />
-          <circle cx="31.5" cy="24" r="1.9" fill="#B8723E" />
-        </svg>
-      )}
-
-      {kind === "request" && (
-        <svg viewBox="0 0 48 48" aria-hidden="true">
-          <rect x="10" y="8" width="28" height="32" rx="8" fill="#FFFFFF" />
-          <rect x="15" y="14" width="18" height="3" rx="1.5" fill="#DDEAFF" />
-          <rect x="15" y="20" width="13" height="3" rx="1.5" fill="#E6DFD3" />
-          <rect x="15" y="26" width="10" height="3" rx="1.5" fill="#E6DFD3" />
-          <circle cx="32.5" cy="30.5" r="6.5" fill="#EAF8EF" />
-          <path
-            d="M29.7 30.6L31.7 32.5L35.6 28.4"
-            stroke="#15803D"
-            strokeWidth="1.9"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      )}
-
-      {kind === "bilingual" && (
-        <svg viewBox="0 0 48 48" aria-hidden="true">
-          <rect x="8" y="10" width="22" height="15" rx="6" fill="#FFFFFF" />
-          <rect x="18" y="23" width="22" height="15" rx="6" fill="#FFFFFF" />
-          <path
-            d="M14 17H24"
-            stroke="#2563EB"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-          />
-          <path
-            d="M14 21H21"
-            stroke="#C9956B"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-          />
-          <path
-            d="M24 29H34"
-            stroke="#2563EB"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-          />
-          <path
-            d="M24 33H31"
-            stroke="#C9956B"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-          />
-          <circle cx="34.5" cy="15" r="4.7" fill="#FFF4E8" />
-          <path
-            d="M34.5 12.4V17.6"
-            stroke="#B8723E"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
-          <path
-            d="M31.9 15H37.1"
-            stroke="#B8723E"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
-        </svg>
-      )}
-
       {kind === "routing" && (
         <svg viewBox="0 0 56 56" aria-hidden="true">
           <circle cx="15" cy="17" r="5.5" fill="#E7F2FF" />
@@ -374,44 +411,6 @@ function ProductBadge({
   );
 }
 
-function FeatureCard({
-  kind,
-  title,
-  body,
-  className,
-  delay = 0,
-}: {
-  kind: "practice" | "request" | "bilingual";
-  title: string;
-  body: string;
-  className: string;
-  delay?: number;
-}) {
-  return (
-    <motion.div
-      className={`floatCard ${className}`}
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: [0, -8, 0] }}
-      transition={{
-        opacity: { duration: 0.6, delay },
-        y: {
-          duration: 6.2 + delay,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: delay * 0.5,
-        },
-      }}
-    >
-      <div className="floatCardTop">
-        <ProductBadge kind={kind} />
-        <span className="floatCardEyebrow">Laura action</span>
-      </div>
-      <strong className="floatCardTitle">{title}</strong>
-      <p className="floatCardBody">{body}</p>
-    </motion.div>
-  );
-}
-
 function Typewriter() {
   const lines = useMemo(
     () => [
@@ -484,7 +483,7 @@ function StatusBar() {
 const convos = [
   {
     label: "English · EN",
-    flag: "🇬🇧",
+    flag: "gb" as FlagCode,
     msgs: [
       { f: "u", t: "I just moved to Manchester and need to register with a GP." },
       { f: "l", t: "I will find practices near you. What is your postcode?" },
@@ -497,7 +496,7 @@ const convos = [
   },
   {
     label: "Français · FR",
-    flag: "🇫🇷",
+    flag: "fr" as FlagCode,
     msgs: [
       { f: "u", t: "J'ai besoin de renouveler mon ordonnance." },
       { f: "l", t: "Combien de jours de stock vous reste-t-il?" },
@@ -509,7 +508,7 @@ const convos = [
   },
   {
     label: "Yorùbá · YO",
-    flag: "🇳🇬",
+    flag: "ng" as FlagCode,
     msgs: [
       { f: "u", t: "Mo ni iba ati efori lati ana. Mo wa ni HD1." },
       { f: "l", t: "Mo ti ri ile-iwosan meji nitosi re." },
@@ -613,7 +612,7 @@ function PhoneMockup() {
                 exit={{ opacity: 0 }}
                 className="phLang"
               >
-                <span className="flagEmoji phFlag">{cv.flag}</span>
+                <FlagMark code={cv.flag} className="phFlagMark" />
                 <span>{cv.label}</span>
               </motion.div>
             </AnimatePresence>
@@ -711,28 +710,7 @@ function HeroStage() {
         transition={{ duration: 6.7, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <FeatureCard
-        kind="practice"
-        title="3 practices found nearby"
-        body="Accepting patients near your area."
-        className="floatCardA"
-        delay={0.1}
-      />
-      <FeatureCard
-        kind="request"
-        title="Request prepared"
-        body="Review before sharing through the available channel."
-        className="floatCardB"
-        delay={0.18}
-      />
-      <FeatureCard
-        kind="bilingual"
-        title="Bilingual note ready"
-        body="Structured for the practice and easier to review."
-        className="floatCardC"
-        delay={0.24}
-      />
-
+      <div className="heroPlate" />
       <div className="heroPhoneWrap">
         <PhoneMockup />
       </div>
@@ -744,7 +722,7 @@ const gs = [
   {
     country: "United Kingdom",
     code: "UK",
-    flag: "🇬🇧",
+    flag: "gb" as FlagCode,
     name: "Sarah, 34, Leeds",
     quote:
       "I called at 8:01am. Busy. By 8:15 all slots were gone. Three weeks of this.",
@@ -756,7 +734,7 @@ const gs = [
   {
     country: "United States",
     code: "US",
-    flag: "🇺🇸",
+    flag: "us" as FlagCode,
     name: "Marcus, 28, Chicago",
     quote:
       "I delayed seeing a doctor for six months because I was terrified of the cost.",
@@ -768,7 +746,7 @@ const gs = [
   {
     country: "Nigeria",
     code: "NG",
-    flag: "🇳🇬",
+    flag: "ng" as FlagCode,
     name: "Amina, 41, Lagos",
     quote:
       "Four doctors for ten thousand people. I spent two days trying to find someone.",
@@ -780,7 +758,7 @@ const gs = [
   {
     country: "India",
     code: "IN",
-    flag: "🇮🇳",
+    flag: "in" as FlagCode,
     name: "Priya, 55, Jaipur",
     quote:
       "My mother lives two hours from the nearest clinic. She never knows when to worry.",
@@ -792,7 +770,7 @@ const gs = [
   {
     country: "Brazil",
     code: "BR",
-    flag: "🇧🇷",
+    flag: "br" as FlagCode,
     name: "Lucas, 23, London",
     quote:
       "I moved to London and could not explain my symptoms in English.",
@@ -1055,7 +1033,7 @@ function GlobeSection() {
                 className="globeStory"
               >
                 <div className="globeCtry">
-                  <span className="flagEmoji globeFlag">{story.flag}</span>
+                  <FlagMark code={story.flag} className="globeFlagMark" />
                   <span className="globeCode">{story.code}</span>
                   <span className="globeCtryN">{story.country}</span>
                 </div>
@@ -1083,6 +1061,7 @@ function GlobeSection() {
                 {gs.map((_, i) => (
                   <button
                     key={i}
+                    type="button"
                     className={`globeD${i === active ? " globeDA" : ""}`}
                     onClick={() => setActive(i)}
                   />
@@ -1090,10 +1069,18 @@ function GlobeSection() {
               </div>
 
               <div className="globeAs">
-                <button className="globeA" onClick={() => setActive((p) => (p - 1 + 5) % 5)}>
+                <button
+                  type="button"
+                  className="globeA"
+                  onClick={() => setActive((p) => (p - 1 + gs.length) % gs.length)}
+                >
                   <ChevronLeft size={15} />
                 </button>
-                <button className="globeA" onClick={() => setActive((p) => (p + 1) % 5)}>
+                <button
+                  type="button"
+                  className="globeA"
+                  onClick={() => setActive((p) => (p + 1) % gs.length)}
+                >
                   <ChevronRight size={15} />
                 </button>
               </div>
@@ -1302,9 +1289,14 @@ const infraLogos = [
 function InfraLogo({ name }: { name: (typeof infraLogos)[number]["name"] }) {
   if (name === "vercel") {
     return (
-      <svg viewBox="0 0 126 28" className="infraSvg" aria-label="Vercel" role="img">
+      <svg
+        viewBox="0 0 128 28"
+        className="infraSvg infraSvg--vercel"
+        aria-label="Vercel"
+        role="img"
+      >
         <path d="M14 4L26 24H2L14 4Z" fill="currentColor" />
-        <text x="36" y="19" fontSize="14" fontWeight="700" fontFamily="DM Sans, sans-serif">
+        <text x="38" y="19" fontSize="14" fontWeight="700" fontFamily="DM Sans, sans-serif">
           Vercel
         </text>
       </svg>
@@ -1313,8 +1305,13 @@ function InfraLogo({ name }: { name: (typeof infraLogos)[number]["name"] }) {
 
   if (name === "stripe") {
     return (
-      <svg viewBox="0 0 126 28" className="infraSvg" aria-label="Stripe" role="img">
-        <text x="6" y="20" fontSize="17" fontWeight="800" fontFamily="DM Sans, sans-serif">
+      <svg
+        viewBox="0 0 112 28"
+        className="infraSvg infraSvg--stripe"
+        aria-label="Stripe"
+        role="img"
+      >
+        <text x="2" y="21" fontSize="17" fontWeight="800" fontFamily="DM Sans, sans-serif">
           stripe
         </text>
       </svg>
@@ -1323,11 +1320,28 @@ function InfraLogo({ name }: { name: (typeof infraLogos)[number]["name"] }) {
 
   if (name === "openai") {
     return (
-      <svg viewBox="0 0 140 28" className="infraSvg" aria-label="OpenAI" role="img">
-        <g transform="translate(4 4)" fill="none" stroke="currentColor" strokeWidth="1.9">
-          <circle cx="10" cy="10" r="8" />
+      <svg
+        viewBox="0 0 156 30"
+        className="infraSvg infraSvg--openai"
+        aria-label="OpenAI"
+        role="img"
+      >
+        <g
+          transform="translate(4 4)"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.55"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="12" cy="5.2" r="4.2" />
+          <circle cx="17.4" cy="8.3" r="4.2" />
+          <circle cx="17.4" cy="14.7" r="4.2" />
+          <circle cx="12" cy="17.8" r="4.2" />
+          <circle cx="6.6" cy="14.7" r="4.2" />
+          <circle cx="6.6" cy="8.3" r="4.2" />
         </g>
-        <text x="30" y="19" fontSize="14" fontWeight="700" fontFamily="DM Sans, sans-serif">
+        <text x="40" y="20" fontSize="14" fontWeight="700" fontFamily="DM Sans, sans-serif">
           OpenAI
         </text>
       </svg>
@@ -1335,7 +1349,12 @@ function InfraLogo({ name }: { name: (typeof infraLogos)[number]["name"] }) {
   }
 
   return (
-    <svg viewBox="0 0 126 28" className="infraSvg" aria-label="Twilio" role="img">
+    <svg
+      viewBox="0 0 124 28"
+      className="infraSvg infraSvg--twilio"
+      aria-label="Twilio"
+      role="img"
+    >
       <g transform="translate(4 5)" fill="none" stroke="currentColor" strokeWidth="1.8">
         <circle cx="9" cy="9" r="8.2" />
         <circle cx="6" cy="6" r="1.4" fill="currentColor" />
@@ -1371,10 +1390,13 @@ function InfraSection() {
               <div className="infraFade infraFadeR" />
 
               <div className="infraTrack">
-                {Array.from({ length: 3 }).map((_, groupIndex) => (
+                {Array.from({ length: 4 }).map((_, groupIndex) => (
                   <div className="infraSet" key={groupIndex}>
                     {infraLogos.map((logo) => (
-                      <div key={`${groupIndex}-${logo.name}`} className="infraItem">
+                      <div
+                        key={`${groupIndex}-${logo.name}`}
+                        className={`infraItem infraItem--${logo.name}`}
+                      >
                         <InfraLogo name={logo.name} />
                       </div>
                     ))}
@@ -1874,15 +1896,16 @@ export default function Page() {
 
                 <div className="glF">
                   {[
-                    "🇬🇧 English · EN",
-                    "🇫🇷 Français · FR",
-                    "🇳🇬 Yorùbá · YO",
-                    "🇸🇦 العربية · AR",
-                    "🇮🇳 हिंदी · HI",
-                    "🌍 40+ more",
-                  ].map((f) => (
-                    <span key={f} className="glFi">
-                      {f}
+                    { code: "gb" as FlagCode, label: "English · EN" },
+                    { code: "fr" as FlagCode, label: "Français · FR" },
+                    { code: "ng" as FlagCode, label: "Yorùbá · YO" },
+                    { code: "global" as FlagCode, label: "العربية · AR" },
+                    { code: "in" as FlagCode, label: "हिंदी · HI" },
+                    { code: "global" as FlagCode, label: "40+ more" },
+                  ].map((item) => (
+                    <span key={item.label} className="glFi">
+                      <FlagMark code={item.code} className="glChipFlag" />
+                      <span>{item.label}</span>
                     </span>
                   ))}
                 </div>
@@ -2211,15 +2234,16 @@ button,input,select{font-family:inherit}
 
 @keyframes blink{0%,50%{opacity:1}50.01%,100%{opacity:0}}
 @keyframes tDot{0%,80%{opacity:0.32;transform:scale(0.82)}40%{opacity:1;transform:scale(1)}}
-@keyframes infraDrift{from{transform:translateX(0)}to{transform:translateX(-33.3333%)}}
+@keyframes infraDrift{from{transform:translateX(0)}to{transform:translateX(-25%)}}
 
 .serif{font-family:'Instrument Serif',Georgia,serif}
-.flagEmoji{
-  font-family:'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif;
-  line-height:1;
-}
 .wrap{width:100%;overflow-x:clip}
 .container{max-width:1180px;margin:0 auto;padding:0 20px}
+
+.flagMark{display:block;width:18px;height:18px;flex-shrink:0;border-radius:999px;overflow:hidden}
+.phFlagMark{width:14px;height:14px}
+.globeFlagMark{width:18px;height:18px}
+.glChipFlag{width:15px;height:15px}
 
 .sec{padding:74px 0}
 .secDk{padding:74px 0;background:${c.dark};color:#fff}
@@ -2386,63 +2410,23 @@ button,input,select{font-family:inherit}
 }
 .heroDustA{right:64px;top:110px}
 .heroDustB{left:96px;bottom:120px}
+.heroPlate{
+  position:absolute;
+  width:360px;
+  height:440px;
+  border-radius:42px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.34), rgba(255,255,255,0.08));
+  border:1px solid rgba(227,221,210,0.72);
+  box-shadow:0 30px 60px rgba(17,18,20,0.05), inset 0 1px 0 rgba(255,255,255,0.55);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  transform:rotate(-7deg);
+}
 .heroPhoneWrap{
   position:relative;
   z-index:5;
   transform-style:preserve-3d;
   filter:drop-shadow(0 32px 54px rgba(17,18,20,0.16));
-}
-
-.floatCard{
-  position:absolute;
-  z-index:3;
-  width:192px;
-  padding:12px 13px;
-  border-radius:20px;
-  border:1px solid rgba(227,221,210,0.86);
-  background:rgba(255,255,255,0.78);
-  backdrop-filter:blur(18px);
-  -webkit-backdrop-filter:blur(18px);
-  box-shadow:0 1px 0 rgba(255,255,255,0.76) inset,0 18px 38px rgba(17,18,20,0.07);
-  pointer-events:none;
-}
-.floatCardTop{display:flex;align-items:center;gap:10px}
-.floatCardEyebrow{
-  font-size:10px;
-  font-weight:700;
-  letter-spacing:0.08em;
-  text-transform:uppercase;
-  color:${c.accent};
-}
-.floatCardTitle{
-  display:block;
-  margin-top:10px;
-  font-size:14px;
-  line-height:1.28;
-  letter-spacing:-0.03em;
-  color:${c.text};
-}
-.floatCardBody{
-  margin-top:5px;
-  font-size:11.5px;
-  line-height:1.58;
-  color:${c.sub};
-}
-.floatCardA{
-  top:58px;
-  left:-54px;
-  transform:rotate(-5deg);
-}
-.floatCardB{
-  top:118px;
-  right:-60px;
-  transform:rotate(5deg);
-}
-.floatCardC{
-  bottom:-8px;
-  left:50%;
-  transform:translateX(-50%);
-  width:220px;
 }
 
 .pBadge{
@@ -2455,9 +2439,6 @@ button,input,select{font-family:inherit}
 .pBadge svg{display:block;width:100%;height:100%}
 .pBadge--md{width:42px;height:42px;padding:7px}
 .pBadge--lg{width:58px;height:58px;padding:9px}
-.pBadge--practice{background:linear-gradient(180deg,#FFFFFF,#F7FBFF)}
-.pBadge--request{background:linear-gradient(180deg,#FFFFFF,#FBFFF9)}
-.pBadge--bilingual{background:linear-gradient(180deg,#FFFFFF,#FFF9F3)}
 .pBadge--routing{background:linear-gradient(180deg,#FFFFFF,#F7FBFF)}
 .pBadge--portal{background:linear-gradient(180deg,#FFFFFF,#FBFBFF)}
 .pBadge--message{background:linear-gradient(180deg,#FFFFFF,#F7FBFF)}
@@ -2496,7 +2477,6 @@ button,input,select{font-family:inherit}
   display:flex;align-items:center;justify-content:center;gap:6px;padding:5px 0;
   background:#F7F8FC;font-size:8px;font-weight:800;color:${c.accent};letter-spacing:0.03em;
 }
-.phFlag{font-size:13px}
 .phBdy{
   display:flex;flex-direction:column;gap:3px;padding:8px 7px;height:372px;overflow:hidden;justify-content:flex-end;
   background:
@@ -2561,8 +2541,7 @@ button,input,select{font-family:inherit}
 .globeCanvas{width:100%;height:100%;display:block}
 .globeC{width:100%;max-width:500px;text-align:center}
 .globeStory{min-height:190px}
-.globeCtry{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px}
-.globeFlag{font-size:16px}
+.globeCtry{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .globeCode{
   width:28px;height:28px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;
   background:rgba(255,255,255,0.8);border:1px solid rgba(227,221,210,0.9);
@@ -2627,7 +2606,7 @@ button,input,select{font-family:inherit}
 .glF{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:16px}
 .glFi{
   padding:7px 12px;border-radius:999px;border:1px solid rgba(227,221,210,0.9);background:rgba(255,255,255,0.86);
-  font-size:11px;font-weight:700;color:${c.sub};
+  font-size:11px;font-weight:700;color:${c.sub};display:inline-flex;align-items:center;gap:7px;
 }
 
 .trm{
@@ -2735,7 +2714,9 @@ button,input,select{font-family:inherit}
   height:26px;
   color:rgba(17,18,20,0.72);
   display:block;
+  overflow:visible;
 }
+.infraSvg--openai{height:28px}
 .infraFade{position:absolute;top:0;bottom:0;width:88px;z-index:2;pointer-events:none}
 .infraFadeL{left:0;background:linear-gradient(90deg,${c.bg} 10%,rgba(248,246,241,0) 100%)}
 .infraFadeR{right:0;background:linear-gradient(270deg,${c.bg} 10%,rgba(248,246,241,0) 100%)}
@@ -3052,47 +3033,42 @@ button,input,select{font-family:inherit}
     width:320px;
     height:320px;
   }
-  .floatCard{
-    width:180px;
-    padding:12px 13px;
-  }
-  .floatCardA{top:74px;left:-8px}
-  .floatCardB{right:-8px;top:162px}
-  .floatCardC{
-    bottom:22px;
-    left:50%;
-    transform:translateX(-50%);
-    width:190px;
+  .heroPlate{
+    width:290px;
+    height:360px;
+    border-radius:34px;
   }
 }
 
 @media(max-width:640px){
+  .navR{height:58px}
+  .navNm{font-size:13px}
   .heroStage{
-    min-height:470px;
+    min-height:430px;
     max-width:330px;
   }
   .heroRing{
     width:260px;
     height:260px;
   }
+  .heroPlate{
+    width:220px;
+    height:300px;
+    border-radius:28px;
+  }
   .heroAuraA{width:220px;height:220px;right:30px;top:68px}
   .heroAuraB{width:200px;height:200px;left:40px;bottom:70px}
-  .floatCard{
-    width:146px;
-    padding:10px 11px;
-    border-radius:16px;
-  }
-  .floatCardTitle{font-size:11px}
-  .floatCardBody{font-size:9.5px}
-  .floatCardEyebrow{font-size:8.5px}
-  .floatCardA{top:74px;left:-8px}
-  .floatCardB{top:162px;right:-8px}
-  .floatCardC{display:none}
+  .phW{max-width:236px}
+  .phB{border-radius:30px}
+  .phS{border-radius:27px}
+  .phBdy{height:314px}
+  .globeCtryN{letter-spacing:0.08em}
   .modB{padding:22px}
   .modRefHd{flex-direction:column;align-items:flex-start}
   .modRefBts{grid-template-columns:1fr}
   .infraSet{gap:28px;padding-right:28px}
   .infraSvg{height:22px}
+  .infraSvg--openai{height:24px}
 }
 
 @media (prefers-reduced-motion: reduce){
