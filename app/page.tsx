@@ -1322,9 +1322,9 @@ function InfraLogo({ name }: { name: (typeof infraLogos)[number]["name"] }) {
   return (
     <div className="infraRealLogo" aria-label="OpenAI" role="img">
       <img
-        src="/openai-wordmark.svg"
+        src="/logos/openai-wordmark.svg"
         alt="OpenAI"
-        className="infraRealLogoImg"
+        className="infraRealLogoImg infraRealLogoImg--openai"
       />
     </div>
   );
@@ -2687,10 +2687,29 @@ button,input,select{font-family:inherit}
   opacity:0.72;
   transition:opacity 0.28s ease,transform 0.28s ease,color 0.28s ease;
 }
-
 .infraItem:hover{
   opacity:1;
   transform:translateY(-1px);
+}
+
+.infraRealLogo{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+}
+
+.infraRealLogoImg{
+  display:block;
+  height:26px;
+  width:auto;
+  object-fit:contain;
+}
+
+.infraRealLogoImg--openai{
+  height:30px;
+  width:158px;
+  max-width:none;
 }
 
 .infraSvg{
@@ -2701,20 +2720,6 @@ button,input,select{font-family:inherit}
   overflow:visible;
 }
 
-.infraRealLogo{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.infraRealLogoImg{
-  display:block;
-  height:28px;
-  width:auto;
-  max-width:140px;
-  object-fit:contain;
-}
-
 .infraFade{
   position:absolute;
   top:0;
@@ -2723,12 +2728,10 @@ button,input,select{font-family:inherit}
   z-index:2;
   pointer-events:none;
 }
-
 .infraFadeL{
   left:0;
   background:linear-gradient(90deg,${c.bg} 10%,rgba(248,246,241,0) 100%);
 }
-
 .infraFadeR{
   right:0;
   background:linear-gradient(270deg,${c.bg} 10%,rgba(248,246,241,0) 100%);
@@ -3080,6 +3083,12 @@ button,input,select{font-family:inherit}
   .modRefBts{grid-template-columns:1fr}
   .infraSet{gap:28px;padding-right:28px}
   .infraSvg{height:22px}
+  .infraRealLogoImg{height:22px;width:auto}
+  .infraRealLogoImg--openai{
+  height:26px;
+  width:auto;
+  max-width:138px;
+}
 
  .infraRealLogoImg{
     height:24px;
