@@ -31,7 +31,7 @@ const FONT = `@import url('https://fonts.googleapis.com/css2?family=Instrument+S
 
 const c = {
   bg: "#F8F6F1",
-  card: "#fff",
+  card: "#FFFFFF",
   dark: "#08090C",
   text: "#111214",
   sub: "#4A4F5C",
@@ -45,9 +45,20 @@ const c = {
   greenDk: "#15803D",
   warm: "#C9956B",
   warmSoft: "#FFF8F0",
+  cream: "#FCFBF7",
 };
 
 type Role = "patient" | "provider" | "developer";
+type BadgeKind =
+  | "practice"
+  | "request"
+  | "bilingual"
+  | "routing"
+  | "portal"
+  | "message"
+  | "language"
+  | "telehealth"
+  | "success";
 
 function FI({
   children,
@@ -59,14 +70,14 @@ function FI({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const v = useInView(ref, { once: true, amount: 0.05 });
+  const visible = useInView(ref, { once: true, amount: 0.05 });
 
   return (
     <motion.div
       ref={ref}
       initial={{ opacity: 0, y: 18 }}
-      animate={v ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
+      animate={visible ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.65, delay, ease: [0.22, 1, 0.36, 1] }}
       className={className}
     >
       {children}
@@ -110,25 +121,25 @@ function Typewriter() {
 
   useEffect(() => {
     if (pause) {
-      const t = setTimeout(() => {
+      const t = window.setTimeout(() => {
         setPause(false);
         setDel(true);
-      }, 1400);
-      return () => clearTimeout(t);
+      }, 1300);
+      return () => window.clearTimeout(t);
     }
 
-    const cur = lines[li];
+    const current = lines[li];
 
     if (!del) {
-      if (ci < cur.length) {
-        const t = setTimeout(() => setCi((p) => p + 1), 28);
-        return () => clearTimeout(t);
+      if (ci < current.length) {
+        const t = window.setTimeout(() => setCi((p) => p + 1), 24);
+        return () => window.clearTimeout(t);
       }
       setPause(true);
     } else {
       if (ci > 0) {
-        const t = setTimeout(() => setCi((p) => p - 1), 14);
-        return () => clearTimeout(t);
+        const t = window.setTimeout(() => setCi((p) => p - 1), 12);
+        return () => window.clearTimeout(t);
       }
       setDel(false);
       setLi((p) => (p + 1) % lines.length);
@@ -148,8 +159,8 @@ function StatusBar() {
     <div className="stBar">
       <div className="container stIn">
         <motion.span
-          animate={{ scale: [1, 1.3, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
+          animate={{ scale: [1, 1.28, 1] }}
+          transition={{ duration: 2.4, repeat: Infinity }}
           className="stDot"
         />
         <span className="stLbl">All systems operational</span>
@@ -161,10 +172,318 @@ function StatusBar() {
   );
 }
 
+function ProductBadge({
+  kind,
+  size = "md",
+}: {
+  kind: BadgeKind;
+  size?: "md" | "lg";
+}) {
+  return (
+    <div className={`pBadge pBadge--${kind} pBadge--${size}`}>
+      {kind === "practice" && (
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <rect x="7" y="10" width="34" height="26" rx="9" fill="#FFFFFF" />
+          <rect x="12" y="15" width="13" height="3.4" rx="1.7" fill="#DDEAFF" />
+          <circle cx="19" cy="26" r="6.5" fill="#ECF5FF" />
+          <path
+            d="M16.7 26.3L18.9 28.5L22.9 24.5"
+            stroke="#2563EB"
+            strokeWidth="1.9"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M31.5 18.5C34.6 18.5 37.1 21 37.1 24.1C37.1 28.4 31.5 33.3 31.5 33.3C31.5 33.3 25.9 28.4 25.9 24.1C25.9 21 28.4 18.5 31.5 18.5Z"
+            fill="#FFE0C4"
+            stroke="#B8723E"
+            strokeWidth="1.4"
+          />
+          <circle cx="31.5" cy="24" r="1.9" fill="#B8723E" />
+        </svg>
+      )}
+
+      {kind === "request" && (
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <rect x="10" y="8" width="28" height="32" rx="8" fill="#FFFFFF" />
+          <rect x="15" y="14" width="18" height="3" rx="1.5" fill="#DDEAFF" />
+          <rect x="15" y="20" width="13" height="3" rx="1.5" fill="#E6DFD3" />
+          <rect x="15" y="26" width="10" height="3" rx="1.5" fill="#E6DFD3" />
+          <circle cx="32.5" cy="30.5" r="6.5" fill="#EAF8EF" />
+          <path
+            d="M29.7 30.6L31.7 32.5L35.6 28.4"
+            stroke="#15803D"
+            strokeWidth="1.9"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+
+      {kind === "bilingual" && (
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <rect x="8" y="10" width="22" height="15" rx="6" fill="#FFFFFF" />
+          <rect x="18" y="23" width="22" height="15" rx="6" fill="#FFFFFF" />
+          <path
+            d="M14 17H24"
+            stroke="#2563EB"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          <path
+            d="M14 21H21"
+            stroke="#C9956B"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          <path
+            d="M24 29H34"
+            stroke="#2563EB"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          <path
+            d="M24 33H31"
+            stroke="#C9956B"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          <circle cx="34.5" cy="15" r="4.7" fill="#FFF4E8" />
+          <path
+            d="M34.5 12.4V17.6"
+            stroke="#B8723E"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <path
+            d="M31.9 15H37.1"
+            stroke="#B8723E"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+        </svg>
+      )}
+
+      {kind === "routing" && (
+        <svg viewBox="0 0 56 56" aria-hidden="true">
+          <circle cx="15" cy="17" r="5.5" fill="#E7F2FF" />
+          <circle cx="42" cy="14" r="5.5" fill="#FFE7D3" />
+          <circle cx="40" cy="40" r="6.5" fill="#EAF8EF" />
+          <path
+            d="M20.8 17H35"
+            stroke="#9AA3B2"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M42 19.6V31.2"
+            stroke="#9AA3B2"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M18.6 20.6L35.2 36.7"
+            stroke="#2563EB"
+            strokeWidth="2.3"
+            strokeLinecap="round"
+          />
+          <path
+            d="M34 36.5L33.8 31.5H38.8"
+            stroke="#2563EB"
+            strokeWidth="2.3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+
+      {kind === "portal" && (
+        <svg viewBox="0 0 56 56" aria-hidden="true">
+          <rect x="9" y="12" width="38" height="30" rx="9" fill="#FFFFFF" />
+          <rect x="13" y="16" width="12" height="22" rx="4" fill="#EEF4FF" />
+          <rect x="28" y="18" width="14" height="4" rx="2" fill="#E6DFD3" />
+          <rect x="28" y="26" width="11" height="4" rx="2" fill="#E6DFD3" />
+          <circle cx="40" cy="37" r="7" fill="#ECFDF3" />
+          <path
+            d="M37.4 37.1L39.4 39.1L43.3 35"
+            stroke="#15803D"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+
+      {kind === "message" && (
+        <svg viewBox="0 0 56 56" aria-hidden="true">
+          <rect x="18" y="8" width="20" height="40" rx="8" fill="#FFFFFF" />
+          <rect x="23" y="13" width="10" height="2.8" rx="1.4" fill="#D8DCE4" />
+          <rect x="22" y="21" width="12" height="8" rx="4" fill="#EAF8EF" />
+          <path
+            d="M15 22C12.2 22 10 24.1 10 26.8C10 28.7 11.2 30.4 13 31.3V35L16.7 32.8H23"
+            fill="#E7F2FF"
+          />
+          <path
+            d="M15 22C12.2 22 10 24.1 10 26.8C10 28.7 11.2 30.4 13 31.3V35L16.7 32.8H23"
+            stroke="#2563EB"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+
+      {kind === "language" && (
+        <svg viewBox="0 0 56 56" aria-hidden="true">
+          <circle cx="24" cy="28" r="14" fill="#EAF3FF" />
+          <path
+            d="M12.5 28H35.5"
+            stroke="#2563EB"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          <path
+            d="M24 14C20.8 17.7 19 22.6 19 28C19 33.4 20.8 38.3 24 42"
+            stroke="#2563EB"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          <path
+            d="M24 14C27.2 17.7 29 22.6 29 28C29 33.4 27.2 38.3 24 42"
+            stroke="#2563EB"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          <rect x="34" y="17" width="13" height="13" rx="5" fill="#FFF5E8" />
+          <path
+            d="M38 21H43"
+            stroke="#B8723E"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          <path
+            d="M38 25H41.5"
+            stroke="#B8723E"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+        </svg>
+      )}
+
+      {kind === "telehealth" && (
+        <svg viewBox="0 0 56 56" aria-hidden="true">
+          <rect x="9" y="13" width="28" height="20" rx="6" fill="#FFFFFF" />
+          <rect x="18" y="35" width="10" height="3.5" rx="1.75" fill="#DCD6CB" />
+          <path
+            d="M23 19V27"
+            stroke="#2563EB"
+            strokeWidth="2.3"
+            strokeLinecap="round"
+          />
+          <path
+            d="M19 23H27"
+            stroke="#2563EB"
+            strokeWidth="2.3"
+            strokeLinecap="round"
+          />
+          <circle cx="42" cy="32" r="8" fill="#EAF8EF" />
+          <path
+            d="M42 27.5V36.5"
+            stroke="#15803D"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M37.5 32H46.5"
+            stroke="#15803D"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+      )}
+
+      {kind === "success" && (
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <circle cx="32" cy="32" r="22" fill="#FFFFFF" />
+          <circle cx="32" cy="32" r="16" fill="#F8FBFF" />
+          <path
+            d="M24.7 32.8L29.2 37.3L39.5 27"
+            stroke="#2563EB"
+            strokeWidth="3.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M32 9V14"
+            stroke="#C9956B"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M32 50V55"
+            stroke="#C9956B"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M9 32H14"
+            stroke="#C9956B"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M50 32H55"
+            stroke="#C9956B"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+      )}
+    </div>
+  );
+}
+
+function FeatureCard({
+  kind,
+  title,
+  body,
+  className,
+  delay = 0,
+}: {
+  kind: "practice" | "request" | "bilingual";
+  title: string;
+  body: string;
+  className: string;
+  delay?: number;
+}) {
+  return (
+    <motion.div
+      className={`floatCard ${className}`}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: [0, -8, 0] }}
+      transition={{
+        opacity: { duration: 0.6, delay },
+        y: {
+          duration: 6.4 + delay,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: delay * 0.5,
+        },
+      }}
+    >
+      <div className="floatCardTop">
+        <ProductBadge kind={kind} />
+        <span className="floatCardEyebrow">Laura action</span>
+      </div>
+      <strong className="floatCardTitle">{title}</strong>
+      <p className="floatCardBody">{body}</p>
+    </motion.div>
+  );
+}
+
 const convos = [
   {
-    lang: "English",
-    flag: "🇬🇧",
+    label: "English · EN",
     msgs: [
       { f: "u", t: "I just moved to Manchester and need to register with a GP." },
       { f: "l", t: "I will find practices near you. What is your postcode?" },
@@ -176,20 +495,18 @@ const convos = [
     ],
   },
   {
-    lang: "Français",
-    flag: "🇫🇷",
+    label: "Français · FR",
     msgs: [
       { f: "u", t: "J'ai besoin de renouveler mon ordonnance." },
       { f: "l", t: "Combien de jours de stock vous reste-t-il?" },
       { f: "u", t: "Environ 3 jours." },
-      { f: "l", t: "J'ai prepare une demande de renouvellement." },
-      { f: "a", t: "Demande preparee · Rappel dans 25 jours" },
+      { f: "l", t: "J'ai préparé une demande de renouvellement." },
+      { f: "a", t: "Demande préparée · Rappel dans 25 jours" },
       { f: "l", t: "Je vous rappellerai 5 jours avant la fin." },
     ],
   },
   {
-    lang: "Yorùbá",
-    flag: "🇳🇬",
+    label: "Yorùbá · YO",
     msgs: [
       { f: "u", t: "Mo ni iba ati efori lati ana. Mo wa ni HD1." },
       { f: "l", t: "Mo ti ri ile-iwosan meji nitosi re." },
@@ -202,46 +519,50 @@ const convos = [
 ];
 
 function PhoneMockup() {
+  const initialVisible = 3;
   const [li, setLi] = useState(0);
-  const [vi, setVi] = useState(0);
+  const [vi, setVi] = useState(initialVisible);
   const [typing, setTyping] = useState(false);
   const cv = convos[li];
 
   useEffect(() => {
     if (vi >= cv.msgs.length) {
-      const t = setTimeout(() => {
+      const t = window.setTimeout(() => {
         setLi((p) => (p + 1) % convos.length);
-        setVi(0);
-      }, 2400);
-      return () => clearTimeout(t);
+        setVi(initialVisible);
+      }, 2300);
+      return () => window.clearTimeout(t);
     }
 
     const msg = cv.msgs[vi];
 
     if (msg.f === "u") {
-      setVi((p) => p + 1);
-    } else {
-      setTyping(true);
-      const t = setTimeout(() => {
-        setTyping(false);
-        setVi((p) => p + 1);
-      }, 400 + Math.random() * 400);
-      return () => clearTimeout(t);
+      const t = window.setTimeout(() => setVi((p) => p + 1), 380);
+      return () => window.clearTimeout(t);
     }
+
+    setTyping(true);
+    const t = window.setTimeout(() => {
+      setTyping(false);
+      setVi((p) => p + 1);
+    }, 520 + Math.random() * 420);
+
+    return () => window.clearTimeout(t);
   }, [vi, li, cv.msgs]);
 
   return (
     <div className="phW">
       <motion.div
         className="phGlow"
-        animate={{ opacity: [0.12, 0.3, 0.12] }}
-        transition={{ duration: 5, repeat: Infinity }}
+        animate={{ opacity: [0.16, 0.34, 0.16], scale: [1, 1.03, 1] }}
+        transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
         className="phF"
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 20, rotateX: 8, rotateY: -8 }}
+        whileInView={{ opacity: 1, y: 0, rotateX: 4, rotateY: -5 }}
         viewport={{ once: true }}
+        transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className="phB">
           <div className="phDI" />
@@ -252,14 +573,15 @@ function PhoneMockup() {
                   src="/laura-avatar.png"
                   alt="Laura"
                   fill
-                  sizes="22px"
+                  sizes="24px"
                   style={{ objectFit: "cover" }}
                 />
               </div>
-              <div>
+
+              <div className="phHeadCopy">
                 <div className="phN">
                   Laura
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path
                       d="M12 1L14.9 3.6L18.6 3.2L19.4 6.8L22.5 8.7L21.2 12.2L22.5 15.7L19.4 17.6L18.6 21.2L14.9 20.8L12 23.4L9.1 20.8L5.4 21.2L4.6 17.6L1.5 15.7L2.8 12.2L1.5 8.7L4.6 6.8L5.4 3.2L9.1 3.6L12 1Z"
                       fill="#22C55E"
@@ -288,7 +610,7 @@ function PhoneMockup() {
                 exit={{ opacity: 0 }}
                 className="phLang"
               >
-                {cv.flag} {cv.lang}
+                {cv.label}
               </motion.div>
             </AnimatePresence>
 
@@ -296,7 +618,7 @@ function PhoneMockup() {
               {cv.msgs.slice(0, vi).map((msg, i) => (
                 <motion.div
                   key={`${li}-${i}`}
-                  initial={{ opacity: 0, y: 3 }}
+                  initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   className={`phR ${msg.f === "u" ? "phRR" : "phRL"}`}
                 >
@@ -307,7 +629,7 @@ function PhoneMockup() {
                       {msg.t}
                       {msg.f === "u" && (
                         <span className="phMt">
-                          <svg width="10" height="7" viewBox="0 0 20 14" fill="none">
+                          <svg width="10" height="7" viewBox="0 0 20 14" fill="none" aria-hidden="true">
                             <path
                               d="M1.5 7.6L4.7 10.8L10.2 5.2"
                               stroke="#53BDEB"
@@ -346,7 +668,7 @@ function PhoneMockup() {
                 <span className="phCoT">Message</span>
               </div>
               <div className="phCoM">
-                <Mic size={10} color="#fff" />
+                <Mic size={11} color="#fff" />
               </div>
             </div>
           </div>
@@ -356,11 +678,70 @@ function PhoneMockup() {
   );
 }
 
-/* ─── Canvas Globe ─── */
+function HeroStage() {
+  return (
+    <div className="heroStage">
+      <motion.div
+        className="heroAura heroAuraA"
+        animate={{ opacity: [0.42, 0.7, 0.42], scale: [1, 1.05, 1] }}
+        transition={{ duration: 7.5, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="heroAura heroAuraB"
+        animate={{ opacity: [0.16, 0.28, 0.16], scale: [1, 1.08, 1] }}
+        transition={{ duration: 9.2, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      <motion.div
+        className="heroRing"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+      />
+
+      <motion.span
+        className="heroDust heroDustA"
+        animate={{ y: [0, -8, 0], opacity: [0.3, 0.7, 0.3] }}
+        transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.span
+        className="heroDust heroDustB"
+        animate={{ y: [0, 7, 0], opacity: [0.24, 0.55, 0.24] }}
+        transition={{ duration: 6.7, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      <div className="heroPhoneWrap">
+        <PhoneMockup />
+      </div>
+
+      <FeatureCard
+        kind="practice"
+        title="3 practices found nearby"
+        body="Accepting patients near your area."
+        className="floatCardA"
+        delay={0.1}
+      />
+      <FeatureCard
+        kind="request"
+        title="Request prepared"
+        body="Review before sharing through the available channel."
+        className="floatCardB"
+        delay={0.18}
+      />
+      <FeatureCard
+        kind="bilingual"
+        title="Bilingual note ready"
+        body="Structured for the practice and easier to review."
+        className="floatCardC"
+        delay={0.24}
+      />
+    </div>
+  );
+}
+
 const gs = [
   {
     country: "United Kingdom",
-    flag: "🇬🇧",
+    code: "UK",
     name: "Sarah, 34, Leeds",
     quote:
       "I called at 8:01am. Busy. By 8:15 all slots were gone. Three weeks of this.",
@@ -371,7 +752,7 @@ const gs = [
   },
   {
     country: "United States",
-    flag: "🇺🇸",
+    code: "US",
     name: "Marcus, 28, Chicago",
     quote:
       "I delayed seeing a doctor for six months because I was terrified of the cost.",
@@ -382,7 +763,7 @@ const gs = [
   },
   {
     country: "Nigeria",
-    flag: "🇳🇬",
+    code: "NG",
     name: "Amina, 41, Lagos",
     quote:
       "Four doctors for ten thousand people. I spent two days trying to find someone.",
@@ -393,7 +774,7 @@ const gs = [
   },
   {
     country: "India",
-    flag: "🇮🇳",
+    code: "IN",
     name: "Priya, 55, Jaipur",
     quote:
       "My mother lives two hours from the nearest clinic. She never knows when to worry.",
@@ -404,7 +785,7 @@ const gs = [
   },
   {
     country: "Brazil",
-    flag: "🇧🇷",
+    code: "BR",
     name: "Lucas, 23, London",
     quote:
       "I moved to London and could not explain my symptoms in English.",
@@ -429,23 +810,22 @@ function latLngToXYZ(lat: number, lng: number) {
 function CanvasGlobe({ active }: { active: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rotRef = useRef(0.4);
-  const frameRef = useRef(0);
+  const frameRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const canvasEl = canvasRef.current;
+    if (!canvasEl) return;
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const context = canvasEl.getContext("2d");
+    if (!context) return;
 
     const dpr = window.devicePixelRatio || 1;
 
-    function resize() {
-      if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-    }
+    const resize = () => {
+      const rect = canvasEl.getBoundingClientRect();
+      canvasEl.width = rect.width * dpr;
+      canvasEl.height = rect.height * dpr;
+    };
 
     resize();
 
@@ -465,11 +845,9 @@ function CanvasGlobe({ active }: { active: number }) {
 
     const cityXYZ = gs.map((g) => latLngToXYZ(g.lat, g.lng));
 
-    function draw() {
-      if (!canvas || !ctx) return;
-
-      const w = canvas.width / dpr;
-      const h = canvas.height / dpr;
+    const draw = () => {
+      const w = canvasEl.width / dpr;
+      const h = canvasEl.height / dpr;
       const R = Math.min(w, h) * 0.42;
       const cx = w / 2;
       const cy = h / 2;
@@ -477,45 +855,61 @@ function CanvasGlobe({ active }: { active: number }) {
       const cosR = Math.cos(rot);
       const sinR = Math.sin(rot);
 
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, w, h);
+      context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      context.clearRect(0, 0, w, h);
 
-      const glow = ctx.createRadialGradient(cx - R * 0.2, cy - R * 0.2, 0, cx, cy, R * 1.3);
-      glow.addColorStop(0, "rgba(201,149,107,0.07)");
-      glow.addColorStop(0.6, "rgba(201,149,107,0.02)");
+      const glow = context.createRadialGradient(
+        cx - R * 0.2,
+        cy - R * 0.2,
+        0,
+        cx,
+        cy,
+        R * 1.3
+      );
+      glow.addColorStop(0, "rgba(201,149,107,0.08)");
+      glow.addColorStop(0.6, "rgba(201,149,107,0.025)");
       glow.addColorStop(1, "transparent");
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, w, h);
+      context.fillStyle = glow;
+      context.fillRect(0, 0, w, h);
 
-      ctx.beginPath();
-      ctx.arc(cx, cy, R, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(192,184,164,0.25)";
-      ctx.lineWidth = 0.8;
-      ctx.stroke();
+      context.beginPath();
+      context.arc(cx, cy, R, 0, Math.PI * 2);
+      context.strokeStyle = "rgba(192,184,164,0.28)";
+      context.lineWidth = 0.8;
+      context.stroke();
 
-      const sg = ctx.createRadialGradient(cx - R * 0.25, cy - R * 0.25, R * 0.1, cx, cy, R);
-      sg.addColorStop(0, "rgba(248,246,241,0.06)");
+      const sg = context.createRadialGradient(
+        cx - R * 0.24,
+        cy - R * 0.24,
+        R * 0.12,
+        cx,
+        cy,
+        R
+      );
+      sg.addColorStop(0, "rgba(255,255,255,0.1)");
       sg.addColorStop(1, "rgba(224,218,200,0.03)");
-      ctx.fillStyle = sg;
-      ctx.beginPath();
-      ctx.arc(cx, cy, R, 0, Math.PI * 2);
-      ctx.fill();
+      context.fillStyle = sg;
+      context.beginPath();
+      context.arc(cx, cy, R, 0, Math.PI * 2);
+      context.fill();
 
-      ctx.strokeStyle = "rgba(200,192,172,0.07)";
-      ctx.lineWidth = 0.5;
+      context.strokeStyle = "rgba(200,192,172,0.08)";
+      context.lineWidth = 0.5;
+
       for (let lat = -60; lat <= 60; lat += 30) {
         const p = ((90 - lat) * Math.PI) / 180;
         const rr = Math.sin(p) * R;
         const ry = cy - Math.cos(p) * R;
-        ctx.beginPath();
-        ctx.ellipse(cx, ry, rr, rr * 0.12, 0, 0, Math.PI * 2);
-        ctx.stroke();
+        context.beginPath();
+        context.ellipse(cx, ry, rr, rr * 0.12, 0, 0, Math.PI * 2);
+        context.stroke();
       }
 
       for (const p of dots) {
         const x = p.x * cosR + p.z * sinR;
         const z = -p.x * sinR + p.z * cosR;
         const y = p.y;
+
         if (z < -0.05) continue;
 
         const sx = cx + x * R;
@@ -523,13 +917,14 @@ function CanvasGlobe({ active }: { active: number }) {
         const alpha = Math.max(0, Math.min(1, (z + 0.3) * 0.6));
         const sz = 1 + z * 0.8;
 
-        ctx.beginPath();
-        ctx.arc(sx, sy, sz, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(180,168,148,${alpha * 0.55})`;
-        ctx.fill();
+        context.beginPath();
+        context.arc(sx, sy, sz, 0, Math.PI * 2);
+        context.fillStyle = `rgba(180,168,148,${alpha * 0.55})`;
+        context.fill();
       }
 
       const projected: { sx: number; sy: number; z: number }[] = [];
+
       for (let i = 0; i < cityXYZ.length; i++) {
         const p = cityXYZ[i];
         const x = p.x * cosR + p.z * sinR;
@@ -539,59 +934,65 @@ function CanvasGlobe({ active }: { active: number }) {
         const sy = cy - y * R;
 
         projected.push({ sx, sy, z });
+
         if (z < 0) continue;
 
         if (i === active) {
-          ctx.beginPath();
-          ctx.arc(sx, sy, 8, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(201,149,107,0.15)";
-          ctx.fill();
+          context.beginPath();
+          context.arc(sx, sy, 8, 0, Math.PI * 2);
+          context.fillStyle = "rgba(201,149,107,0.16)";
+          context.fill();
 
-          ctx.beginPath();
-          ctx.arc(sx, sy, 14, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(201,149,107,0.06)";
-          ctx.fill();
+          context.beginPath();
+          context.arc(sx, sy, 14, 0, Math.PI * 2);
+          context.fillStyle = "rgba(201,149,107,0.06)";
+          context.fill();
         }
 
-        ctx.beginPath();
-        ctx.arc(sx, sy, i === active ? 4 : 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = i === active ? c.warm : "rgba(176,168,148,0.7)";
-        ctx.fill();
+        context.beginPath();
+        context.arc(sx, sy, i === active ? 4 : 2.5, 0, Math.PI * 2);
+        context.fillStyle = i === active ? c.warm : "rgba(176,168,148,0.7)";
+        context.fill();
       }
 
       for (let i = 0; i < cityXYZ.length; i++) {
         const next = (i + 1) % cityXYZ.length;
         const a = projected[i];
         const b = projected[next];
+
         if (a.z < -0.2 || b.z < -0.2) continue;
 
         const mx = (a.sx + b.sx) / 2;
         const my = (a.sy + b.sy) / 2 - Math.abs(a.sx - b.sx) * 0.2;
 
-        ctx.beginPath();
-        ctx.moveTo(a.sx, a.sy);
-        ctx.quadraticCurveTo(mx, my, b.sx, b.sy);
-        ctx.strokeStyle =
-          i === active ? "rgba(201,149,107,0.35)" : "rgba(201,149,107,0.06)";
-        ctx.lineWidth = i === active ? 1.2 : 0.5;
-        ctx.setLineDash(i === active ? [4, 3] : []);
-        ctx.stroke();
-        ctx.setLineDash([]);
+        context.beginPath();
+        context.moveTo(a.sx, a.sy);
+        context.quadraticCurveTo(mx, my, b.sx, b.sy);
+        context.strokeStyle =
+          i === active ? "rgba(201,149,107,0.34)" : "rgba(201,149,107,0.06)";
+        context.lineWidth = i === active ? 1.2 : 0.5;
+        context.setLineDash(i === active ? [4, 3] : []);
+        context.stroke();
+        context.setLineDash([]);
       }
 
       rotRef.current += 0.002;
-      frameRef.current = requestAnimationFrame(draw);
-    }
+      frameRef.current = window.requestAnimationFrame(draw);
+    };
 
-    frameRef.current = requestAnimationFrame(draw);
-    const ro = new ResizeObserver(() => {
+    frameRef.current = window.requestAnimationFrame(draw);
+
+    const resizeObserver = new ResizeObserver(() => {
       resize();
     });
-    ro.observe(canvas);
+
+    resizeObserver.observe(canvasEl);
 
     return () => {
-      cancelAnimationFrame(frameRef.current);
-      ro.disconnect();
+      if (frameRef.current !== null) {
+        window.cancelAnimationFrame(frameRef.current);
+      }
+      resizeObserver.disconnect();
     };
   }, [active]);
 
@@ -599,22 +1000,28 @@ function CanvasGlobe({ active }: { active: number }) {
 }
 
 function GlobeSection() {
-  const [a, setA] = useState(0);
-  const tr = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [active, setActive] = useState(0);
+  const timerRef = useRef<number | null>(null);
 
   const reset = useCallback(() => {
-    if (tr.current) clearTimeout(tr.current);
-    tr.current = setTimeout(() => setA((p) => (p + 1) % gs.length), 6000);
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+    }
+    timerRef.current = window.setTimeout(() => {
+      setActive((p) => (p + 1) % gs.length);
+    }, 6000);
   }, []);
 
   useEffect(() => {
     reset();
     return () => {
-      if (tr.current) clearTimeout(tr.current);
+      if (timerRef.current !== null) {
+        window.clearTimeout(timerRef.current);
+      }
     };
-  }, [a, reset]);
+  }, [active, reset]);
 
-  const s = gs[a];
+  const story = gs[active];
 
   return (
     <section className="globeSec">
@@ -627,13 +1034,13 @@ function GlobeSection() {
 
         <div className="globeW">
           <div className="globeV">
-            <CanvasGlobe active={a} />
+            <CanvasGlobe active={active} />
           </div>
 
           <div className="globeC">
             <AnimatePresence mode="wait">
               <motion.div
-                key={a}
+                key={active}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
@@ -641,12 +1048,12 @@ function GlobeSection() {
                 className="globeStory"
               >
                 <div className="globeCtry">
-                  <span style={{ fontSize: "18px" }}>{s.flag}</span>
-                  <span className="globeCtryN">{s.country}</span>
+                  <span className="globeCode">{story.code}</span>
+                  <span className="globeCtryN">{story.country}</span>
                 </div>
 
-                <p className="serif globeQ">&ldquo;{s.quote}&rdquo;</p>
-                <p className="globeNm">{s.name}</p>
+                <p className="serif globeQ">&ldquo;{story.quote}&rdquo;</p>
+                <p className="globeNm">{story.name}</p>
 
                 <div className="globeL">
                   <div className="globeLA">
@@ -658,7 +1065,7 @@ function GlobeSection() {
                       style={{ objectFit: "cover" }}
                     />
                   </div>
-                  <p className="globeLT">{s.laura}</p>
+                  <p className="globeLT">{story.laura}</p>
                 </div>
               </motion.div>
             </AnimatePresence>
@@ -668,17 +1075,17 @@ function GlobeSection() {
                 {gs.map((_, i) => (
                   <button
                     key={i}
-                    className={`globeD${i === a ? " globeDA" : ""}`}
-                    onClick={() => setA(i)}
+                    className={`globeD${i === active ? " globeDA" : ""}`}
+                    onClick={() => setActive(i)}
                   />
                 ))}
               </div>
 
               <div className="globeAs">
-                <button className="globeA" onClick={() => setA((p) => (p - 1 + 5) % 5)}>
+                <button className="globeA" onClick={() => setActive((p) => (p - 1 + 5) % 5)}>
                   <ChevronLeft size={15} />
                 </button>
-                <button className="globeA" onClick={() => setA((p) => (p + 1) % 5)}>
+                <button className="globeA" onClick={() => setActive((p) => (p + 1) % 5)}>
                   <ChevronRight size={15} />
                 </button>
               </div>
@@ -690,7 +1097,6 @@ function GlobeSection() {
   );
 }
 
-/* ─── Terminal ─── */
 function SDKTerminal() {
   const lines = useMemo(
     () => [
@@ -709,7 +1115,7 @@ function SDKTerminal() {
       '    concern: "prescription renewal"',
       "  });",
       "",
-      "  // Laura found 2 practices, drafted request",
+      "  // Laura found 2 practices and prepared the next step",
       "  Done in 1.1s",
     ],
     []
@@ -720,26 +1126,29 @@ function SDKTerminal() {
 
   useEffect(() => {
     if (vl >= lines.length) {
-      const t = setTimeout(() => {
+      const t = window.setTimeout(() => {
         setVl(0);
         setCi(0);
       }, 3000);
-      return () => clearTimeout(t);
+      return () => window.clearTimeout(t);
     }
 
     const line = lines[vl];
 
     if (ci < line.length) {
-      const t = setTimeout(() => setCi((p) => p + 1), line.startsWith("  //") ? 36 : 18);
-      return () => clearTimeout(t);
+      const t = window.setTimeout(
+        () => setCi((p) => p + 1),
+        line.startsWith("  //") ? 34 : 18
+      );
+      return () => window.clearTimeout(t);
     }
 
-    const t = setTimeout(() => {
+    const t = window.setTimeout(() => {
       setVl((p) => p + 1);
       setCi(0);
-    }, line === "" ? 50 : 140);
+    }, line === "" ? 50 : 130);
 
-    return () => clearTimeout(t);
+    return () => window.clearTimeout(t);
   }, [vl, ci, lines]);
 
   return (
@@ -757,16 +1166,18 @@ function SDKTerminal() {
       <div className="trmB">
         {lines.slice(0, vl + 1).map((line, i) => {
           const active = i === vl;
+
           return (
             <div
               key={i}
               className="trmL"
               style={{
-                color: line.startsWith("  Done") || line.startsWith("  //")
-                  ? "#4ADE80"
-                  : line.startsWith("$")
-                  ? "#E2E8F0"
-                  : "#94A3B8",
+                color:
+                  line.startsWith("  Done") || line.startsWith("  //")
+                    ? "#4ADE80"
+                    : line.startsWith("$")
+                    ? "#E2E8F0"
+                    : "#94A3B8",
               }}
             >
               {active ? line.slice(0, ci) : line}
@@ -779,37 +1190,41 @@ function SDKTerminal() {
   );
 }
 
-/* ─── Roadmap ─── */
-const roadmapItems = [
+const roadmapItems: {
+  title: string;
+  desc: string;
+  stage: string;
+  kind: "routing" | "portal" | "message" | "language" | "telehealth";
+}[] = [
   {
     title: "GP request routing",
     desc: "Laura will help route callback and prescription requests through supported practice channels.",
     stage: "Stage 2",
-    emoji: "📨",
+    kind: "routing",
   },
   {
     title: "Practice portal",
     desc: "A dashboard for care teams to manage structured intake, urgency support, and patient routing.",
     stage: "Stage 2",
-    emoji: "🏥",
+    kind: "portal",
   },
   {
     title: "WhatsApp access",
-    desc: "Reach Laura through WhatsApp for an even simpler, mobile-first care navigation experience.",
+    desc: "Reach Laura through familiar messaging for an even simpler, mobile-first care navigation experience.",
     stage: "Stage 2",
-    emoji: "📱",
+    kind: "message",
   },
   {
     title: "Multilingual notes",
     desc: "Full 40+ language support with bilingual structured notes for the practice.",
     stage: "Stage 2",
-    emoji: "🌍",
+    kind: "language",
   },
   {
     title: "Telehealth pathways",
-    desc: "Laura connects you to telehealth consultations where in-person visits are not practical.",
+    desc: "Laura can later connect people to telehealth pathways where in-person care is not practical.",
     stage: "Stage 3",
-    emoji: "🩺",
+    kind: "telehealth",
   },
 ];
 
@@ -837,17 +1252,22 @@ function RoadmapCards() {
               transition={{ delay: i * 0.08 }}
             >
               <div className="roadTop">
-                <motion.span
-                  className="roadEmoji"
-                  animate={{ y: [0, -3, 0], rotate: [0, 5, -5, 0] }}
-                  transition={{ duration: 3 + i * 0.3, repeat: Infinity, ease: "easeInOut" }}
+                <motion.div
+                  className="roadBadgeWrap"
+                  animate={{ y: [0, -4, 0], rotate: [0, 1.8, 0] }}
+                  transition={{
+                    duration: 4.8 + i * 0.35,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
                 >
-                  {item.emoji}
-                </motion.span>
+                  <ProductBadge kind={item.kind} size="lg" />
+                </motion.div>
+
                 <motion.span
                   className="roadSt"
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 2, repeat: Infinity, delay: i * 0.4 }}
+                  animate={{ scale: [1, 1.04, 1] }}
+                  transition={{ duration: 2.2, repeat: Infinity, delay: i * 0.3 }}
                 >
                   {item.stage}
                 </motion.span>
@@ -864,75 +1284,70 @@ function RoadmapCards() {
   );
 }
 
-/* ─── Infra Logos ─── */
 const infraLogos = [
-  { name: "Vercel", src: "/logos/vercel.svg", w: 116, h: 30 },
-  { name: "Neon", src: "/logos/neon.svg", w: 90, h: 24 },
-  { name: "Stripe", src: "/logos/stripe.svg", w: 104, h: 30 },
-  { name: "OpenAI", src: "/logos/openai.svg", w: 118, h: 30 },
-  { name: "PostgreSQL", src: "/logos/postgres.svg", w: 126, h: 30 },
-  { name: "Twilio", src: "/logos/twilio.svg", w: 112, h: 30 },
-];
+  { name: "vercel" },
+  { name: "stripe" },
+  { name: "openai" },
+  { name: "twilio" },
+] as const;
 
-function InfraRail({
-  logos,
-  direction = "left",
-  className = "",
-}: {
-  logos: typeof infraLogos;
-  direction?: "left" | "right";
-  className?: string;
-}) {
+function InfraLogo({ name }: { name: (typeof infraLogos)[number]["name"] }) {
+  if (name === "vercel") {
+    return (
+      <svg viewBox="0 0 126 28" className="infraSvg" aria-label="Vercel" role="img">
+        <path d="M14 4L26 24H2L14 4Z" fill="currentColor" />
+        <text x="36" y="19" fontSize="14" fontWeight="700" fontFamily="DM Sans, sans-serif">
+          Vercel
+        </text>
+      </svg>
+    );
+  }
+
+  if (name === "stripe") {
+    return (
+      <svg viewBox="0 0 126 28" className="infraSvg" aria-label="Stripe" role="img">
+        <text x="6" y="20" fontSize="17" fontWeight="800" fontFamily="DM Sans, sans-serif">
+          stripe
+        </text>
+      </svg>
+    );
+  }
+
+  if (name === "openai") {
+    return (
+      <svg viewBox="0 0 126 28" className="infraSvg" aria-label="OpenAI" role="img">
+        <g transform="translate(4 4)" fill="none" stroke="currentColor" strokeWidth="1.7">
+          <path d="M11 2.2C13.7 0.7 17.1 1.6 18.7 4.2L21.2 8.5" />
+          <path d="M20.8 7.2C23.5 8.7 24.5 12.1 23 14.8L20.6 19" />
+          <path d="M20.2 18.2C20.2 21.3 17.7 23.8 14.6 23.8H9.8" />
+          <path d="M10.8 23.4C8.1 24.9 4.7 24 3.1 21.4L0.6 17.1" />
+          <path d="M1 18.4C-1.7 16.9-2.7 13.5-1.2 10.8L1.2 6.6" transform="translate(2 0)" />
+          <path d="M2.2 6.4C2.2 3.3 4.7 0.8 7.8 0.8H12.6" transform="translate(2 0)" />
+        </g>
+        <text x="34" y="19" fontSize="14" fontWeight="700" fontFamily="DM Sans, sans-serif">
+          OpenAI
+        </text>
+      </svg>
+    );
+  }
+
   return (
-    <div className={`infraMarquee ${className}`}>
-      <div className="infraFade infraFadeL" />
-      <div className="infraFade infraFadeR" />
-
-      <div className={`infraTrack ${direction === "left" ? "infraTrackL" : "infraTrackR"}`}>
-        <div className="infraSet">
-          {logos.map((logo) => (
-            <div key={`${direction}-${logo.name}-a`} className="infraItem">
-              <div className="infraLogoCard">
-                <div className="infraLogoInner">
-                  <Image
-                    src={logo.src}
-                    alt={logo.name}
-                    width={logo.w}
-                    height={logo.h}
-                    className="infraLogoImg"
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="infraSet" aria-hidden="true">
-          {logos.map((logo) => (
-            <div key={`${direction}-${logo.name}-b`} className="infraItem">
-              <div className="infraLogoCard">
-                <div className="infraLogoInner">
-                  <Image
-                    src={logo.src}
-                    alt=""
-                    width={logo.w}
-                    height={logo.h}
-                    className="infraLogoImg"
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+    <svg viewBox="0 0 126 28" className="infraSvg" aria-label="Twilio" role="img">
+      <g transform="translate(4 5)" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <circle cx="9" cy="9" r="8.2" />
+        <circle cx="6" cy="6" r="1.4" fill="currentColor" />
+        <circle cx="12" cy="6" r="1.4" fill="currentColor" />
+        <circle cx="6" cy="12" r="1.4" fill="currentColor" />
+        <circle cx="12" cy="12" r="1.4" fill="currentColor" />
+      </g>
+      <text x="28" y="19" fontSize="14" fontWeight="700" fontFamily="DM Sans, sans-serif">
+        twilio
+      </text>
+    </svg>
   );
 }
 
 function InfraSection() {
-  const rowOne = infraLogos;
-  const rowTwo = [...infraLogos].reverse();
-
   return (
     <section className="infraSec">
       <div className="container">
@@ -950,8 +1365,27 @@ function InfraSection() {
 
             <div className="infraShell">
               <div className="infraShellGlow" />
-              <InfraRail logos={rowOne} direction="left" />
-              <InfraRail logos={rowTwo} direction="right" className="infraMarqueeB" />
+
+              <div className="infraTrackWrap">
+                <div className="infraFade infraFadeL" />
+                <div className="infraFade infraFadeR" />
+
+                <div className="infraTrack">
+                  {Array.from({ length: 3 }).map((_, groupIndex) => (
+                    <div className="infraSet" key={groupIndex}>
+                      {infraLogos.map((logo) => (
+                        <div key={`${groupIndex}-${logo.name}`} className="infraItem">
+                          <div className="infraLogoCard">
+                            <div className="infraLogoInner">
+                              <InfraLogo name={logo.name} />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </FI>
@@ -960,40 +1394,6 @@ function InfraSection() {
   );
 }
 
-/* ─── Confetti ─── */
-function Confetti() {
-  const particles = useMemo(
-    () =>
-      Array.from({ length: 20 }, (_, i) => ({
-        id: i,
-        emoji: ["🎉", "✨", "🎊", "🌟", "💫"][i % 5],
-        left: Math.random() * 100,
-        delay: Math.random() * 0.6,
-        duration: 1.5 + Math.random() * 1,
-        rotate: Math.random() * 360,
-      })),
-    []
-  );
-
-  return (
-    <div className="confW">
-      {particles.map((p) => (
-        <motion.span
-          key={p.id}
-          className="confP"
-          initial={{ opacity: 1, y: 0, scale: 0 }}
-          animate={{ opacity: [1, 1, 0], y: -120, scale: [0, 1.2, 0.8], rotate: p.rotate }}
-          transition={{ duration: p.duration, delay: p.delay, ease: "easeOut" }}
-          style={{ left: `${p.left}%` }}
-        >
-          {p.emoji}
-        </motion.span>
-      ))}
-    </div>
-  );
-}
-
-/* ─── Modal ─── */
 function SuccessModal({
   open,
   onClose,
@@ -1005,24 +1405,33 @@ function SuccessModal({
 }) {
   const [copied, setCopied] = useState(false);
   const link =
-    typeof window !== "undefined" ? `${window.location.origin}?ref=${referralCode}` : "";
+    referralCode && typeof window !== "undefined"
+      ? `${window.location.origin}?ref=${referralCode}`
+      : "";
 
   function copyLink() {
-    navigator.clipboard.writeText(link).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+    if (!link) return;
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(link).then(() => {
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 1800);
+      });
+    }
   }
 
   async function shareLink() {
-    if (navigator.share) {
+    if (!link) return;
+
+    if ("share" in navigator && typeof navigator.share === "function") {
       try {
         await navigator.share({
           title: "Join Omela",
-          text: "Skip the GP queue. Laura helps you navigate healthcare.",
+          text: "Join the Omela waitlist and move up the queue with my referral link.",
           url: link,
         });
-      } catch {}
+      } catch {
+        // do nothing
+      }
     } else {
       copyLink();
     }
@@ -1039,39 +1448,59 @@ function SuccessModal({
           className="modO"
         >
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            initial={{ opacity: 0, y: 20, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ type: "spring", damping: 20, stiffness: 300 }}
+            exit={{ opacity: 0, y: 12, scale: 0.98 }}
+            transition={{ type: "spring", damping: 22, stiffness: 280 }}
             onClick={(e) => e.stopPropagation()}
             className="modB"
           >
-            <Confetti />
+            <div className="modHalo modHaloA" />
+            <div className="modHalo modHaloB" />
+
+            <span className="modPill">Early access confirmed</span>
+
             <motion.div
-              className="modCel"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", delay: 0.2, stiffness: 400, damping: 15 }}
+              className="modSealWrap"
+              animate={{ y: [0, -4, 0] }}
+              transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }}
             >
-              <span className="modCelE">🎉</span>
+              <div className="modSealPulse" />
+              <ProductBadge kind="success" size="lg" />
             </motion.div>
 
-            <h3 className="serif modTi">You are on the list!</h3>
+            <h3 className="serif modTi">You are on the list.</h3>
             <p className="modBd">
-              Laura will reach out as access opens. Invite 3 friends to move up the
-              waitlist and unlock bonus credits.
+              Laura will open access in measured batches. Invite 3 people to move up
+              the waitlist and unlock bonus credits.
             </p>
 
             {referralCode && (
-              <div className="modRef">
-                <p className="modRefLbl">Your referral link</p>
+              <motion.div
+                className="modRef"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+              >
+                <div className="modRefHd">
+                  <div>
+                    <p className="modRefEyebrow">Move up the waitlist</p>
+                    <p className="modRefTitle">Your referral link</p>
+                  </div>
+                  <span className="modRefTag">Invite 3 people</span>
+                </div>
 
                 <div className="modRefBox">
                   <span className="modRefUrl">
                     {link.replace("https://", "").replace("http://", "")}
                   </span>
-                  <button onClick={copyLink} className="modRefCp" type="button">
-                    {copied ? <Check size={14} /> : <Copy size={14} />}
+                  <button
+                    onClick={copyLink}
+                    className="modRefCp"
+                    type="button"
+                    aria-label="Copy referral link"
+                  >
+                    {copied ? <Check size={15} /> : <Copy size={15} />}
                   </button>
                 </div>
 
@@ -1080,6 +1509,7 @@ function SuccessModal({
                     <Share2 size={13} />
                     Share link
                   </button>
+
                   <a
                     href="https://x.com/joinomela"
                     target="_blank"
@@ -1089,7 +1519,7 @@ function SuccessModal({
                     Follow @joinomela
                   </a>
                 </div>
-              </div>
+              </motion.div>
             )}
 
             <button type="button" className="modClose" onClick={onClose}>
@@ -1102,7 +1532,6 @@ function SuccessModal({
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════ */
 export default function Page() {
   const [role, setRole] = useState<Role>("patient");
   const [email, setEmail] = useState("");
@@ -1221,6 +1650,13 @@ export default function Page() {
           <div className="container">
             <div className="heroTxt">
               <FI>
+                <div className="heroEyebrowRow">
+                  <span className="heroEyebrowDot" />
+                  <span className="heroEyebrow">Laura by Omela</span>
+                </div>
+              </FI>
+
+              <FI delay={0.03}>
                 <h1 className="serif heroTi">
                   Getting care
                   <br />
@@ -1228,18 +1664,21 @@ export default function Page() {
                 </h1>
               </FI>
 
-              <FI delay={0.05}>
+              <FI delay={0.06}>
+                <p className="heroLead">Laura helps people move care access forward.</p>
+              </FI>
+
+              <FI delay={0.08}>
                 <div className="heroBd">
                   <Typewriter />
                 </div>
               </FI>
 
-              <FI delay={0.1}>
+              <FI delay={0.11}>
                 <p className="heroSub">
-                  Laura is a care navigation agent that helps people find doctors,
-                  prepare prescription requests, understand referral letters, and
-                  generate bilingual notes for the practice. She does not just answer
-                  questions. She helps move care access forward.
+                  Find nearby practices, prepare prescription requests, understand referral
+                  letters, and generate structured bilingual notes — all in one calm care
+                  navigation experience.
                 </p>
               </FI>
 
@@ -1253,10 +1692,25 @@ export default function Page() {
                   </a>
                 </div>
               </FI>
+
+              <FI delay={0.18}>
+                <div className="heroMeta">
+                  {[
+                    "Finds nearby practices",
+                    "Prepares requests",
+                    "Bilingual notes",
+                  ].map((item) => (
+                    <span key={item} className="heroMetaChip">
+                      <span className="heroMetaDot" />
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </FI>
             </div>
 
             <div className="heroPh">
-              <PhoneMockup />
+              <HeroStage />
             </div>
           </div>
         </section>
@@ -1278,7 +1732,7 @@ export default function Page() {
                 {
                   icon: <Search size={22} />,
                   title: "Finds doctors and helps prepare requests",
-                  body: "Laura searches practices near you, surfaces suitable options, and helps prepare registration or callback requests for submission with your approval.",
+                  body: "Laura searches practices near you, surfaces suitable options, and helps prepare registration or callback requests for sharing with your approval.",
                 },
                 {
                   icon: <FileCheck size={22} />,
@@ -1351,7 +1805,7 @@ export default function Page() {
                   <h3 className="baTi">With Laura</h3>
                   {[
                     "Laura prepares a structured callback request and helps route it through the available channel.",
-                    "Laura drafts your refill request and helps submit it where supported.",
+                    "Laura drafts your refill request and helps share it where supported.",
                     "Laura translates your referral into plain language with appointment prep.",
                     "Laura finds nearby accepting practices and helps prepare the registration request.",
                     "Laura prepares a bilingual note for the practice that you can review and share.",
@@ -1394,7 +1848,7 @@ export default function Page() {
                 {
                   icon: <Code2 size={22} />,
                   title: "Developers",
-                  desc: "Embed Laura's care-navigation engine into your product via API. Provider search, urgency assessment, prescription routing, and multilingual intake.",
+                  desc: "Embed Laura's care-navigation engine into your product via API. Provider search, urgency support, prescription routing, and multilingual intake.",
                   color: c.warm,
                   soon: true,
                 },
@@ -1446,13 +1900,18 @@ export default function Page() {
                 </p>
 
                 <div className="glF">
-                  {["🇬🇧 UK", "🇺🇸 US", "🇫🇷 France", "🇳🇬 Nigeria", "🇮🇳 India", "🌍 40+ more"].map(
-                    (f) => (
-                      <span key={f} className="glFi">
-                        {f}
-                      </span>
-                    )
-                  )}
+                  {[
+                    "English · EN",
+                    "Français · FR",
+                    "Yorùbá · YO",
+                    "العربية · AR",
+                    "हिंदी · HI",
+                    "40+ more",
+                  ].map((f) => (
+                    <span key={f} className="glFi">
+                      {f}
+                    </span>
+                  ))}
                 </div>
               </div>
             </FI>
@@ -1492,7 +1951,11 @@ export default function Page() {
                       "Prescription and callback routing",
                       "Multilingual intake with bilingual notes",
                     ].map((f) => (
-                      <div key={f} className="ftR" style={{ color: "rgba(255,255,255,0.7)" }}>
+                      <div
+                        key={f}
+                        className="ftR"
+                        style={{ color: "rgba(255,255,255,0.7)" }}
+                      >
                         <Chk dark />
                         <span>{f}</span>
                       </div>
@@ -1629,7 +2092,11 @@ export default function Page() {
                     autoComplete="email"
                   />
 
-                  <select className="inp" value={role} onChange={(e) => setRole(e.target.value as Role)}>
+                  <select
+                    className="inp"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value as Role)}
+                  >
                     <option value="patient">I need care access</option>
                     <option value="provider">I run a practice</option>
                     <option value="developer">I am a developer</option>
@@ -1758,50 +2225,101 @@ const CSS = `
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 html,body{max-width:100%;overflow-x:clip}
-body{background:${c.bg};color:${c.text};font-family:'DM Sans',-apple-system,sans-serif;-webkit-font-smoothing:antialiased;font-size:16px}
+body{
+  background:${c.bg};
+  color:${c.text};
+  font-family:'DM Sans',-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  font-size:16px;
+}
 a{color:inherit;text-decoration:none}
 button,input,select{font-family:inherit}
 ::selection{background:${c.accent};color:#fff}
 
 @keyframes blink{0%,50%{opacity:1}50.01%,100%{opacity:0}}
-@keyframes tDot{0%,80%{opacity:0.3;transform:scale(0.8)}40%{opacity:1;transform:scale(1)}}
-@keyframes infraDriftLeft{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@keyframes infraDriftRight{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+@keyframes tDot{0%,80%{opacity:0.32;transform:scale(0.82)}40%{opacity:1;transform:scale(1)}}
+@keyframes infraDrift{from{transform:translateX(0)}to{transform:translateX(-33.3333%)}}
 
 .serif{font-family:'Instrument Serif',Georgia,serif}
 .wrap{width:100%;overflow-x:clip}
-.container{max-width:1100px;margin:0 auto;padding:0 20px}
+.container{max-width:1180px;margin:0 auto;padding:0 20px}
 
-.sec{padding:68px 0}
-.secDk{padding:68px 0;background:${c.dark};color:#fff}
-.secPr{padding:68px 0;background:linear-gradient(180deg,#FDFCFA,${c.bg})}
+.sec{padding:74px 0}
+.secDk{padding:74px 0;background:${c.dark};color:#fff}
+.secPr{padding:74px 0;background:linear-gradient(180deg,#FDFCFA,${c.bg})}
 
-.soon{display:inline-flex;padding:3px 8px;border-radius:6px;background:rgba(37,99,235,0.06);color:${c.accent};font-size:10px;font-weight:700;border:1px solid rgba(37,99,235,0.1)}
+.soon{
+  display:inline-flex;
+  padding:3px 8px;
+  border-radius:999px;
+  background:rgba(37,99,235,0.06);
+  color:${c.accent};
+  font-size:10px;
+  font-weight:700;
+  border:1px solid rgba(37,99,235,0.1);
+}
 
-.stBar{background:${c.greenSoft};border-bottom:1px solid rgba(34,197,94,0.12);padding:6px 0}
+.stBar{
+  background:${c.greenSoft};
+  border-bottom:1px solid rgba(34,197,94,0.12);
+  padding:6px 0;
+}
 .stIn{display:flex;align-items:center;gap:7px}
-.stDot{width:6px;height:6px;border-radius:999px;background:${c.green};display:inline-block;box-shadow:0 0 5px ${c.green}44}
+.stDot{
+  width:6px;height:6px;border-radius:999px;background:${c.green};display:inline-block;
+  box-shadow:0 0 5px ${c.green}44;
+}
 .stLbl{font-size:12px;font-weight:700;color:${c.greenDk}}
-.stLnk{font-size:11px;font-weight:700;color:${c.accent};text-decoration:underline;text-underline-offset:2px}
+.stLnk{
+  font-size:11px;font-weight:700;color:${c.accent};
+  text-decoration:underline;text-underline-offset:2px;
+}
 
-.chk{width:18px;height:18px;border-radius:999px;background:${c.greenSoft};color:${c.green};display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;flex-shrink:0;margin-top:2px}
+.chk{
+  width:18px;height:18px;border-radius:999px;background:${c.greenSoft};color:${c.green};
+  display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;
+  flex-shrink:0;margin-top:2px;
+}
 .chkD{background:rgba(34,197,94,0.12);color:#4ADE80}
 
-.shW{text-align:center;max-width:700px;margin:0 auto}
-.shT{font-size:clamp(24px,5vw,46px);line-height:1.08;letter-spacing:-0.04em}
-.shB{font-size:clamp(14px,2.5vw,16px);line-height:1.78;margin-top:12px;max-width:500px;margin-left:auto;margin-right:auto;color:${c.sub}}
+.shW{text-align:center;max-width:760px;margin:0 auto}
+.shT{font-size:clamp(26px,5vw,50px);line-height:1.05;letter-spacing:-0.045em}
+.shB{
+  font-size:clamp(14px,2.5vw,16px);
+  line-height:1.78;
+  margin-top:12px;
+  max-width:540px;
+  margin-left:auto;
+  margin-right:auto;
+  color:${c.sub};
+}
 
-.btnP{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:${c.dark};color:#fff;border:none;border-radius:999px;padding:14px 24px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.3s;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
-.btnP:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 28px rgba(0,0,0,0.14)}
+.btnP{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;background:${c.dark};
+  color:#fff;border:none;border-radius:999px;padding:14px 24px;font-size:14px;font-weight:700;
+  cursor:pointer;transition:all 0.3s;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+.btnP:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 28px rgba(0,0,0,0.14)}
 .btnP:disabled{opacity:0.5;cursor:not-allowed;transform:none}
 
-.btnS{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:rgba(255,255,255,0.9);color:${c.text};border:1px solid ${c.border};border-radius:999px;padding:14px 24px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.3s;white-space:nowrap}
+.btnS{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;background:rgba(255,255,255,0.88);
+  color:${c.text};border:1px solid rgba(227,221,210,0.9);border-radius:999px;padding:14px 24px;
+  font-size:14px;font-weight:700;cursor:pointer;transition:all 0.3s;white-space:nowrap;
+}
 .btnS:hover{background:#fff;box-shadow:0 4px 16px rgba(0,0,0,0.06)}
 
-.nav{position:sticky;top:0;z-index:100;background:rgba(248,246,241,0.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid rgba(227,221,210,0.5)}
+.nav{
+  position:sticky;top:0;z-index:100;background:rgba(248,246,241,0.86);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid rgba(227,221,210,0.52);
+}
 .navR{display:flex;align-items:center;justify-content:space-between;gap:8px;height:56px}
 .navBr{display:flex;align-items:center;gap:7px;flex-shrink:0}
-.navLo{width:32px;height:32px;border-radius:9px;overflow:hidden;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,0.05)}
+.navLo{
+  width:32px;height:32px;border-radius:10px;overflow:hidden;flex-shrink:0;
+  box-shadow:0 2px 6px rgba(0,0,0,0.05);
+}
 .navNm{font-size:14px;font-weight:800;letter-spacing:-0.03em}
 .navSb{font-size:8px;font-weight:800;letter-spacing:0.1em;color:${c.accent};margin-top:1px}
 .navLks{display:none;align-items:center;gap:22px}
@@ -1809,107 +2327,323 @@ button,input,select{font-family:inherit}
 .navLk:hover{color:${c.text}}
 .navCt{padding:9px 16px!important;font-size:12px!important;flex-shrink:0}
 
-.heroSec{padding:48px 0 20px}
-.heroTxt{max-width:540px}
-.heroTi{font-size:clamp(34px,8.5vw,76px);line-height:0.96;letter-spacing:-0.05em}
+.heroSec{
+  padding:56px 0 28px;
+  position:relative;
+  overflow:hidden;
+}
+.heroSec::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(37,99,235,0.055), transparent 28%),
+    radial-gradient(circle at 82% 26%, rgba(201,149,107,0.09), transparent 24%);
+}
+.heroTxt{max-width:560px}
+.heroEyebrowRow{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.heroEyebrowDot{
+  width:8px;height:8px;border-radius:999px;background:${c.warm};
+  box-shadow:0 0 0 6px rgba(201,149,107,0.12);
+}
+.heroEyebrow{
+  font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${c.muted};
+}
+.heroTi{font-size:clamp(36px,8.6vw,82px);line-height:0.95;letter-spacing:-0.055em}
 .heroAc{color:${c.accent};font-style:italic}
-.tw{font-size:clamp(16px,2.8vw,20px);line-height:1.5;color:${c.text};font-weight:600;min-height:1.4em;display:block;margin-top:16px}
+.heroLead{
+  font-size:clamp(16px,3vw,20px);
+  line-height:1.5;
+  color:${c.text};
+  font-weight:700;
+  margin-top:16px;
+}
+.tw{
+  font-size:clamp(16px,2.7vw,20px);
+  line-height:1.55;
+  color:${c.text};
+  font-weight:600;
+  min-height:1.5em;
+  display:block;
+  margin-top:8px;
+}
 .twC{color:${c.accent};animation:blink 1s step-end infinite;font-weight:300}
-.heroSub{font-size:clamp(14px,2.2vw,16px);line-height:1.78;color:${c.sub};max-width:460px;margin-top:10px}
-.heroBd{min-height:44px}
+.heroSub{
+  font-size:clamp(14px,2.15vw,16px);
+  line-height:1.82;
+  color:${c.sub};
+  max-width:520px;
+  margin-top:12px;
+}
+.heroBd{min-height:46px}
 .heroBt{display:flex;flex-direction:column;gap:10px;margin-top:24px}
 .heroBt .btnP,.heroBt .btnS{width:100%;text-align:center}
-.heroPh{margin-top:32px;width:100%;display:flex;justify-content:center;position:relative}
+.heroMeta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.heroMetaChip{
+  display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;
+  border:1px solid rgba(227,221,210,0.88);
+  background:rgba(255,255,255,0.74);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  font-size:11px;font-weight:700;color:${c.sub};
+  box-shadow:0 8px 22px rgba(17,18,20,0.04);
+}
+.heroMetaDot{
+  width:6px;height:6px;border-radius:999px;background:${c.accent};display:inline-block;flex-shrink:0;
+}
+.heroPh{margin-top:36px;width:100%;display:flex;justify-content:center;position:relative}
 
-.phW{width:100%;max-width:220px;position:relative}
-.phGlow{position:absolute;inset:-28px;border-radius:999px;background:radial-gradient(circle,rgba(37,99,235,0.06),transparent 70%);z-index:0}
+.heroStage{
+  position:relative;
+  width:100%;
+  max-width:560px;
+  min-height:620px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  perspective:1400px;
+}
+.heroAura{position:absolute;border-radius:999px;filter:blur(22px);pointer-events:none}
+.heroAuraA{
+  width:360px;height:360px;
+  background:radial-gradient(circle, rgba(37,99,235,0.12), rgba(37,99,235,0.03), transparent 72%);
+  right:80px;top:80px;
+}
+.heroAuraB{
+  width:300px;height:300px;
+  background:radial-gradient(circle, rgba(201,149,107,0.14), rgba(201,149,107,0.03), transparent 74%);
+  left:120px;bottom:90px;
+}
+.heroRing{
+  position:absolute;
+  width:420px;height:420px;border-radius:999px;
+  border:1px solid rgba(201,149,107,0.18);
+  box-shadow:0 0 0 18px rgba(201,149,107,0.03),0 0 0 38px rgba(201,149,107,0.016);
+  opacity:0.78;
+}
+.heroDust{
+  position:absolute;
+  width:10px;height:10px;border-radius:999px;
+  background:linear-gradient(135deg, rgba(201,149,107,0.8), rgba(37,99,235,0.5));
+  filter:blur(0.2px);
+}
+.heroDustA{right:64px;top:110px}
+.heroDustB{left:96px;bottom:120px}
+.heroPhoneWrap{
+  position:relative;z-index:3;transform-style:preserve-3d;
+  filter:drop-shadow(0 32px 54px rgba(17,18,20,0.16));
+}
+
+.floatCard{
+  position:absolute;z-index:4;width:220px;padding:14px 15px;border-radius:22px;
+  border:1px solid rgba(227,221,210,0.86);
+  background:rgba(255,255,255,0.76);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  box-shadow:0 1px 0 rgba(255,255,255,0.76) inset,0 18px 38px rgba(17,18,20,0.07);
+}
+.floatCardTop{display:flex;align-items:center;gap:10px}
+.floatCardEyebrow{
+  font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${c.accent};
+}
+.floatCardTitle{
+  display:block;margin-top:10px;font-size:14px;line-height:1.28;letter-spacing:-0.03em;color:${c.text};
+}
+.floatCardBody{
+  margin-top:5px;font-size:11.5px;line-height:1.58;color:${c.sub};
+}
+.floatCardA{top:96px;left:10px;transform:rotate(-5deg)}
+.floatCardB{right:0;top:188px;transform:rotate(5deg)}
+.floatCardC{left:42px;bottom:84px;transform:rotate(-4deg)}
+
+.pBadge{
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  border-radius:18px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.72));
+  border:1px solid rgba(227,221,210,0.82);
+  box-shadow:0 8px 18px rgba(17,18,20,0.045),0 1px 0 rgba(255,255,255,0.8) inset;
+}
+.pBadge svg{display:block;width:100%;height:100%}
+.pBadge--md{width:42px;height:42px;padding:7px}
+.pBadge--lg{width:58px;height:58px;padding:9px}
+.pBadge--practice{background:linear-gradient(180deg,#FFFFFF,#F7FBFF)}
+.pBadge--request{background:linear-gradient(180deg,#FFFFFF,#FBFFF9)}
+.pBadge--bilingual{background:linear-gradient(180deg,#FFFFFF,#FFF9F3)}
+.pBadge--routing{background:linear-gradient(180deg,#FFFFFF,#F7FBFF)}
+.pBadge--portal{background:linear-gradient(180deg,#FFFFFF,#FBFBFF)}
+.pBadge--message{background:linear-gradient(180deg,#FFFFFF,#F7FBFF)}
+.pBadge--language{background:linear-gradient(180deg,#FFFFFF,#FFF8F0)}
+.pBadge--telehealth{background:linear-gradient(180deg,#FFFFFF,#F9FCFF)}
+.pBadge--success{
+  background:linear-gradient(180deg,#FFFFFF,#FBFCFF);
+  width:74px;height:74px;padding:10px;border-radius:999px;
+  box-shadow:0 10px 28px rgba(17,18,20,0.07),0 0 0 8px rgba(37,99,235,0.04);
+}
+
+.phW{width:100%;max-width:278px;position:relative}
+.phGlow{
+  position:absolute;inset:-34px;border-radius:999px;
+  background:radial-gradient(circle, rgba(37,99,235,0.09), rgba(37,99,235,0.03), transparent 70%);
+  z-index:0;
+}
 .phF{position:relative;z-index:1}
-.phB{background:#1A1A1E;border-radius:30px;padding:4px;box-shadow:0 16px 40px rgba(0,0,0,0.14),0 2px 8px rgba(0,0,0,0.06)}
-.phDI{width:60px;height:16px;border-radius:999px;background:#000;margin:0 auto 2px}
-.phS{background:#FAFAFA;border-radius:27px;overflow:hidden}
-.phH{display:flex;align-items:center;gap:4px;padding:5px 7px;background:#fff;border-bottom:1px solid #f0f0f0}
-.phAv{position:relative;width:20px;height:20px;border-radius:999px;overflow:hidden;flex-shrink:0;border:1px solid #fff}
-.phN{display:flex;align-items:center;gap:2px;font-size:9px;font-weight:700}
-.phOn{display:flex;align-items:center;gap:2px;font-size:7px;color:${c.green};font-weight:600}
-.phOnD{width:3px;height:3px;border-radius:999px;background:${c.green};display:inline-block}
-.phLang{display:flex;align-items:center;justify-content:center;gap:3px;padding:3px 0;background:#F7F7FB;font-size:8px;font-weight:700;color:${c.accent}}
-.phBdy{display:flex;flex-direction:column;gap:2px;padding:5px 4px;height:310px;overflow:hidden;justify-content:flex-end;background:linear-gradient(180deg,#F5F5F0,#ECE5DA)}
+.phB{
+  background:#1A1A1E;border-radius:36px;padding:5px;
+  box-shadow:0 18px 44px rgba(0,0,0,0.16),0 2px 8px rgba(0,0,0,0.06);
+}
+.phDI{width:78px;height:18px;border-radius:999px;background:#000;margin:0 auto 3px}
+.phS{background:#FAFAFA;border-radius:32px;overflow:hidden}
+.phH{
+  display:flex;align-items:center;gap:6px;padding:8px 10px;background:#fff;border-bottom:1px solid #F0F0F3;
+}
+.phAv{
+  position:relative;width:24px;height:24px;border-radius:999px;overflow:hidden;flex-shrink:0;border:1px solid #fff;
+}
+.phHeadCopy{display:flex;flex-direction:column}
+.phN{display:flex;align-items:center;gap:3px;font-size:10px;font-weight:800}
+.phOn{display:flex;align-items:center;gap:3px;font-size:7.5px;color:${c.green};font-weight:700}
+.phOnD{width:4px;height:4px;border-radius:999px;background:${c.green};display:inline-block}
+.phLang{
+  display:flex;align-items:center;justify-content:center;gap:3px;padding:5px 0;
+  background:#F7F8FC;font-size:8px;font-weight:800;color:${c.accent};letter-spacing:0.03em;
+}
+.phBdy{
+  display:flex;flex-direction:column;gap:3px;padding:8px 7px;height:372px;overflow:hidden;justify-content:flex-end;
+  background:
+    radial-gradient(circle at top, rgba(255,255,255,0.22), transparent 30%),
+    linear-gradient(180deg,#F5F5F0,#ECE5DA);
+}
 .phR{display:flex}
 .phRR{justify-content:flex-end}
 .phRL{justify-content:flex-start}
-.phBb{max-width:88%;padding:5px 7px;font-size:8px;line-height:1.38;word-break:break-word}
-.phBbU{background:#E7FFDB;color:#111;border-radius:8px 8px 2px 8px}
-.phBbL{background:#fff;color:#111;border-radius:8px 8px 8px 2px}
-.phMt{display:flex;justify-content:flex-end;margin-top:1px}
-.phAct{width:90%;margin:2px auto;padding:5px 7px;background:${c.accentSoft};border:1px solid rgba(37,99,235,0.1);border-radius:7px;font-size:7.5px;font-weight:700;color:${c.accent};text-align:center}
-.phTy{display:flex;gap:2px;padding:7px 10px}
-.phTy span{width:4px;height:4px;border-radius:999px;background:${c.muted};animation:tDot 1.2s infinite}
+.phBb{
+  max-width:88%;padding:7px 9px;font-size:8.8px;line-height:1.42;word-break:break-word;
+  box-shadow:0 1px 0 rgba(0,0,0,0.02);
+}
+.phBbU{background:#E7FFDB;color:#111;border-radius:10px 10px 3px 10px}
+.phBbL{background:#fff;color:#111;border-radius:10px 10px 10px 3px}
+.phMt{display:flex;justify-content:flex-end;margin-top:2px}
+.phAct{
+  width:90%;margin:3px auto;padding:7px 9px;background:${c.accentSoft};
+  border:1px solid rgba(37,99,235,0.12);border-radius:9px;font-size:8px;font-weight:800;color:${c.accent};text-align:center;
+}
+.phTy{display:flex;gap:2px;padding:8px 10px}
+.phTy span{
+  width:4px;height:4px;border-radius:999px;background:${c.muted};
+  animation:tDot 1.2s infinite;
+}
 .phTy span:nth-child(2){animation-delay:0.2s}
 .phTy span:nth-child(3){animation-delay:0.4s}
-.phCo{padding:3px 4px 6px;display:flex;align-items:center;gap:3px;background:#F0EBE3}
-.phCoF{flex:1;height:18px;border-radius:999px;background:#fff;display:flex;align-items:center;padding:0 6px}
-.phCoT{color:${c.muted};font-size:7px}
-.phCoM{width:18px;height:18px;border-radius:999px;background:#25D366;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.phCo{padding:4px 5px 7px;display:flex;align-items:center;gap:4px;background:#F0EBE3}
+.phCoF{
+  flex:1;height:22px;border-radius:999px;background:#fff;display:flex;align-items:center;padding:0 8px;
+}
+.phCoT{color:${c.muted};font-size:7.5px}
+.phCoM{
+  width:22px;height:22px;border-radius:999px;background:#25D366;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
 
 .capGrid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:32px}
-.capCard{padding:28px;border:1px solid ${c.border};border-radius:22px;background:rgba(255,255,255,0.95);transition:all 0.3s}
-.capCard:hover{box-shadow:0 12px 36px rgba(0,0,0,0.06);transform:translateY(-2px)}
-.capIc{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:${c.accentSoft};color:${c.accent};border:1px solid rgba(37,99,235,0.08);margin-bottom:14px}
+.capCard{
+  padding:28px;border:1px solid rgba(227,221,210,0.92);border-radius:24px;background:rgba(255,255,255,0.96);
+  transition:all 0.3s;box-shadow:0 6px 22px rgba(17,18,20,0.03);
+}
+.capCard:hover{box-shadow:0 12px 36px rgba(17,18,20,0.06);transform:translateY(-2px)}
+.capIc{
+  width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:${c.accentSoft};
+  color:${c.accent};border:1px solid rgba(37,99,235,0.08);margin-bottom:14px;
+}
 .capTi{font-size:17px;font-weight:800;letter-spacing:-0.03em}
 .capBd{font-size:13.5px;line-height:1.72;color:${c.sub};margin-top:6px}
 .seeAll{display:inline-flex;align-items:center;gap:5px;font-size:14px;font-weight:700;color:${c.accent}}
 
 .baGrid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:32px}
-.baCard{border-radius:22px;padding:28px;border:1px solid ${c.border}}
-.baBf{background:rgba(254,242,242,0.3)}
-.baAf{background:rgba(236,253,243,0.3)}
+.baCard{border-radius:24px;padding:28px;border:1px solid rgba(227,221,210,0.92)}
+.baBf{background:rgba(254,242,242,0.34)}
+.baAf{background:rgba(236,253,243,0.34)}
 .baTi{font-size:17px;font-weight:800;margin-bottom:16px}
-.baIt{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;line-height:1.65;color:${c.sub};margin-bottom:10px}
+.baIt{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;line-height:1.68;color:${c.sub};margin-bottom:10px}
 .baX{color:#EF4444;font-weight:800;flex-shrink:0;margin-top:1px}
 
-.globeSec{padding:72px 0;background:linear-gradient(180deg,${c.bg},#EDE8DD,${c.bg})}
+.globeSec{padding:76px 0;background:linear-gradient(180deg,${c.bg},#EEE8DD,${c.bg})}
 .globeW{display:flex;flex-direction:column;align-items:center;gap:24px;margin-top:32px}
 .globeV{width:100%;max-width:340px;aspect-ratio:1;margin:0 auto}
 .globeCanvas{width:100%;height:100%;display:block}
-.globeC{width:100%;max-width:480px;text-align:center}
-.globeStory{min-height:180px}
-.globeCtry{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:10px}
-.globeCtryN{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:${c.muted};background:rgba(255,255,255,0.8);padding:3px 9px;border-radius:5px}
+.globeC{width:100%;max-width:500px;text-align:center}
+.globeStory{min-height:190px}
+.globeCtry{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px}
+.globeCode{
+  width:28px;height:28px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,0.8);border:1px solid rgba(227,221,210,0.9);
+  font-size:10px;font-weight:800;color:${c.text};
+}
+.globeCtryN{
+  font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:${c.muted};
+  background:rgba(255,255,255,0.8);padding:4px 10px;border-radius:999px;
+}
 .globeQ{font-size:clamp(15px,3.2vw,20px);line-height:1.35;letter-spacing:-0.02em;font-style:italic}
 .globeNm{font-size:11px;color:${c.muted};font-weight:600;margin-top:8px;font-style:italic}
-.globeL{display:flex;align-items:flex-start;gap:8px;margin-top:14px;background:rgba(255,255,255,0.85);border:1px solid ${c.border};border-radius:14px;padding:12px 14px;text-align:left}
-.globeLA{position:relative;width:22px;height:22px;border-radius:999px;overflow:hidden;flex-shrink:0;border:1px solid #fff}
+.globeL{
+  display:flex;align-items:flex-start;gap:8px;margin-top:14px;background:rgba(255,255,255,0.88);
+  border:1px solid rgba(227,221,210,0.9);border-radius:16px;padding:12px 14px;text-align:left;
+}
+.globeLA{
+  position:relative;width:22px;height:22px;border-radius:999px;overflow:hidden;flex-shrink:0;border:1px solid #fff;
+}
 .globeLT{font-size:12.5px;line-height:1.65;color:${c.sub}}
 .globeNav{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:18px}
 .globeDs{display:flex;gap:4px}
 .globeD{width:6px;height:6px;border-radius:999px;background:${c.border};border:none;cursor:pointer;transition:all 0.3s;padding:0}
 .globeDA{background:${c.warm};width:18px}
 .globeAs{display:flex;gap:4px}
-.globeA{width:30px;height:30px;border-radius:999px;background:rgba(255,255,255,0.9);border:1px solid ${c.border};display:flex;align-items:center;justify-content:center;cursor:pointer;color:${c.sub}}
+.globeA{
+  width:30px;height:30px;border-radius:999px;background:rgba(255,255,255,0.92);
+  border:1px solid rgba(227,221,210,0.9);display:flex;align-items:center;justify-content:center;cursor:pointer;color:${c.sub};
+}
 
 .audGrid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:32px}
-.audCard{padding:28px;border:1px solid ${c.border};border-radius:22px;background:rgba(255,255,255,0.95);transition:all 0.3s}
-.audCard:hover{box-shadow:0 8px 28px rgba(0,0,0,0.05)}
-.audIc{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;border:1px solid rgba(0,0,0,0.04)}
+.audCard{
+  padding:28px;border:1px solid rgba(227,221,210,0.92);border-radius:24px;background:rgba(255,255,255,0.96);
+  transition:all 0.3s;box-shadow:0 6px 22px rgba(17,18,20,0.03);
+}
+.audCard:hover{box-shadow:0 8px 28px rgba(17,18,20,0.05)}
+.audIc{
+  width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;
+  border:1px solid rgba(0,0,0,0.04);
+}
 .audTi{font-size:18px;font-weight:800;letter-spacing:-0.03em}
 .audBd{font-size:13.5px;line-height:1.78;color:${c.sub};margin-top:8px}
 
 .g2{display:grid;grid-template-columns:1fr;gap:16px}
-.dkC{background:linear-gradient(180deg,rgba(16,19,24,0.98),rgba(13,15,20,0.98));border:1px solid ${c.borderDk};border-radius:22px;padding:28px}
+.dkC{
+  background:linear-gradient(180deg,rgba(16,19,24,0.98),rgba(13,15,20,0.98));
+  border:1px solid ${c.borderDk};border-radius:24px;padding:28px;
+}
 .dkCT{font-size:clamp(17px,3vw,22px);font-weight:800;color:#fff}
 .dkCB{margin-top:8px;color:rgba(255,255,255,0.5);font-size:13.5px;line-height:1.8}
 
 .ftL{display:flex;flex-direction:column;gap:6px;margin-top:10px}
 .ftR{display:flex;align-items:flex-start;gap:6px;font-size:13px;line-height:1.55;color:${c.sub}}
 
-.glC{border:1px solid ${c.border};background:rgba(255,255,255,0.92);border-radius:22px;padding:28px;text-align:center}
+.glC{
+  border:1px solid rgba(227,221,210,0.92);background:rgba(255,255,255,0.94);border-radius:24px;padding:28px;text-align:center;
+  box-shadow:0 6px 22px rgba(17,18,20,0.03);
+}
 .glT{font-size:clamp(22px,4.5vw,38px);letter-spacing:-0.04em;display:inline}
-.glB{margin-top:8px;color:${c.sub};font-size:14px;line-height:1.75;max-width:440px;margin-left:auto;margin-right:auto}
+.glB{
+  margin-top:8px;color:${c.sub};font-size:14px;line-height:1.75;max-width:460px;margin-left:auto;margin-right:auto;
+}
 .glF{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:16px}
-.glFi{padding:6px 12px;border-radius:999px;border:1px solid ${c.border};background:rgba(255,255,255,0.8);font-size:11px;font-weight:600;color:${c.sub}}
+.glFi{
+  padding:7px 12px;border-radius:999px;border:1px solid rgba(227,221,210,0.9);background:rgba(255,255,255,0.86);
+  font-size:11px;font-weight:700;color:${c.sub};
+}
 
-.trm{background:#07080B;border:1px solid #1F2330;border-radius:16px;overflow:hidden;height:340px;display:flex;flex-direction:column}
-.trmT{display:flex;align-items:center;gap:6px;padding:10px 13px;border-bottom:1px solid #1B1F2B;background:#0E1118;flex-shrink:0}
+.trm{
+  background:#07080B;border:1px solid #1F2330;border-radius:18px;overflow:hidden;height:340px;display:flex;flex-direction:column;
+}
+.trmT{
+  display:flex;align-items:center;gap:6px;padding:10px 13px;border-bottom:1px solid #1B1F2B;background:#0E1118;flex-shrink:0;
+}
 .trmD{display:flex;gap:4px}
 .trmD span{width:7px;height:7px;border-radius:999px;display:inline-block}
 .trmD span:nth-child(1){background:#FF5F57}
@@ -1917,93 +2651,326 @@ button,input,select{font-family:inherit}
 .trmD span:nth-child(3){background:#28C840}
 .trmTi{font-size:9px;color:#6B7280;font-weight:700;flex:1}
 .trmB{padding:12px;flex:1;overflow:hidden}
-.trmL{white-space:pre-wrap;word-break:break-all;font-size:10px;line-height:1.7;font-family:'SF Mono',ui-monospace,Menlo,Consolas,monospace}
+.trmL{
+  white-space:pre-wrap;word-break:break-all;font-size:10px;line-height:1.7;
+  font-family:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
+}
 .trmC{color:#60A5FA;animation:blink 0.8s step-end infinite}
 
-.roadScroll{display:flex;gap:14px;margin-top:32px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:8px;scrollbar-width:none;-ms-overflow-style:none}
+.roadScroll{
+  display:flex;gap:14px;margin-top:32px;overflow-x:auto;scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;padding-bottom:8px;scrollbar-width:none;-ms-overflow-style:none;
+}
 .roadScroll::-webkit-scrollbar{display:none}
-.roadCard{min-width:260px;max-width:300px;flex-shrink:0;scroll-snap-align:start;background:rgba(255,255,255,0.55);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.7);border-radius:20px;padding:24px;position:relative;overflow:hidden;transition:all 0.3s;box-shadow:0 4px 24px rgba(0,0,0,0.04)}
-.roadCard:hover{border-color:rgba(201,149,107,0.3);box-shadow:0 8px 32px rgba(201,149,107,0.08);transform:translateY(-2px)}
-.roadTop{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.roadEmoji{font-size:28px;display:block}
-.roadSt{padding:4px 10px;border-radius:999px;background:rgba(201,149,107,0.12);color:${c.warm};font-size:10px;font-weight:700;border:1px solid rgba(201,149,107,0.15)}
-.roadTi{font-size:15px;font-weight:800;color:#111214;letter-spacing:-0.02em}
-.roadDs{font-size:12px;line-height:1.65;color:#4A4F5C;margin-top:6px}
-.roadLine{position:absolute;bottom:0;left:24px;right:24px;height:2px;background:linear-gradient(90deg,transparent,rgba(201,149,107,0.3),transparent);border-radius:1px}
+.roadCard{
+  min-width:280px;max-width:320px;flex-shrink:0;scroll-snap-align:start;
+  background:rgba(255,255,255,0.72);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(227,221,210,0.9);border-radius:24px;padding:24px;position:relative;overflow:hidden;
+  transition:all 0.3s;box-shadow:0 10px 28px rgba(17,18,20,0.04);
+}
+.roadCard:hover{
+  border-color:rgba(201,149,107,0.28);
+  box-shadow:0 14px 34px rgba(201,149,107,0.07);
+  transform:translateY(-2px);
+}
+.roadTop{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:10px}
+.roadBadgeWrap{display:flex}
+.roadSt{
+  padding:5px 11px;border-radius:999px;background:rgba(201,149,107,0.12);color:${c.warm};
+  font-size:10px;font-weight:700;border:1px solid rgba(201,149,107,0.15);
+}
+.roadTi{font-size:17px;font-weight:800;color:#111214;letter-spacing:-0.02em}
+.roadDs{font-size:13px;line-height:1.72;color:#4A4F5C;margin-top:7px;max-width:95%}
+.roadLine{
+  position:absolute;bottom:0;left:24px;right:24px;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(201,149,107,0.3),transparent);border-radius:1px;
+}
 
-.infraSec{padding:50px 0;border-top:1px solid ${c.border};border-bottom:1px solid ${c.border};background:linear-gradient(180deg,rgba(255,255,255,0.42),rgba(255,255,255,0.08)),${c.bg};position:relative;overflow:hidden}
+.infraSec{
+  padding:54px 0;border-top:1px solid rgba(227,221,210,0.9);border-bottom:1px solid rgba(227,221,210,0.9);
+  background:linear-gradient(180deg,rgba(255,255,255,0.44),rgba(255,255,255,0.08)),${c.bg};position:relative;overflow:hidden;
+}
 .infraIn{text-align:center}
 .infraHead{display:flex;align-items:center;justify-content:center;gap:10px}
-.infraEyebrow{width:28px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,149,107,0.45),transparent);display:block}
-.infraLbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:${c.muted}}
-.infraSub{max-width:420px;margin:10px auto 0;color:${c.sub};font-size:13px;line-height:1.75}
-.infraShell{position:relative;margin-top:24px;padding:16px 0}
-.infraShellGlow{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(900px,95%);height:140px;border-radius:999px;background:radial-gradient(circle,rgba(201,149,107,0.08),rgba(201,149,107,0.02),transparent 72%);pointer-events:none;filter:blur(8px)}
-.infraMarquee{position:relative;overflow:hidden;width:100%;padding:8px 0}
-.infraMarqueeB{margin-top:12px}
-.infraTrack{display:flex;width:max-content;will-change:transform}
-.infraTrackL{animation:infraDriftLeft 32s linear infinite}
-.infraTrackR{animation:infraDriftRight 36s linear infinite}
-.infraMarquee:hover .infraTrack{animation-play-state:paused}
-.infraSet{display:flex;align-items:center;gap:16px;flex-shrink:0}
+.infraEyebrow{
+  width:28px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,149,107,0.45),transparent);display:block;
+}
+.infraLbl{
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:${c.muted};
+}
+.infraSub{
+  max-width:440px;margin:10px auto 0;color:${c.sub};font-size:13px;line-height:1.75;
+}
+.infraShell{position:relative;margin-top:26px}
+.infraShellGlow{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(900px,95%);height:150px;border-radius:999px;
+  background:radial-gradient(circle,rgba(201,149,107,0.08),rgba(201,149,107,0.018),transparent 72%);
+  pointer-events:none;filter:blur(8px);
+}
+.infraTrackWrap{position:relative;overflow:hidden;width:100%;padding:10px 0}
+.infraTrack{
+  display:flex;width:max-content;will-change:transform;animation:infraDrift 38s linear infinite;
+}
+.infraTrackWrap:hover .infraTrack{animation-play-state:paused}
+.infraSet{display:flex;align-items:center;gap:16px;flex-shrink:0;padding-right:16px}
 .infraItem{flex:0 0 auto;display:flex;align-items:center;justify-content:center}
-.infraLogoCard{min-width:152px;height:60px;border-radius:18px;border:1px solid rgba(227,221,210,0.84);background:linear-gradient(180deg,rgba(255,255,255,0.84),rgba(255,255,255,0.68));backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 1px 0 rgba(255,255,255,0.75) inset,0 10px 28px rgba(17,18,20,0.04);display:flex;align-items:center;justify-content:center;padding:0 22px;transition:transform 0.3s ease,box-shadow 0.3s ease,border-color 0.3s ease,background 0.3s ease}
-.infraLogoCard:hover{transform:translateY(-1px);border-color:rgba(201,149,107,0.3);background:linear-gradient(180deg,rgba(255,255,255,0.94),rgba(255,255,255,0.8));box-shadow:0 1px 0 rgba(255,255,255,0.8) inset,0 14px 34px rgba(17,18,20,0.065)}
+.infraLogoCard{
+  min-width:164px;height:64px;border-radius:20px;border:1px solid rgba(227,221,210,0.88);
+  background:linear-gradient(180deg,rgba(255,255,255,0.88),rgba(255,255,255,0.72));
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 1px 0 rgba(255,255,255,0.78) inset,0 10px 28px rgba(17,18,20,0.04);
+  display:flex;align-items:center;justify-content:center;padding:0 24px;
+  transition:transform 0.3s ease,box-shadow 0.3s ease,border-color 0.3s ease,background 0.3s ease;
+}
+.infraLogoCard:hover{
+  transform:translateY(-1px);border-color:rgba(201,149,107,0.3);
+  background:linear-gradient(180deg,rgba(255,255,255,0.96),rgba(255,255,255,0.82));
+  box-shadow:0 1px 0 rgba(255,255,255,0.8) inset,0 14px 34px rgba(17,18,20,0.06);
+}
 .infraLogoInner{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
-.infraLogoImg{width:auto;height:auto;max-width:126px;max-height:28px;object-fit:contain;filter:grayscale(1) saturate(0) brightness(0.55) contrast(1.08);opacity:0.82;transition:filter 0.28s ease,opacity 0.28s ease,transform 0.28s ease}
-.infraLogoCard:hover .infraLogoImg{filter:grayscale(1) saturate(0) brightness(0.42) contrast(1.12);opacity:1;transform:scale(1.02)}
+.infraSvg{
+  width:126px;
+  height:28px;
+  color:rgba(17,18,20,0.65);
+}
+.infraLogoCard:hover .infraSvg{color:rgba(17,18,20,0.88)}
 .infraFade{position:absolute;top:0;bottom:0;width:88px;z-index:2;pointer-events:none}
-.infraFadeL{left:0;background:linear-gradient(90deg,${c.bg} 12%,rgba(248,246,241,0) 100%)}
-.infraFadeR{right:0;background:linear-gradient(270deg,${c.bg} 12%,rgba(248,246,241,0) 100%)}
+.infraFadeL{left:0;background:linear-gradient(90deg,${c.bg} 10%,rgba(248,246,241,0) 100%)}
+.infraFadeR{right:0;background:linear-gradient(270deg,${c.bg} 10%,rgba(248,246,241,0) 100%)}
 
 .prGrid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:36px}
-.prCard{background:rgba(255,255,255,0.96);border:1px solid ${c.border};border-radius:22px;padding:32px;position:relative;transition:all 0.3s;display:flex;flex-direction:column}
-.prCard:hover{box-shadow:0 12px 36px rgba(0,0,0,0.06)}
-.prCardDk{background:linear-gradient(180deg,#111318,#0D0F14)!important;border:1px solid ${c.borderDk}!important;color:#fff!important}
-.prBg{position:absolute;top:14px;right:14px;border-radius:6px;padding:4px 10px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);font-size:9px;font-weight:700}
+.prCard{
+  background:rgba(255,255,255,0.96);border:1px solid rgba(227,221,210,0.92);border-radius:24px;padding:32px;
+  position:relative;transition:all 0.3s;display:flex;flex-direction:column;box-shadow:0 6px 22px rgba(17,18,20,0.03);
+}
+.prCard:hover{box-shadow:0 12px 36px rgba(17,18,20,0.06)}
+.prCardDk{
+  background:linear-gradient(180deg,#111318,#0D0F14)!important;border:1px solid ${c.borderDk}!important;color:#fff!important;
+}
+.prBg{
+  position:absolute;top:14px;right:14px;border-radius:999px;padding:4px 10px;background:rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.65);font-size:9px;font-weight:700;
+}
 .prNm{font-size:16px;font-weight:800}
 .prPr{margin-top:10px}
 .prAmt{font-size:clamp(24px,5vw,36px);letter-spacing:-0.04em}
 .prPd2{font-size:12px;color:${c.muted};margin-top:3px}
 .prCardDk .prPd2{color:rgba(255,255,255,0.35)}
 .prDs{margin-top:10px;font-size:13.5px;line-height:1.72;color:${c.sub}}
-.prCardDk .prDs{color:rgba(255,255,255,0.5)}
-.prFts{display:flex;flex-direction:column;gap:7px;margin-top:18px;padding-top:18px;border-top:1px solid ${c.border};flex:1}
+.prCardDk .prDs{color:rgba(255,255,255,0.52)}
+.prFts{display:flex;flex-direction:column;gap:7px;margin-top:18px;padding-top:18px;border-top:1px solid rgba(227,221,210,0.9);flex:1}
 .prCardDk .prFts{border-top-color:rgba(255,255,255,0.08)}
 .prFt{display:flex;align-items:flex-start;gap:6px;font-size:12.5px;line-height:1.5;color:${c.sub}}
-.prCardDk .prFt{color:rgba(255,255,255,0.6)}
+.prCardDk .prFt{color:rgba(255,255,255,0.62)}
 .prBt{margin-top:20px;width:100%}
 .prBtW{background:#fff!important;color:${c.dark}!important}
 
-.wlC{background:rgba(255,255,255,0.95);border:1px solid ${c.border};border-radius:22px;padding:28px;max-width:720px;margin:0 auto;box-shadow:0 4px 20px rgba(0,0,0,0.03)}
+.wlC{
+  background:rgba(255,255,255,0.96);border:1px solid rgba(227,221,210,0.92);border-radius:24px;padding:28px;
+  max-width:760px;margin:0 auto;box-shadow:0 6px 22px rgba(17,18,20,0.03);
+}
 .wlF{display:grid;grid-template-columns:1fr;gap:10px;margin-top:16px}
 .wlBt{height:48px;width:100%}
-.inp{width:100%;height:48px;border-radius:12px;border:1px solid ${c.border};background:#fff;padding:0 14px;font-size:14px;color:${c.text};outline:none;transition:all 0.2s}
+.inp{
+  width:100%;height:48px;border-radius:14px;border:1px solid rgba(227,221,210,0.92);background:#fff;padding:0 14px;
+  font-size:14px;color:${c.text};outline:none;transition:all 0.2s;
+}
 .inp:focus{border-color:${c.accent};box-shadow:0 0 0 3px rgba(37,99,235,0.06)}
-.pvL{display:flex;align-items:flex-start;gap:6px;margin-top:10px;color:${c.sub};font-size:11px;line-height:1.6;cursor:pointer;max-width:480px;margin-left:auto;margin-right:auto}
+.pvL{
+  display:flex;align-items:flex-start;gap:6px;margin-top:10px;color:${c.sub};font-size:11px;line-height:1.6;cursor:pointer;
+  max-width:500px;margin-left:auto;margin-right:auto;
+}
 .pvC{margin-top:1px;width:14px;height:14px;accent-color:${c.accent};flex-shrink:0}
 .pvLk{color:${c.text};font-weight:700;text-decoration:underline;text-underline-offset:2px}
-.fmOk{margin-top:10px;background:${c.greenSoft};color:${c.greenDk};border-radius:12px;padding:12px;text-align:center;font-size:13px;font-weight:600}
-.fmEr{margin-top:10px;background:#FFF7F7;color:#B91C1C;border-radius:12px;padding:12px;text-align:center;font-size:13px;font-weight:600}
+.fmOk{
+  margin-top:10px;background:${c.greenSoft};color:${c.greenDk};border-radius:12px;padding:12px;text-align:center;font-size:13px;font-weight:600;
+}
+.fmEr{
+  margin-top:10px;background:#FFF7F7;color:#B91C1C;border-radius:12px;padding:12px;text-align:center;font-size:13px;font-weight:600;
+}
 
-.modO{position:fixed;inset:0;z-index:220;background:rgba(9,10,13,0.5);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:center;padding:14px}
-.modB{width:100%;max-width:420px;background:rgba(255,255,255,0.98);border:1px solid ${c.border};border-radius:24px;padding:32px;box-shadow:0 24px 60px rgba(0,0,0,0.18);position:relative;overflow:hidden;text-align:center}
-.modCel{width:56px;height:56px;border-radius:999px;background:linear-gradient(135deg,#FFF8F0,#ECFDF3);border:1px solid rgba(34,197,94,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
-.modCelE{font-size:28px}
-.modTi{font-size:clamp(22px,4.5vw,30px);letter-spacing:-0.04em}
-.modBd{margin-top:8px;color:${c.sub};font-size:13.5px;line-height:1.72}
-.modRef{margin-top:20px;padding:16px;border-radius:14px;background:rgba(37,99,235,0.03);border:1px solid rgba(37,99,235,0.08)}
-.modRefLbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:${c.muted};margin-bottom:8px}
-.modRefBox{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid ${c.border};border-radius:10px;padding:8px 10px}
-.modRefUrl{flex:1;font-size:11px;color:${c.sub};font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
-.modRefCp{width:32px;height:32px;border-radius:8px;background:${c.accentSoft};border:1px solid rgba(37,99,235,0.1);color:${c.accent};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s}
+.modO{
+  position:fixed;inset:0;z-index:220;background:rgba(9,10,13,0.42);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  display:flex;align-items:center;justify-content:center;padding:16px;
+}
+.modO::before{
+  content:"";
+  position:absolute;
+  left:15%;
+  top:20%;
+  width:240px;
+  height:240px;
+  border-radius:999px;
+  background:radial-gradient(circle, rgba(37,99,235,0.12), transparent 72%);
+  filter:blur(16px);
+}
+.modO::after{
+  content:"";
+  position:absolute;
+  right:12%;
+  bottom:16%;
+  width:220px;
+  height:220px;
+  border-radius:999px;
+  background:radial-gradient(circle, rgba(201,149,107,0.11), transparent 72%);
+  filter:blur(18px);
+}
+.modB{
+  width:100%;
+  max-width:460px;
+  background:rgba(255,255,255,0.97);
+  border:1px solid rgba(227,221,210,0.92);
+  border-radius:30px;
+  padding:26px;
+  box-shadow:0 30px 70px rgba(0,0,0,0.18);
+  position:relative;
+  overflow:hidden;
+  text-align:center;
+}
+.modHalo{
+  position:absolute;
+  border-radius:999px;
+  pointer-events:none;
+  filter:blur(20px);
+}
+.modHaloA{
+  width:180px;height:180px;
+  left:-40px;top:-34px;
+  background:radial-gradient(circle, rgba(37,99,235,0.1), transparent 72%);
+}
+.modHaloB{
+  width:150px;height:150px;
+  right:-30px;bottom:-24px;
+  background:radial-gradient(circle, rgba(201,149,107,0.09), transparent 72%);
+}
+.modPill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:6px 12px;
+  border-radius:999px;
+  background:rgba(37,99,235,0.06);
+  border:1px solid rgba(37,99,235,0.1);
+  color:${c.accent};
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+}
+.modSealWrap{
+  position:relative;
+  margin:18px auto 0;
+  width:max-content;
+}
+.modSealPulse{
+  position:absolute;
+  inset:-8px;
+  border-radius:999px;
+  background:radial-gradient(circle, rgba(37,99,235,0.08), transparent 72%);
+}
+.modTi{
+  font-size:clamp(28px,5vw,40px);
+  letter-spacing:-0.04em;
+  margin-top:18px;
+}
+.modBd{
+  margin:10px auto 0;
+  color:${c.sub};
+  font-size:14px;
+  line-height:1.76;
+  max-width:350px;
+}
+.modRef{
+  margin-top:22px;
+  padding:16px;
+  border-radius:18px;
+  background:rgba(248,250,255,0.86);
+  border:1px solid rgba(217,226,244,0.85);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+}
+.modRefHd{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  text-align:left;
+}
+.modRefEyebrow{
+  font-size:10px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+  color:${c.muted};
+}
+.modRefTitle{
+  font-size:14px;
+  font-weight:800;
+  color:${c.text};
+  margin-top:4px;
+}
+.modRefTag{
+  flex-shrink:0;
+  padding:5px 10px;
+  border-radius:999px;
+  background:rgba(201,149,107,0.1);
+  color:${c.warm};
+  border:1px solid rgba(201,149,107,0.15);
+  font-size:10px;
+  font-weight:800;
+}
+.modRefBox{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:#fff;
+  border:1px solid rgba(227,221,210,0.92);
+  border-radius:14px;
+  padding:9px 10px;
+  margin-top:14px;
+}
+.modRefUrl{
+  flex:1;
+  font-size:11px;
+  color:${c.sub};
+  font-weight:600;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-align:left;
+}
+.modRefCp{
+  width:36px;height:36px;border-radius:10px;background:${c.accentSoft};
+  border:1px solid rgba(37,99,235,0.1);color:${c.accent};
+  display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s;
+}
 .modRefCp:hover{background:rgba(37,99,235,0.12)}
-.modRefBts{display:flex;gap:8px;margin-top:12px}
-.modShareBtn{flex:1;padding:10px 14px!important;font-size:12px!important}
-.modXBtn{flex:1;padding:10px 14px!important;font-size:12px!important}
-.modClose{margin-top:14px;background:none;border:none;color:${c.muted};font-size:12px;font-weight:600;cursor:pointer;padding:4px 8px}
-.confW{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.confP{position:absolute;bottom:40%;font-size:16px;pointer-events:none}
+.modRefBts{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:12px;
+}
+.modShareBtn{
+  padding:12px 14px!important;
+  font-size:12px!important;
+}
+.modXBtn{
+  padding:12px 14px!important;
+  font-size:12px!important;
+}
+.modClose{
+  margin-top:16px;
+  background:none;
+  border:none;
+  color:${c.muted};
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+  padding:6px 10px;
+}
 
 .ft{background:${c.dark};padding:36px 0 20px;color:#fff}
 .ftTop{display:flex;flex-direction:column;gap:24px}
@@ -2013,17 +2980,26 @@ button,input,select{font-family:inherit}
 .ftBrS{font-size:8px;font-weight:800;letter-spacing:0.1em;color:${c.accent};margin-top:1px}
 .ftCols{display:flex;gap:36px}
 .ftCol{display:flex;flex-direction:column;gap:7px}
-.ftColT{font-size:10px;font-weight:800;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:3px}
+.ftColT{
+  font-size:10px;font-weight:800;color:rgba(255,255,255,0.3);
+  text-transform:uppercase;letter-spacing:0.1em;margin-bottom:3px;
+}
 .ftLk{font-size:12px;color:rgba(255,255,255,0.5);font-weight:500;transition:color 0.2s}
 .ftLk:hover{color:#fff}
-.ftDsc{margin-top:24px;padding:14px 0;border-top:1px solid rgba(255,255,255,0.06);font-size:11px;color:rgba(255,255,255,0.3);line-height:1.7;text-align:center}
-.ftBtm{border-top:1px solid rgba(255,255,255,0.06);padding-top:14px;font-size:10px;color:rgba(255,255,255,0.2);text-align:center}
+.ftDsc{
+  margin-top:24px;padding:14px 0;border-top:1px solid rgba(255,255,255,0.06);
+  font-size:11px;color:rgba(255,255,255,0.3);line-height:1.7;text-align:center;
+}
+.ftBtm{
+  border-top:1px solid rgba(255,255,255,0.06);
+  padding-top:14px;font-size:10px;color:rgba(255,255,255,0.2);text-align:center;
+}
 
 @media(min-width:640px){
   .container{padding:0 24px}
-  .sec{padding:80px 0}
-  .secDk{padding:80px 0}
-  .secPr{padding:80px 0}
+  .sec{padding:84px 0}
+  .secDk{padding:84px 0}
+  .secPr{padding:84px 0}
   .navR{height:64px}
   .navLks{display:flex}
   .heroBt{flex-direction:row}
@@ -2036,48 +3012,84 @@ button,input,select{font-family:inherit}
   .wlF{grid-template-columns:1.2fr 0.8fr auto}
   .wlBt{width:auto}
   .wlC{padding:32px}
-  .phW{max-width:240px}
   .ftTop{flex-direction:row;justify-content:space-between}
   .globeW{flex-direction:row;align-items:center;gap:36px}
-  .globeV{max-width:340px;flex-shrink:0}
+  .globeV{max-width:360px;flex-shrink:0}
   .globeC{text-align:left}
   .globeCtry{justify-content:flex-start}
   .globeQ{text-align:left}
   .globeNm{text-align:left}
-  .roadCard{min-width:280px}
-  .infraSec{padding:56px 0}
-  .infraLogoCard{min-width:170px;height:66px;padding:0 24px}
-  .infraLogoImg{max-width:132px;max-height:30px}
-  .infraSet{gap:18px}
+  .roadCard{min-width:300px}
+  .infraLogoCard{min-width:176px;height:68px;padding:0 24px}
 }
 
 @media(min-width:960px){
   .container{padding:0 36px}
-  .sec{padding:92px 0}
-  .secDk{padding:92px 0}
-  .secPr{padding:92px 0}
+  .sec{padding:96px 0}
+  .secDk{padding:96px 0}
+  .secPr{padding:96px 0}
   .navR{height:72px}
-  .heroSec{padding:60px 0 32px}
-  .heroSec .container{display:grid;grid-template-columns:1.1fr 0.9fr;gap:0 40px;align-items:start}
+  .heroSec{padding:66px 0 34px}
+  .heroSec .container{
+    display:grid;
+    grid-template-columns:1.02fr 0.98fr;
+    gap:0 36px;
+    align-items:start;
+  }
   .heroTxt{grid-column:1}
   .heroPh{grid-column:2;margin-top:0;align-self:start}
-  .phW{max-width:260px}
-  .phB{border-radius:36px;padding:5px}
-  .phS{border-radius:32px}
-  .phBdy{height:340px}
-  .globeV{max-width:380px}
-  .infraSec{padding:60px 0}
-  .infraTrackL{animation-duration:36s}
-  .infraTrackR{animation-duration:40s}
-  .infraLogoCard{min-width:184px;height:70px;border-radius:20px}
-  .infraLogoImg{max-width:138px;max-height:31px}
+  .globeV{max-width:390px}
+  .heroStage{max-width:580px;min-height:640px}
+  .infraTrack{animation-duration:42s}
+  .infraLogoCard{min-width:190px;height:72px;border-radius:22px}
 }
 
-@media(min-width:1100px){
-  .heroTi{font-size:clamp(56px,7vw,76px)}
+@media(max-width:959px){
+  .heroStage{
+    max-width:420px;
+    min-height:520px;
+  }
+  .heroRing{
+    width:320px;
+    height:320px;
+  }
+  .floatCard{
+    width:180px;
+    padding:12px 13px;
+  }
+  .floatCardA{top:74px;left:-4px}
+  .floatCardB{right:-4px;top:156px}
+  .floatCardC{left:12px;bottom:42px}
+}
+
+@media(max-width:640px){
+  .heroStage{
+    min-height:470px;
+    max-width:330px;
+  }
+  .heroRing{
+    width:260px;
+    height:260px;
+  }
+  .heroAuraA{width:220px;height:220px;right:30px;top:68px}
+  .heroAuraB{width:200px;height:200px;left:40px;bottom:70px}
+  .floatCard{
+    width:146px;
+    padding:10px 11px;
+    border-radius:16px;
+  }
+  .floatCardTitle{font-size:11px}
+  .floatCardBody{font-size:9.5px}
+  .floatCardEyebrow{font-size:8.5px}
+  .floatCardA{top:62px;left:-14px}
+  .floatCardB{right:-14px;top:128px}
+  .floatCardC{left:-2px;bottom:38px}
+  .modB{padding:22px}
+  .modRefHd{flex-direction:column;align-items:flex-start}
+  .modRefBts{grid-template-columns:1fr}
 }
 
 @media (prefers-reduced-motion: reduce){
-  .infraTrackL,.infraTrackR{animation:none}
+  .infraTrack{animation:none}
 }
 `;
