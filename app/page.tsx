@@ -1363,10 +1363,6 @@ function InfraSection() {
               <span className="infraEyebrow" />
             </div>
 
-            <p className="infraSub">
-              Quietly reliable systems behind a calm patient experience.
-            </p>
-
             <div className="infraTrackWrap">
               <div className="infraFade infraFadeL" />
               <div className="infraFade infraFadeR" />
@@ -2655,9 +2651,7 @@ button,input,select{font-family:inherit}
 .infraLbl{
   font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:${c.muted};
 }
-.infraSub{
-  max-width:440px;margin:10px auto 0;color:${c.sub};font-size:13px;line-height:1.75;
-}
+
 .infraTrackWrap{
   position:relative;
   overflow:hidden;
@@ -2696,25 +2690,25 @@ button,input,select{font-family:inherit}
   display:flex;
   align-items:center;
   justify-content:center;
-  flex:0 0 auto;
 }
 
 .infraRealLogoImg{
   display:block;
-  height:26px;
+  height:30px;
   width:auto;
+  max-width:160px;
   object-fit:contain;
 }
 
 .infraRealLogoImg--openai{
   height:30px;
-  width:158px;
-  max-width:none;
+  width:auto;
+  max-width:160px;
 }
 
 .infraSvg{
   width:auto;
-  height:26px;
+  height:30px;
   color:rgba(17,18,20,0.72);
   display:block;
   overflow:visible;
@@ -3082,12 +3076,12 @@ button,input,select{font-family:inherit}
   .modRefHd{flex-direction:column;align-items:flex-start}
   .modRefBts{grid-template-columns:1fr}
   .infraSet{gap:28px;padding-right:28px}
-  .infraSvg{height:22px}
-  .infraRealLogoImg{height:22px;width:auto}
+  .infraSvg{height:26px}
+  .infraRealLogoImg{height:26px}
   .infraRealLogoImg--openai{
-  height:26px;
-  width:auto;
-  max-width:138px;
+    height:26px;
+    width:auto;
+    max-width:138px;
 }
 
  .infraRealLogoImg{
