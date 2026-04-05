@@ -229,11 +229,6 @@ export default function Privacy() {
               Regulation and the Data Protection Act 2018.
             </p>
 
-            <div className="badges">
-              <span className="badge">Privacy-first by design</span>
-              <span className="badge">Built with UK data protection in mind</span>
-            </div>
-
             <div className="topCards">
               <div className="topCard">
                 <span className="topCardLabel">Controller</span>

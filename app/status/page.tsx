@@ -3,128 +3,385 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Clock3,
+  Mail,
+  Server,
+  ShieldCheck,
+  Wrench,
+} from "lucide-react";
 
 const FONT = `@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap');`;
 
 const c = {
-  bg: "#F8F6F1", card: "#FFFFFF", dark: "#08090C",
-  text: "#111214", sub: "#4A4F5C", muted: "#888E9C",
-  accent: "#2563EB", border: "#E3DDD2",
-  green: "#22C55E", greenSoft: "#ECFDF3", greenDk: "#15803D",
+  bg: "#F8F6F1",
+  surface: "#FFFFFF",
+  dark: "#090B10",
+  text: "#111214",
+  sub: "#4A4F5C",
+  muted: "#8A90A0",
+  accent: "#2563EB",
+  accentSoft: "#ECF2FF",
+  border: "#E4DDD2",
+  green: "#22C55E",
+  greenSoft: "#ECFDF3",
+  greenText: "#166534",
   amber: "#F59E0B",
+  amberSoft: "#FFFBEB",
+  amberText: "#92400E",
   red: "#EF4444",
+  redSoft: "#FEF2F2",
+  redText: "#991B1B",
 };
 
 type ServiceStatus = "operational" | "degraded" | "outage";
 
-const services: { name: string; status: ServiceStatus; uptime: string; bars: ServiceStatus[] }[] = [
-  { name: "Laura Chat", status: "operational", uptime: "99.94%", bars: generateBars(0.997) },
-  { name: "Urgency Engine", status: "operational", uptime: "99.98%", bars: generateBars(0.999) },
-  { name: "Provider Search", status: "operational", uptime: "99.91%", bars: generateBars(0.995) },
-  { name: "Translation", status: "operational", uptime: "99.96%", bars: generateBars(0.998) },
-  { name: "Waitlist API", status: "operational", uptime: "100%", bars: generateBars(1.0) },
-  { name: "Admin Dashboard", status: "operational", uptime: "99.89%", bars: generateBars(0.993) },
-];
+type Service = {
+  name: string;
+  status: ServiceStatus;
+  uptime: string;
+  description: string;
+  bars: ServiceStatus[];
+};
 
-function generateBars(reliability: number): ServiceStatus[] {
-  const days = 30;
-  return Array.from({ length: days }, () => {
-    const r = Math.random();
-    if (r > reliability + 0.003) return "outage";
-    if (r > reliability) return "degraded";
+type Incident = {
+  date: string;
+  title: string;
+  body: string;
+  impact: "resolved" | "monitoring";
+};
+
+function buildBars(
+  length: number,
+  degradedDays: number[] = [],
+  outageDays: number[] = []
+): ServiceStatus[] {
+  return Array.from({ length }, (_, index) => {
+    if (outageDays.includes(index)) return "outage";
+    if (degradedDays.includes(index)) return "degraded";
     return "operational";
   });
 }
 
-const barColor = { operational: c.green, degraded: c.amber, outage: c.red };
-
-const incidents = [
-  { date: "March 28, 2026", title: "Scheduled maintenance completed", body: "Planned database migration completed successfully with zero downtime.", status: "resolved" as const },
-  { date: "March 22, 2026", title: "Translation service latency", body: "Elevated response times on translation requests lasting approximately 12 minutes. Root cause was a provider-side rate limit adjustment.", status: "resolved" as const },
-  { date: "March 15, 2026", title: "Provider Search index refresh", body: "Brief delay in provider search results during a scheduled index rebuild. No data loss.", status: "resolved" as const },
+const services: Service[] = [
+  {
+    name: "Laura Chat",
+    status: "operational",
+    uptime: "99.94%",
+    description: "Core conversation layer for care-navigation support.",
+    bars: buildBars(30, [6, 19]),
+  },
+  {
+    name: "Urgency Support",
+    status: "operational",
+    uptime: "99.98%",
+    description: "Structured urgency flow and escalation guidance.",
+    bars: buildBars(30, [11]),
+  },
+  {
+    name: "Provider Search",
+    status: "operational",
+    uptime: "99.91%",
+    description: "Practice and route discovery across supported flows.",
+    bars: buildBars(30, [8, 9, 22]),
+  },
+  {
+    name: "Translation Layer",
+    status: "operational",
+    uptime: "99.96%",
+    description: "Bilingual notes and multilingual understanding support.",
+    bars: buildBars(30, [14]),
+  },
+  {
+    name: "Waitlist API",
+    status: "operational",
+    uptime: "100%",
+    description: "Waitlist form submissions and onboarding capture.",
+    bars: buildBars(30),
+  },
+  {
+    name: "Admin Dashboard",
+    status: "operational",
+    uptime: "99.89%",
+    description: "Internal operational tools and monitoring surfaces.",
+    bars: buildBars(30, [4, 17], [18]),
+  },
 ];
 
+const incidents: Incident[] = [
+  {
+    date: "28 March 2026",
+    title: "Scheduled maintenance completed",
+    body: "Planned infrastructure maintenance completed successfully. No customer-facing outage occurred.",
+    impact: "resolved",
+  },
+  {
+    date: "22 March 2026",
+    title: "Temporary translation latency",
+    body: "Some translation-related requests responded more slowly than usual for a short period. Service returned to normal after provider-side adjustment.",
+    impact: "resolved",
+  },
+  {
+    date: "15 March 2026",
+    title: "Provider search refresh delay",
+    body: "A scheduled index refresh caused a brief delay in some provider-search responses. No data was lost and normal performance was restored.",
+    impact: "resolved",
+  },
+];
+
+const statusColors: Record<ServiceStatus, { bg: string; text: string; label: string }> = {
+  operational: {
+    bg: c.greenSoft,
+    text: c.greenText,
+    label: "Operational",
+  },
+  degraded: {
+    bg: c.amberSoft,
+    text: c.amberText,
+    label: "Degraded",
+  },
+  outage: {
+    bg: c.redSoft,
+    text: c.redText,
+    label: "Outage",
+  },
+};
+
+const barColors: Record<ServiceStatus, string> = {
+  operational: c.green,
+  degraded: c.amber,
+  outage: c.red,
+};
+
 export default function StatusPage() {
-  const allOperational = services.every(s => s.status === "operational");
+  const allOperational = services.every((service) => service.status === "operational");
 
   return (
     <>
       <style>{FONT}</style>
       <style>{CSS}</style>
-      <div className="statusWrap">
-        <nav className="statusNav">
-          <div className="container statusNavInner">
-            <Link href="/" className="statusNavBrand">
-              <div className="statusNavLogo"><Image src="/omela-logo-mark.png" alt="Omela" width={32} height={32} style={{ width: "100%", height: "100%", objectFit: "contain" }} /></div>
-              <div><div className="statusNavName">Omela</div><div className="statusNavSub serif">System Status</div></div>
+
+      <div className="page">
+        <nav className="nav">
+          <div className="container navInner">
+            <Link href="/" className="brand">
+              <div className="brandMark">
+                <Image
+                  src="/omela-logo-mark.png"
+                  alt="Omela"
+                  width={32}
+                  height={32}
+                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                />
+              </div>
+
+              <div>
+                <div className="brandName">Omela</div>
+                <div className="brandSub">System status</div>
+              </div>
             </Link>
-            <Link href="/" className="btnP statusBackBtn">Back to Omela <ArrowRight size={13} /></Link>
+
+            <Link href="/" className="backButton">
+              <ArrowLeft size={14} />
+              Back to Omela
+            </Link>
           </div>
         </nav>
 
-        <main className="statusMain">
+        <main className="main">
           <div className="container">
-            {/* Overall status */}
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className={`overallBanner ${allOperational ? "overallOk" : "overallWarn"}`}>
-              <div className="overallDot" />
-              <span className="overallTxt">{allOperational ? "All Systems Operational" : "Some Systems Experiencing Issues"}</span>
-            </motion.div>
+            <motion.section
+              className="hero"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <span className="eyebrow">Live system status</span>
 
-            <p className="uptimeNote">Uptime over the past 30 days. <Link href="mailto:notice@omela.ai" className="uptimeLink">Subscribe to updates</Link></p>
+              <h1 className="serif heroTitle">Calm, clear reliability.</h1>
 
-            {/* Service grid */}
-            <div className="serviceGrid">
-              {services.map((svc, i) => (
-                <motion.div key={svc.name} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.06 }} className="serviceCard">
-                  <div className="serviceHeader">
-                    <span className="serviceName">{svc.name}</span>
-                    <div className="serviceRight">
-                      <span className="serviceUptime">{svc.uptime}</span>
-                      <span className={`serviceStatus ${svc.status === "operational" ? "serviceOk" : svc.status === "degraded" ? "serviceWarn" : "serviceDown"}`}>
-                        {svc.status === "operational" ? "Operational" : svc.status === "degraded" ? "Degraded" : "Outage"}
-                      </span>
+              <p className="heroBody">
+                A public view of service health across the Laura experience and supporting systems.
+              </p>
+
+              <div className={`overallBanner ${allOperational ? "overallOk" : "overallWarn"}`}>
+                <div className="overallLeft">
+                  <div className="overallIconWrap">
+                    <CheckCircle2 size={18} />
+                  </div>
+                  <div>
+                    <div className="overallTitle">
+                      {allOperational
+                        ? "All systems operational"
+                        : "Some systems are experiencing issues"}
+                    </div>
+                    <div className="overallSub">
+                      Updated automatically as service health changes.
                     </div>
                   </div>
-                  <div className="serviceBars">
-                    {svc.bars.map((bar, j) => (
-                      <div key={j} className="serviceBar" style={{ background: barColor[bar] }} title={`Day ${j + 1}: ${bar}`} />
-                    ))}
-                  </div>
-                  <div className="serviceBarLabels">
-                    <span>30 days ago</span>
-                    <span>Today</span>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                </div>
 
-            {/* Incidents */}
-            <div className="incidentSection">
-              <h2 className="serif incidentTitle">Past incidents</h2>
-              <div className="incidentList">
-                {incidents.map((inc, i) => (
-                  <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.3 + i * 0.06 }} className="incidentCard">
-                    <div className="incidentHeader">
-                      <span className="incidentDate">{inc.date}</span>
-                      <span className="incidentBadge">Resolved</span>
+                <a href="mailto:notice@omela.ai" className="subscribeLink">
+                  <Mail size={14} />
+                  Subscribe to updates
+                </a>
+              </div>
+            </motion.section>
+
+            <section className="summaryGrid">
+              <motion.div
+                className="summaryCard"
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, delay: 0.06 }}
+              >
+                <div className="summaryIcon summaryIconGreen">
+                  <ShieldCheck size={18} />
+                </div>
+                <div>
+                  <div className="summaryLabel">Platform health</div>
+                  <div className="summaryValue">Operational</div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                className="summaryCard"
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, delay: 0.12 }}
+              >
+                <div className="summaryIcon summaryIconBlue">
+                  <Server size={18} />
+                </div>
+                <div>
+                  <div className="summaryLabel">Services tracked</div>
+                  <div className="summaryValue">{services.length} active services</div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                className="summaryCard"
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, delay: 0.18 }}
+              >
+                <div className="summaryIcon summaryIconWarm">
+                  <Clock3 size={18} />
+                </div>
+                <div>
+                  <div className="summaryLabel">Reporting window</div>
+                  <div className="summaryValue">Last 30 days</div>
+                </div>
+              </motion.div>
+            </section>
+
+            <section className="section">
+              <div className="sectionHead">
+                <h2 className="serif sectionTitle">Service health</h2>
+                <p className="sectionBody">
+                  Rolling availability view across core Omela services.
+                </p>
+              </div>
+
+              <div className="serviceList">
+                {services.map((service, index) => (
+                  <motion.article
+                    key={service.name}
+                    className="serviceCard"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.42, delay: 0.08 + index * 0.05 }}
+                  >
+                    <div className="serviceTop">
+                      <div>
+                        <div className="serviceName">{service.name}</div>
+                        <p className="serviceDescription">{service.description}</p>
+                      </div>
+
+                      <div className="serviceMeta">
+                        <span className="serviceUptime">{service.uptime}</span>
+                        <span
+                          className="serviceStatus"
+                          style={{
+                            background: statusColors[service.status].bg,
+                            color: statusColors[service.status].text,
+                          }}
+                        >
+                          {statusColors[service.status].label}
+                        </span>
+                      </div>
                     </div>
-                    <h3 className="incidentName">{inc.title}</h3>
-                    <p className="incidentBody">{inc.body}</p>
-                  </motion.div>
+
+                    <div className="serviceBars">
+                      {service.bars.map((bar, barIndex) => (
+                        <div
+                          key={barIndex}
+                          className="serviceBar"
+                          style={{ background: barColors[bar] }}
+                          title={`Day ${barIndex + 1}: ${bar}`}
+                        />
+                      ))}
+                    </div>
+
+                    <div className="serviceLabels">
+                      <span>30 days ago</span>
+                      <span>Today</span>
+                    </div>
+                  </motion.article>
                 ))}
               </div>
-            </div>
+            </section>
+
+            <section className="section">
+              <div className="sectionHead sectionHeadLeft">
+                <h2 className="serif sectionTitle">Past incidents</h2>
+                <p className="sectionBody">
+                  Recent resolved events and maintenance activity.
+                </p>
+              </div>
+
+              <div className="incidentList">
+                {incidents.map((incident, index) => (
+                  <motion.article
+                    key={`${incident.date}-${incident.title}`}
+                    className="incidentCard"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.42, delay: 0.18 + index * 0.06 }}
+                  >
+                    <div className="incidentTop">
+                      <span className="incidentDate">{incident.date}</span>
+                      <span className="incidentBadge">
+                        <Wrench size={12} />
+                        {incident.impact === "resolved" ? "Resolved" : "Monitoring"}
+                      </span>
+                    </div>
+
+                    <h3 className="incidentTitle">{incident.title}</h3>
+                    <p className="incidentBody">{incident.body}</p>
+                  </motion.article>
+                ))}
+              </div>
+            </section>
           </div>
         </main>
 
-        <footer className="statusFooter">
-          <div className="container statusFooterInner">
-            <p className="statusFooterTxt">&copy; 2026 Omela. Powered by Laura.</p>
-            <div style={{ display: "flex", gap: "14px" }}>
-              <Link href="/privacy" className="statusFooterLink">Privacy</Link>
-              <Link href="/terms" className="statusFooterLink">Terms</Link>
-              <a href="mailto:notice@omela.ai" className="statusFooterLink">Contact</a>
+        <footer className="footer">
+          <div className="container footerInner">
+            <p className="footerText">&copy; 2026 Omela</p>
+
+            <div className="footerLinks">
+              <Link href="/privacy" className="footerLink">
+                Privacy
+              </Link>
+              <Link href="/terms" className="footerLink">
+                Terms
+              </Link>
+              <a href="mailto:notice@omela.ai" className="footerLink">
+                Contact
+              </a>
             </div>
           </div>
         </footer>
@@ -134,67 +391,431 @@ export default function StatusPage() {
 }
 
 const CSS = `
-*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
-body{background:${c.bg};color:${c.text};font-family:'DM Sans',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
-a{color:inherit;text-decoration:none}button,input{font-family:inherit}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:${c.bg};
+  color:${c.text};
+  font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none}
+button,input{font-family:inherit}
+::selection{background:${c.accent};color:#fff}
 .serif{font-family:'Instrument Serif',Georgia,serif}
-.container{max-width:900px;margin:0 auto;padding:0 20px}
-.btnP{display:inline-flex;align-items:center;gap:6px;background:${c.dark};color:#fff;border:none;border-radius:999px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;text-decoration:none}
 
-.statusWrap{min-height:100vh;display:flex;flex-direction:column}
-.statusNav{background:rgba(248,246,241,0.94);backdrop-filter:blur(16px);border-bottom:1px solid ${c.border};flex-shrink:0}
-.statusNavInner{display:flex;align-items:center;justify-content:space-between;height:60px;gap:10px}
-.statusNavBrand{display:flex;align-items:center;gap:8px;text-decoration:none}
-.statusNavLogo{width:30px;height:30px;border-radius:9px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
-.statusNavName{font-size:13px;font-weight:800}
-.statusNavSub{font-size:10px;color:${c.accent};font-weight:700;margin-top:1px}
-.statusBackBtn{padding:8px 16px!important;font-size:12px!important}
+.page{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+.container{
+  max-width:1040px;
+  margin:0 auto;
+  padding:0 20px;
+}
 
-.statusMain{flex:1;padding:40px 0 60px}
+.nav{
+  position:sticky;
+  top:0;
+  z-index:30;
+  background:rgba(248,246,241,0.9);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  border-bottom:1px solid rgba(228,221,210,0.78);
+}
+.navInner{
+  min-height:72px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.brandMark{
+  width:36px;
+  height:36px;
+  border-radius:12px;
+  overflow:hidden;
+  flex-shrink:0;
+  box-shadow:0 4px 12px rgba(17,18,20,0.06);
+}
+.brandName{
+  font-size:15px;
+  font-weight:800;
+  letter-spacing:-0.03em;
+}
+.brandSub{
+  margin-top:2px;
+  font-size:12px;
+  color:${c.accent};
+  font-weight:700;
+}
+.backButton{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  min-height:48px;
+  padding:0 18px;
+  border-radius:999px;
+  border:1px solid rgba(228,221,210,0.94);
+  background:rgba(255,255,255,0.8);
+  font-size:14px;
+  font-weight:700;
+  color:${c.text};
+  transition:transform .22s ease,box-shadow .22s ease;
+}
+.backButton:hover{
+  transform:translateY(-1px);
+  box-shadow:0 10px 24px rgba(17,18,20,0.06);
+}
 
-.overallBanner{display:flex;align-items:center;gap:12px;padding:20px 24px;border-radius:16px;font-size:18px;font-weight:800}
-.overallOk{background:${c.greenSoft};color:${c.greenDk}}
-.overallWarn{background:#FFFBEB;color:#92400E}
-.overallDot{width:12px;height:12px;border-radius:999px;background:currentColor;flex-shrink:0}
+.main{
+  flex:1;
+  padding:52px 0 78px;
+}
 
-.uptimeNote{margin-top:16px;font-size:13px;color:${c.muted};text-align:center}
-.uptimeLink{color:${c.accent};font-weight:700;text-decoration:underline;text-underline-offset:2px}
+.hero{
+  text-align:center;
+}
+.eyebrow{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  color:#8591A8;
+}
+.heroTitle{
+  margin-top:14px;
+  font-size:clamp(40px,7vw,76px);
+  line-height:0.98;
+  letter-spacing:-0.055em;
+}
+.heroBody{
+  max-width:720px;
+  margin:18px auto 0;
+  font-size:18px;
+  line-height:1.74;
+  color:${c.sub};
+}
 
-.serviceGrid{display:flex;flex-direction:column;gap:12px;margin-top:32px}
-.serviceCard{background:${c.card};border:1px solid ${c.border};border-radius:16px;padding:18px 22px}
-.serviceHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.serviceName{font-size:15px;font-weight:700}
-.serviceRight{display:flex;align-items:center;gap:10px}
-.serviceUptime{font-size:13px;color:${c.muted};font-weight:600}
-.serviceStatus{font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px}
-.serviceOk{background:${c.greenSoft};color:${c.greenDk}}
-.serviceWarn{background:#FFFBEB;color:#92400E}
-.serviceDown{background:#FEF2F2;color:#991B1B}
+.overallBanner{
+  margin-top:28px;
+  padding:22px 24px;
+  border-radius:26px;
+  border:1px solid rgba(228,221,210,0.94);
+  background:rgba(255,255,255,0.92);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+  box-shadow:0 14px 28px rgba(17,18,20,0.04);
+}
+.overallOk{
+  background:linear-gradient(180deg, rgba(236,253,243,0.96), rgba(255,255,255,0.96));
+}
+.overallWarn{
+  background:linear-gradient(180deg, rgba(255,251,235,0.96), rgba(255,255,255,0.96));
+}
+.overallLeft{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.overallIconWrap{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:${c.greenSoft};
+  color:${c.greenText};
+  flex-shrink:0;
+}
+.overallTitle{
+  font-size:20px;
+  font-weight:800;
+  letter-spacing:-0.02em;
+}
+.overallSub{
+  margin-top:4px;
+  font-size:14px;
+  color:${c.sub};
+}
+.subscribeLink{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  min-height:44px;
+  padding:0 16px;
+  border-radius:999px;
+  background:${c.dark};
+  color:#fff;
+  font-size:14px;
+  font-weight:700;
+  white-space:nowrap;
+}
 
-.serviceBars{display:flex;gap:2px;margin-top:14px;height:32px;align-items:stretch}
-.serviceBar{flex:1;border-radius:3px;min-width:0;transition:opacity 0.2s}
-.serviceBar:hover{opacity:0.7}
-.serviceBarLabels{display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:${c.muted};font-weight:600}
+.summaryGrid{
+  margin-top:22px;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:14px;
+}
+.summaryCard{
+  padding:20px 22px;
+  border-radius:22px;
+  background:rgba(255,255,255,0.92);
+  border:1px solid rgba(228,221,210,0.94);
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.summaryIcon{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+}
+.summaryIconGreen{
+  background:${c.greenSoft};
+  color:${c.greenText};
+}
+.summaryIconBlue{
+  background:${c.accentSoft};
+  color:${c.accent};
+}
+.summaryIconWarm{
+  background:#FFF5E8;
+  color:${c.amberText};
+}
+.summaryLabel{
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:${c.muted};
+}
+.summaryValue{
+  margin-top:4px;
+  font-size:18px;
+  font-weight:800;
+  letter-spacing:-0.02em;
+}
 
-.incidentSection{margin-top:48px}
-.incidentTitle{font-size:clamp(24px,4vw,36px);letter-spacing:-0.04em}
-.incidentList{display:flex;flex-direction:column;gap:12px;margin-top:20px}
-.incidentCard{background:${c.card};border:1px solid ${c.border};border-radius:14px;padding:18px 22px}
-.incidentHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
-.incidentDate{font-size:12px;color:${c.muted};font-weight:600}
-.incidentBadge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;background:${c.greenSoft};color:${c.greenDk};text-transform:uppercase;letter-spacing:0.06em}
-.incidentName{font-size:16px;font-weight:700;letter-spacing:-0.02em}
-.incidentBody{font-size:13px;color:${c.sub};line-height:1.7;margin-top:4px}
+.section{
+  margin-top:44px;
+}
+.sectionHead{
+  text-align:center;
+}
+.sectionHeadLeft{
+  text-align:left;
+}
+.sectionTitle{
+  font-size:clamp(28px,5vw,42px);
+  line-height:1.02;
+  letter-spacing:-0.045em;
+}
+.sectionBody{
+  margin-top:10px;
+  font-size:16px;
+  line-height:1.72;
+  color:${c.sub};
+}
 
-.statusFooter{border-top:1px solid ${c.border};padding:20px 0}
-.statusFooterInner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
-.statusFooterTxt{font-size:11px;color:${c.muted}}
-.statusFooterLink{font-size:11px;color:${c.muted};font-weight:600;transition:color 0.2s}
-.statusFooterLink:hover{color:${c.text}}
+.serviceList{
+  margin-top:22px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.serviceCard{
+  background:rgba(255,255,255,0.94);
+  border:1px solid rgba(228,221,210,0.94);
+  border-radius:24px;
+  padding:22px 24px;
+  box-shadow:0 12px 24px rgba(17,18,20,0.03);
+}
+.serviceTop{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+}
+.serviceName{
+  font-size:18px;
+  font-weight:800;
+  letter-spacing:-0.02em;
+}
+.serviceDescription{
+  margin-top:6px;
+  font-size:14px;
+  line-height:1.65;
+  color:${c.sub};
+}
+.serviceMeta{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.serviceUptime{
+  font-size:14px;
+  color:${c.muted};
+  font-weight:700;
+}
+.serviceStatus{
+  min-height:32px;
+  padding:0 12px;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:800;
+}
+.serviceBars{
+  margin-top:18px;
+  display:flex;
+  gap:4px;
+  height:34px;
+  align-items:stretch;
+}
+.serviceBar{
+  flex:1;
+  min-width:0;
+  border-radius:4px;
+}
+.serviceLabels{
+  margin-top:8px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-size:11px;
+  font-weight:700;
+  color:${c.muted};
+}
 
-@media(min-width:640px){
+.incidentList{
+  margin-top:22px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.incidentCard{
+  padding:22px 24px;
+  border-radius:24px;
+  background:rgba(255,255,255,0.94);
+  border:1px solid rgba(228,221,210,0.94);
+}
+.incidentTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.incidentDate{
+  font-size:13px;
+  color:${c.muted};
+  font-weight:700;
+}
+.incidentBadge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  min-height:30px;
+  padding:0 10px;
+  border-radius:999px;
+  background:${c.greenSoft};
+  color:${c.greenText};
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+}
+.incidentTitle{
+  margin-top:12px;
+  font-size:18px;
+  font-weight:800;
+  letter-spacing:-0.02em;
+}
+.incidentBody{
+  margin-top:8px;
+  font-size:15px;
+  line-height:1.72;
+  color:${c.sub};
+}
+
+.footer{
+  border-top:1px solid rgba(228,221,210,0.82);
+  padding:20px 0;
+}
+.footerInner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.footerText{
+  font-size:12px;
+  color:${c.muted};
+}
+.footerLinks{
+  display:flex;
+  gap:16px;
+  flex-wrap:wrap;
+}
+.footerLink{
+  font-size:12px;
+  font-weight:700;
+  color:${c.muted};
+}
+.footerLink:hover{
+  color:${c.text};
+}
+
+@media(min-width:700px){
   .container{padding:0 28px}
-  .statusMain{padding:52px 0 72px}
-  .overallBanner{padding:24px 28px;font-size:20px}
+  .summaryGrid{
+    grid-template-columns:repeat(3,1fr);
+  }
+}
+
+@media(max-width:699px){
+  .navInner{
+    min-height:64px;
+  }
+  .brandSub{
+    font-size:11px;
+  }
+  .backButton{
+    min-height:42px;
+    padding:0 14px;
+    font-size:13px;
+  }
+  .overallBanner{
+    padding:20px;
+  }
+  .overallTitle{
+    font-size:18px;
+  }
 }
 `;

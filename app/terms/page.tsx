@@ -203,11 +203,6 @@ export default function Terms() {
               committed to compliance with UK GDPR.
             </p>
 
-            <div className="badges">
-              <span className="badge">Care navigation, not clinical care</span>
-              <span className="badge">Built with UK legal clarity in mind</span>
-            </div>
-
             <div className="topCards">
               <div className="topCard">
                 <span className="topCardLabel">Product</span>
