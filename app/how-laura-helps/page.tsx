@@ -25,7 +25,7 @@ export default function HowLauraHelpsPage(){
       {/* Nav */}
       <motion.nav initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} className="nav"><div className="container navR">
         <Link href="/" className="navBr"><div className="navLo"><Image src="/omela-logo-mark.png" alt="Omela" width={34} height={34} style={{width:"100%",height:"100%",objectFit:"contain"}}/></div><div><div className="navNm">Omela</div><div className="navSb">POWERED BY LAURA</div></div></Link>
-        <div className="navAc"><Link href="/demo" className="btnG">Try demo</Link><Link href="/" className="btnP navCt">Back to Omela <ArrowRight size={13}/></Link></div>
+     <div className="navAc"><Link href="/" className="btnP navCt">Back to Omela <ArrowRight size={13}/></Link></div>
       </div></motion.nav>
 
       {/* Hero */}
