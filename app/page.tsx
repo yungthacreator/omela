@@ -65,7 +65,6 @@ export default function Page(){
         <FI><h1 className="serif heroTi">Getting care<br/><span className="heroAc">should not be this hard.</span></h1></FI>
         <FI delay={0.05}><div className="heroBd"><Typewriter/></div></FI>
         <FI delay={0.1}><p className="heroSub">Laura helps people find the right practice, prepare requests, understand letters, and move care access forward. She does not just answer questions. She helps people move.</p></FI>
-        <FI delay={0.13}><div className="heroPill"><motion.svg width="22" height="22" viewBox="0 0 32 32" animate={{y:[0,-1.5,0]}} transition={{duration:2.8,repeat:Infinity,ease:"easeInOut"}}><motion.path d="M6 23C9 23 10.5 19 13 19C15.4 19 16.6 13 20 13C22.8 13 23.6 9 26 9" fill="none" stroke={c.accent} strokeWidth="2.2" strokeLinecap="round" initial={{pathLength:0.2}} animate={{pathLength:1}} transition={{duration:1.8,repeat:Infinity,repeatType:"reverse"}}/><circle cx="6" cy="23" r="2" fill={c.accent}/></motion.svg><span>Not just answers. A way forward.</span></div></FI>
         <FI delay={0.16}><div className="heroBt"><Link href="/demo" className="btnP">See Laura in action <ArrowRight size={14}/></Link><a href="#waitlist" className="btnS">Join waitlist</a></div></FI>
       </div><div className="heroPh"><PhoneMockup/></div></div></section>
 
