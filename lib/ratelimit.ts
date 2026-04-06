@@ -1,19 +1,24 @@
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
 
-type WaitlistRateLimitResult = {
+export type RateLimitResult = {
   success: boolean;
-  limit?: number;
-  remaining?: number;
-  reset?: number;
+  limit: number | null;
+  remaining: number | null;
+  reset: number | null;
 };
 
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL?.trim();
 const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
+const isProduction = process.env.NODE_ENV === "production";
 
-function isUsableEnvValue(value?: string) {
-  if (!value) return false;
-  const normalized = value.toLowerCase();
+function isUsableEnvValue(value?: string): boolean {
+  if (!value) {
+    return false;
+  }
+
+  const normalized = value.trim().toLowerCase();
+
   return (
     normalized.length > 0 &&
     !normalized.includes("your_upstash") &&
@@ -36,15 +41,43 @@ const ratelimit = upstashEnabled
     })
   : null;
 
+function getSafeIdentifier(identifier?: string | null): string {
+  const value = identifier?.trim();
+
+  if (!value) {
+    return "anonymous";
+  }
+
+  return value.slice(0, 256);
+}
+
 export async function limitWaitlist(
-  identifier: string
-): Promise<WaitlistRateLimitResult> {
+  identifier?: string | null
+): Promise<RateLimitResult> {
+  const safeIdentifier = getSafeIdentifier(identifier);
+
   if (!ratelimit) {
-    return { success: true };
+    if (isProduction) {
+      console.error("WAITLIST_RATELIMIT_UNAVAILABLE");
+
+      return {
+        success: false,
+        limit: null,
+        remaining: null,
+        reset: null,
+      };
+    }
+
+    return {
+      success: true,
+      limit: null,
+      remaining: null,
+      reset: null,
+    };
   }
 
   try {
-    const result = await ratelimit.limit(identifier);
+    const result = await ratelimit.limit(safeIdentifier);
 
     return {
       success: result.success,
@@ -55,7 +88,22 @@ export async function limitWaitlist(
   } catch (error) {
     console.error("WAITLIST_RATELIMIT_ERROR", error);
 
-    return { success: true };
+    if (isProduction) {
+      return {
+        success: false,
+        limit: null,
+        remaining: null,
+        reset: null,
+      };
+    }
+
+    return {
+      success: true,
+      limit: null,
+      remaining: null,
+      reset: null,
+    };
   }
 }
-export const rateLimit = limitWaitlist;
+
+export { limitWaitlist as rateLimit };

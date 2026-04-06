@@ -114,13 +114,62 @@ const roadmap=[{step:"Now",title:"Repeat prescriptions",desc:"Reminders, request
 function Roadmap(){const ref=useRef<HTMLDivElement>(null);const[active,setActive]=useState(0);function onScroll(){const el=ref.current;if(!el)return;const ch=Array.from(el.children) as HTMLElement[];const mid=el.scrollLeft+el.clientWidth/2;let n=0,s=Infinity;ch.forEach((c2,i)=>{const d=Math.abs(c2.offsetLeft+c2.clientWidth/2-mid);if(d<s){s=d;n=i;}});setActive(n);}function go(i:number){const el=ref.current;if(!el)return;const ch=el.children[i] as HTMLElement;if(ch)el.scrollTo({left:ch.offsetLeft-12,behavior:"smooth"});setActive(i);}return(<section className="sec"><div className="container"><FI><div className="shW"><h2 className="serif shT">Start with prescriptions. Expand into the rest of the admin people hate.</h2></div></FI><div className="roadScroll" ref={ref} onScroll={onScroll}>{roadmap.map((item,i)=>(<motion.div key={item.title} className="roadCard" initial={{opacity:0,y:12}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{delay:i*0.07}}><div className="roadStep" style={{background:`${item.color}10`,color:item.color,borderColor:`${item.color}20`}}>{item.step}</div><h4 className="roadTi">{item.title}</h4><p className="roadDs">{item.desc}</p></motion.div>))}</div><div className="roadDots">{roadmap.map((_,i)=><button key={i} className={`roadDot${i===active?" roadDotA":""}`} onClick={()=>go(i)}/>)}</div></div></section>);}
 
 /* ─── Logo Marquee ─── */
-function LogoMarquee(){const logos=[{src:"/logos/openai-wordmark.svg",alt:"OpenAI",w:120,h:28},{src:"/logos/stripe.svg",alt:"Stripe",w:72,h:28},{src:"/logos/twilio.svg",alt:"Twilio",w:88,h:28},{src:"/logos/vercel.svg",alt:"Vercel",w:96,h:24},{src:"/logos/microsoft-logo.png",alt:"Microsoft",w:120,h:26}];const doubled=[...logos,...logos];return(<section className="logoSec"><div className="container logoHd"><p className="logoLbl">Built on trusted infrastructure</p></div><div className="logoMarqueeW"><div className="logoFadeL"/><div className="logoFadeR"/><motion.div className="logoTrack" animate={{x:["0%","-50%"]}} transition={{duration:24,repeat:Infinity,ease:"linear"}}>{doubled.map((l,i)=><div key={i} className="logoItem">{l.src.endsWith(".png")?<Image src={l.src} alt={l.alt} width={l.w} height={l.h} style={{width:l.w,height:l.h,objectFit:"contain",opacity:0.4,filter:"grayscale(1)"}}/>:<img src={l.src} alt={l.alt} width={l.w} height={l.h} style={{width:l.w,height:l.h,objectFit:"contain",opacity:0.35,filter:"grayscale(1)"}}/>}</div>)}</motion.div></div></section>);}
+function LogoMarquee(){
+  const logos=[
+    {src:"/logos/openai-wordmark.svg",alt:"OpenAI",w:120,h:28},
+    {src:"/logos/stripe.svg",alt:"Stripe",w:72,h:28},
+    {src:"/logos/twilio.svg",alt:"Twilio",w:88,h:28},
+    {src:"/logos/vercel.svg",alt:"Vercel",w:96,h:24},
+    {src:"/logos/microsoft-logo.png",alt:"Microsoft",w:120,h:26}
+  ];
+  const doubled=[...logos,...logos];
+
+  return(
+    <section className="logoSec">
+      <div className="container logoHd">
+        <p className="logoLbl">Built on trusted infrastructure</p>
+      </div>
+      <div className="logoMarqueeW">
+        <div className="logoFadeL"/>
+        <div className="logoFadeR"/>
+        <motion.div className="logoTrack" animate={{x:["0%","-50%"]}} transition={{duration:24,repeat:Infinity,ease:"linear"}}>
+          {doubled.map((l,i)=>(
+            <div key={i} className="logoItem">
+              <Image
+                src={l.src}
+                alt={l.alt}
+                width={l.w}
+                height={l.h}
+                unoptimized={l.src.endsWith(".svg")}
+                style={{
+                  width:l.w,
+                  height:l.h,
+                  objectFit:"contain",
+                  opacity:l.src.endsWith(".png") ? 0.4 : 0.35,
+                  filter:"grayscale(1)"
+                }}
+              />
+            </div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
 
 /* ─── SDK Terminal ─── */
 function SDKTerminal(){const lines=useMemo(()=>['$ npm install @omela/laura-sdk','','  const laura = new Laura({','    apiKey: process.env.OMELA_KEY,','    region: "eu-west-2"','  });','','  const refill = await laura.prescription({','    patient: "patient_4102",','    medication: "Amlodipine 5mg",','    action: "prepare-request"','  });','','  // Request prepared, status: pending','  Done in 0.9s'],[]);const[vl,setVl]=useState(0);const[ci,setCi]=useState(0);useEffect(()=>{if(vl>=lines.length){const t=setTimeout(()=>{setVl(0);setCi(0);},3000);return()=>clearTimeout(t);}const line=lines[vl];if(ci<line.length){const t=setTimeout(()=>setCi(p=>p+1),line.startsWith("  //")?36:18);return()=>clearTimeout(t);}else{const t=setTimeout(()=>{setVl(p=>p+1);setCi(0);},line===""?50:140);return()=>clearTimeout(t);}},[vl,ci,lines]);return<div className="trm"><div className="trmT"><div className="trmD"><span/><span/><span/></div><span className="trmTi">Laura SDK</span><Soon/></div><div className="trmB">{lines.slice(0,vl+1).map((line,i)=>{const a2=i===vl;return<div key={i} className="trmL" style={{color:line.startsWith("  Done")||line.startsWith("  //")?"#4ADE80":line.startsWith("$")?"#E2E8F0":"#94A3B8"}}>{a2?line.slice(0,ci):line}{a2&&<span className="trmC">|</span>}</div>;})}</div></div>;}
 
 /* ─── Confetti + Modal ─── */
-function Confetti(){const ps=useMemo(()=>Array.from({length:18},(_,i)=>({id:i,emoji:["\u{1F389}","\u{2728}","\u{1F38A}","\u{1F31F}"][i%4],left:Math.random()*100,delay:Math.random()*0.5,dur:1.4+Math.random()*0.8,rot:Math.random()*360})),[]);return<div className="confW">{ps.map(p=><motion.span key={p.id} className="confP" initial={{opacity:1,y:0,scale:0}} animate={{opacity:[1,1,0],y:-110,scale:[0,1.1,0.7],rotate:p.rot}} transition={{duration:p.dur,delay:p.delay,ease:"easeOut"}} style={{left:`${p.left}%`}}>{p.emoji}</motion.span>)}</div>;}
+const CONFETTI_PARTICLES = Array.from({length:18},(_,i)=>({
+  id:i,
+  emoji:["\u{1F389}","\u{2728}","\u{1F38A}","\u{1F31F}"][i%4],
+  left:(i*17)%100,
+  delay:(i%6)*0.08,
+  dur:1.4+(i%5)*0.12,
+  rot:(i*43)%360,
+}));
+function Confetti(){return<div className="confW">{CONFETTI_PARTICLES.map(p=><motion.span key={p.id} className="confP" initial={{opacity:1,y:0,scale:0}} animate={{opacity:[1,1,0],y:-110,scale:[0,1.1,0.7],rotate:p.rot}} transition={{duration:p.dur,delay:p.delay,ease:"easeOut"}} style={{left:`${p.left}%`}}>{p.emoji}</motion.span>)}</div>;}
 function SuccessModal({open,onClose,referralCode}:{open:boolean;onClose:()=>void;referralCode:string}){const[copied,setCopied]=useState(false);const link=typeof window!=="undefined"?`${window.location.origin}?ref=${referralCode}`:"";function copyLink(){navigator.clipboard.writeText(link).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);});}async function shareLink(){if(navigator.share){try{await navigator.share({title:"Join Omela",text:"Stop chasing repeat prescriptions. Try Laura.",url:link});}catch{}}else{copyLink();}}return<AnimatePresence>{open&&<motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={onClose} className="modO"><motion.div initial={{opacity:0,y:18,scale:0.96}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:10}} transition={{type:"spring",damping:22,stiffness:300}} onClick={e=>e.stopPropagation()} className="modB"><Confetti/><motion.div className="modCel" initial={{scale:0}} animate={{scale:1}} transition={{type:"spring",delay:0.2,stiffness:400,damping:15}}><span style={{fontSize:"28px"}}>{"\u{1F389}"}</span></motion.div><h3 className="serif modTi">You are on the list!</h3><p className="modBd">We will reach out as access opens. Invite 3 friends to move up the waitlist and unlock bonus credits.</p>{referralCode&&<div className="modRef"><p className="modRefLbl">Your referral link</p><div className="modRefBox"><span className="modRefUrl">{link.replace("https://","").replace("http://","")}</span><button onClick={copyLink} className="modRefCp" type="button">{copied?<Check size={13}/>:<Copy size={13}/>}</button></div><div className="modRefBts"><button onClick={shareLink} className="btnP modShareBtn" type="button"><Share2 size={12}/>Share</button><a href="https://x.com/joinomela" target="_blank" rel="noreferrer" className="btnS modXBtn">Follow @joinomela</a></div></div>}<button type="button" className="modClose" onClick={onClose}>Close</button></motion.div></motion.div>}</AnimatePresence>;}
 
 /* ═════════════ PAGE ═════════════ */

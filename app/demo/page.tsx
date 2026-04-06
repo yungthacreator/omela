@@ -2,12 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, RotateCcw, Send, Bell, FileText, Package, Globe2, Pill, PhoneOff } from "lucide-react";
 
 const FONT=`@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap');`;
 const c={bg:"#F8F6F1",dark:"#08090C",text:"#111214",sub:"#4A4F5C",muted:"#888E9C",accent:"#2563EB",accentSoft:"#ECF2FF",border:"#E3DDD2",green:"#22C55E",greenSoft:"#ECFDF3",greenDk:"#15803D",warm:"#C9956B",warmSoft:"#FFF8F0"};
+
+const USER_TO_BOT_DELAY_MS = 520;
+const BOT_REPLY_DELAY_MS = 850;
+const BOT_TYPING_DELAY_MS = 850;
+const SCENARIO_STEP_DELAY_MS = 900;
 
 type Msg={from:"user"|"laura";text:string;urgency?:"routine"|"soon"|"urgent"|"emergency";action?:string};
 type Scenario={id:string;label:string;emoji:string;desc:string;icon:ReactNode;conversation:Msg[]};
@@ -83,18 +88,50 @@ export default function DemoPage(){
   const timers=useRef<number[]>([]);
   const msgs=mode==="scenario"&&cs?cs.conversation.slice(0,vc):fm;
 
-  useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"});},[msgs,typing]);
-  useEffect(()=>()=>clr(),[]);
+  const clr = useCallback(() => {
+    timers.current.forEach((id) => window.clearTimeout(id));
+    timers.current = [];
+  }, []);
 
-  function clr(){timers.current.forEach(id=>window.clearTimeout(id));timers.current=[];}
-  function sched(fn:()=>void,d:number){const id=window.setTimeout(fn,d);timers.current.push(id);}
+  function sched(fn:()=>void,d:number){
+    const id=window.setTimeout(fn,d);
+    timers.current.push(id);
+  }
+
+  useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"});},[msgs,typing]);
+
+  useEffect(() => {
+    return () => clr();
+  }, [clr]);
 
   function startSc(sc:Scenario){clr();setMode("scenario");setCs(sc);setVc(0);setTyping(false);playSc(sc,0);}
   function playSc(sc:Scenario,idx:number){
     if(idx>=sc.conversation.length)return;
     const cur=sc.conversation[idx];
-    if(cur.from==="user"){setVc(idx+1);const next=sc.conversation[idx+1];if(!next)return;sched(()=>{setTyping(true);sched(()=>{setTyping(false);setVc(idx+2);sched(()=>playSc(sc,idx+2),900);},650+Math.random()*350);},520);return;}
-    setTyping(true);sched(()=>{setTyping(false);setVc(idx+1);sched(()=>playSc(sc,idx+1),850);},650+Math.random()*350);
+
+    if(cur.from==="user"){
+      setVc(idx+1);
+      const next=sc.conversation[idx+1];
+      if(!next)return;
+
+      sched(()=>{
+        setTyping(true);
+        sched(()=>{
+          setTyping(false);
+          setVc(idx+2);
+          sched(()=>playSc(sc,idx+2),SCENARIO_STEP_DELAY_MS);
+        },BOT_TYPING_DELAY_MS);
+      },USER_TO_BOT_DELAY_MS);
+
+      return;
+    }
+
+    setTyping(true);
+    sched(()=>{
+      setTyping(false);
+      setVc(idx+1);
+      sched(()=>playSc(sc,idx+1),SCENARIO_STEP_DELAY_MS);
+    },BOT_REPLY_DELAY_MS);
   }
 
   function getFreeResp(input:string):Msg{
@@ -109,7 +146,20 @@ export default function DemoPage(){
     return{from:"laura",text:"Tell me more about what you need. I can help with refill requests, reminders, tracking status, or explaining letters."};
   }
 
-  function sendFree(val:string){const tr=val.trim();if(!tr||typing)return;setFm(p=>[...p,{from:"user",text:tr}]);setFi("");setTyping(true);sched(()=>{setTyping(false);setFm(p=>[...p,getFreeResp(tr)]);},650+Math.random()*350);}
+  function sendFree(val:string){
+    const tr=val.trim();
+    if(!tr||typing)return;
+
+    setFm(p=>[...p,{from:"user",text:tr}]);
+    setFi("");
+    setTyping(true);
+
+    sched(()=>{
+      setTyping(false);
+      setFm(p=>[...p,getFreeResp(tr)]);
+    },BOT_REPLY_DELAY_MS);
+  }
+
   function reset(){clr();setMode("pick");setCs(null);setVc(0);setTyping(false);setFi("");setFm([freeIntro]);}
 
   return(<><style>{FONT}</style><style>{CSS}</style>
