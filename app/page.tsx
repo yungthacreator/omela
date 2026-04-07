@@ -60,6 +60,94 @@ const c = {
 
 type Role = "carer" | "household" | "care_team";
 
+const HERO_SIGNAL_LINES = [
+  "See who handled it last.",
+  "See who owns it now.",
+  "See what happens next.",
+] as const;
+
+type LanguageOption = {
+  label: string;
+  emoji: string;
+  sample: string;
+  note: string;
+};
+
+const LANGUAGE_OPTIONS: LanguageOption[] = [
+  {
+    label: "English",
+    emoji: "🇬🇧",
+    sample:
+      "Clear status updates that feel natural, calm, and easy to act on.",
+    note:
+      "Helpful for everyday follow-through when someone needs to know what has been requested, what is ready, and what still needs attention.",
+  },
+  {
+    label: "French",
+    emoji: "🇫🇷",
+    sample:
+      "Softer wording for updates, handovers, and next steps around repeat prescriptions.",
+    note:
+      "Useful when medication admin needs to feel more familiar and less clinical for households and carers.",
+  },
+  {
+    label: "Spanish",
+    emoji: "🇪🇸",
+    sample:
+      "Simple guidance that makes requests and progress easier to follow together.",
+    note:
+      "Designed to reduce repeated checking and make it easier to pass an update on to someone else.",
+  },
+  {
+    label: "Portuguese",
+    emoji: "🇵🇹",
+    sample:
+      "Clearer explanations for delays, status changes, and what happens next.",
+    note:
+      "Built to make shared medication admin feel easier across family members, carers, and support teams.",
+  },
+  {
+    label: "Yoruba",
+    emoji: "🇳🇬",
+    sample:
+      "Familiar communication that helps people stay aligned on the next step.",
+    note:
+      "Especially useful when one person prepares the request and another person follows it through.",
+  },
+  {
+    label: "Arabic",
+    emoji: "🇸🇦",
+    sample:
+      "Calmer updates for letters, status changes, and repeat prescription follow-through.",
+    note:
+      "Made to help reduce friction when people are already carrying enough care admin.",
+  },
+  {
+    label: "Hindi",
+    emoji: "🇮🇳",
+    sample:
+      "Straightforward language that reduces confusion around requests and collection.",
+    note:
+      "Designed so the important part stays clear without making the experience feel cold or technical.",
+  },
+  {
+    label: "Urdu",
+    emoji: "🇵🇰",
+    sample:
+      "Simple, shared visibility that makes handover easier across family members.",
+    note:
+      "Useful when more than one person needs to understand what has happened and what still needs doing.",
+  },
+  {
+    label: "Mandarin",
+    emoji: "🇨🇳",
+    sample:
+      "Easier status updates for households and care teams managing more than one person.",
+    note:
+      "Helps turn repeat prescription admin into something clearer, more manageable, and easier to explain.",
+  },
+];
+
 function FI({
   children,
   delay = 0,
@@ -98,6 +186,139 @@ function Overline({
     <span className={`overline overline--${tone} ${className}`.trim()}>
       {children}
     </span>
+  );
+}
+
+function HeroSignal() {
+  const [lineIndex, setLineIndex] = useState(0);
+  const [displayed, setDisplayed] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    const current = HERO_SIGNAL_LINES[lineIndex];
+    let timeout: number;
+
+    if (!deleting && displayed.length < current.length) {
+      timeout = window.setTimeout(() => {
+        setDisplayed(current.slice(0, displayed.length + 1));
+      }, 34);
+    } else if (!deleting && displayed.length === current.length) {
+      timeout = window.setTimeout(() => {
+        setDeleting(true);
+      }, 1500);
+    } else if (deleting && displayed.length > 0) {
+      timeout = window.setTimeout(() => {
+        setDisplayed(current.slice(0, displayed.length - 1));
+      }, 18);
+    } else {
+      timeout = window.setTimeout(() => {
+        setDeleting(false);
+        setLineIndex((p) => (p + 1) % HERO_SIGNAL_LINES.length);
+      }, 180);
+    }
+
+    return () => window.clearTimeout(timeout);
+  }, [displayed, deleting, lineIndex]);
+
+  return (
+    <div className="heroCredWrap">
+      <span className="heroCredLead">Laura keeps the handoff visible</span>
+      <div className="heroCredLine" aria-live="polite">
+        <span>{displayed}</span>
+        <span className="heroCursor" aria-hidden="true" />
+      </div>
+    </div>
+  );
+}
+
+function LanguageExperience() {
+  const [active, setActive] = useState<LanguageOption>(LANGUAGE_OPTIONS[0]);
+
+  return (
+    <div className="langCard">
+      <div className="langTop">
+        <div className="langOrb">
+          <Globe size={22} />
+        </div>
+
+        <div className="langTopText">
+          <Overline tone="warm" className="langOverline">
+            Clarity that feels familiar
+          </Overline>
+
+          <h2 className="serif langTi langTiSpaced">
+            Easier updates, in the language people are most comfortable with.
+          </h2>
+        </div>
+      </div>
+
+      <p className="langBd">
+        Laura is being designed to explain updates, letters, and next steps in
+        simpler language and across 40+ languages, so repeat prescription admin
+        feels easier to follow, easier to hand over, and less stressful to keep
+        on top of.
+      </p>
+
+      <div className="langChips">
+        {LANGUAGE_OPTIONS.map((item) => {
+          const isActive = active.label === item.label;
+
+          return (
+            <button
+              key={item.label}
+              type="button"
+              className={`langChip ${isActive ? "langChipA" : ""}`}
+              onClick={() => setActive(item)}
+            >
+              <span className="langChipFlag" aria-hidden="true">
+                {item.emoji}
+              </span>
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+
+        <button type="button" className="langChip langChipMore">
+          <span className="langChipFlag" aria-hidden="true">
+            🌍
+          </span>
+          <span>40+ more</span>
+        </button>
+      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={active.label}
+          className="langPreview"
+          initial={{ opacity: 0, y: 10, scale: 0.985 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -8, scale: 0.985 }}
+          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <div className="langPreviewHead">
+            <div className="langPreviewId">
+              <div className="langPreviewFlag" aria-hidden="true">
+                {active.emoji}
+              </div>
+
+              <div>
+                <div className="langPreviewLabel">{active.label}</div>
+                <div className="langPreviewMeta">Selected language view</div>
+              </div>
+            </div>
+
+            <div className="langPreviewTags">
+              <span className="langPreviewTag">Updates</span>
+              <span className="langPreviewTag">Letters</span>
+              <span className="langPreviewTag">Next steps</span>
+            </div>
+          </div>
+
+          <p className="langPreviewBody">{active.sample}</p>
+          <p className="langPreviewNote">{active.note}</p>
+        </motion.div>
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -169,7 +390,9 @@ function SuccessModal({
 
             {referralCode ? (
               <div className="modRef">
-                <p className="modRefLbl">Share with a family member or care team</p>
+                <p className="modRefLbl">
+                  Share with a family member or care team
+                </p>
                 <div className="modRefBox">
                   <span className="modRefUrl">
                     {link.replace("https://", "").replace("http://", "")}
@@ -204,7 +427,7 @@ function SuccessModal({
 /* ─────────────────────────────────────────────────────────────
    Laura workspace — detail-first layout
    Left: compact people list with initial avatars
-   Right: rich detail card for the selected person (cream, not dark)
+   Right: rich detail card for the selected person
    ───────────────────────────────────────────────────────────── */
 function LauraWorkspace() {
   type Step = {
@@ -366,7 +589,9 @@ function LauraWorkspace() {
                 <div className="wsDtMeta">
                   <div className="wsDtMetaRow">
                     <span className="wsDtMetaLbl">Status</span>
-                    <span className={`wsDtMetaVal wsDtMetaVal--${current.tone}`}>
+                    <span
+                      className={`wsDtMetaVal wsDtMetaVal--${current.tone}`}
+                    >
                       {current.status}
                     </span>
                   </div>
@@ -419,7 +644,6 @@ function LauraWorkspace() {
 
 /* ─────────────────────────────────────────────────────────────
    HomeScene — illustrated "helping a parent" scene
-   (kept; minor caption refinements)
    ───────────────────────────────────────────────────────────── */
 function HomeScene() {
   const captions = [
@@ -484,8 +708,22 @@ function HomeScene() {
           stroke="#C8D8E5"
           strokeWidth="1.5"
         />
-        <line x1="240" y1="18" x2="240" y2="128" stroke="#C8D8E5" strokeWidth="1" />
-        <line x1="170" y1="73" x2="310" y2="73" stroke="#C8D8E5" strokeWidth="1" />
+        <line
+          x1="240"
+          y1="18"
+          x2="240"
+          y2="128"
+          stroke="#C8D8E5"
+          strokeWidth="1"
+        />
+        <line
+          x1="170"
+          y1="73"
+          x2="310"
+          y2="73"
+          stroke="#C8D8E5"
+          strokeWidth="1"
+        />
         <rect x="171" y="19" width="138" height="108" rx="5" fill="url(#winGlow)" />
         <defs>
           <linearGradient id="winGlow" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -493,8 +731,16 @@ function HomeScene() {
             <stop offset="100%" stopColor="#C8E8F8" />
           </linearGradient>
         </defs>
-        <path d="M170,18 Q158,60 163,128 L170,128 Z" fill="#D4CCBC" opacity="0.6" />
-        <path d="M310,18 Q322,60 317,128 L310,128 Z" fill="#D4CCBC" opacity="0.6" />
+        <path
+          d="M170,18 Q158,60 163,128 L170,128 Z"
+          fill="#D4CCBC"
+          opacity="0.6"
+        />
+        <path
+          d="M310,18 Q322,60 317,128 L310,128 Z"
+          fill="#D4CCBC"
+          opacity="0.6"
+        />
         <circle cx="220" cy="50" r="14" fill="#F5D78A" opacity="0.5" />
         <ellipse cx="270" cy="42" rx="18" ry="9" fill="#fff" opacity="0.6" />
         <ellipse cx="284" cy="38" rx="12" ry="8" fill="#fff" opacity="0.6" />
@@ -550,8 +796,22 @@ function HomeScene() {
           strokeLinecap="round"
           fill="none"
         />
-        <circle cx="353" cy="135" r="6" fill="none" stroke="#8A7A6A" strokeWidth="1.2" />
-        <circle cx="367" cy="135" r="6" fill="none" stroke="#8A7A6A" strokeWidth="1.2" />
+        <circle
+          cx="353"
+          cy="135"
+          r="6"
+          fill="none"
+          stroke="#8A7A6A"
+          strokeWidth="1.2"
+        />
+        <circle
+          cx="367"
+          cy="135"
+          r="6"
+          fill="none"
+          stroke="#8A7A6A"
+          strokeWidth="1.2"
+        />
         <line x1="359" y1="135" x2="361" y2="135" stroke="#8A7A6A" strokeWidth="1" />
         <line x1="347" y1="135" x2="343" y2="134" stroke="#8A7A6A" strokeWidth="1" />
         <line x1="373" y1="135" x2="377" y2="134" stroke="#8A7A6A" strokeWidth="1" />
@@ -1509,13 +1769,14 @@ export default function Page() {
           <div className="container heroGrid">
             <div className="heroTxt">
               <FI delay={0.04}>
-                <Overline tone="warm">Laura &mdash; by Omela</Overline>
+                <Overline tone="warm" className="heroOverline">
+                  Laura by Omela
+                </Overline>
               </FI>
 
               <FI delay={0.08}>
                 <h1 className="serif heroTi">
                   Coordinate repeat prescriptions
-                  <br />
                   <span className="heroAc">without the chasing.</span>
                 </h1>
               </FI>
@@ -1529,9 +1790,7 @@ export default function Page() {
               </FI>
 
               <FI delay={0.16}>
-                <p className="heroCredLine">
-                  See who handled it last, who owns it now, and what happens next.
-                </p>
+                <HeroSignal />
               </FI>
 
               <FI delay={0.2}>
@@ -1547,7 +1806,7 @@ export default function Page() {
               </FI>
             </div>
 
-            <FI delay={0.14} className="heroBoardCol">
+            <FI delay={0.18} className="heroBoardCol">
               <LauraWorkspace />
             </FI>
           </div>
@@ -1734,46 +1993,7 @@ export default function Page() {
         <section className="sec">
           <div className="container">
             <FI>
-              <div className="langCard">
-                <div className="langTop">
-                  <div className="langOrb">
-                    <Globe size={22} />
-                  </div>
-                  <div>
-                    <Overline tone="warm">Clarity that feels familiar</Overline>
-                    <h2 className="serif langTi langTiSpaced">
-                      Easier updates, in the language people are most
-                      comfortable with.
-                    </h2>
-                  </div>
-                </div>
-
-                <p className="langBd">
-                  Laura is being designed to explain updates, letters, and next
-                  steps in simpler language and across 40+ languages, so repeat
-                  prescription admin feels easier to follow and easier to hand
-                  over.
-                </p>
-
-                <div className="langChips">
-                  {[
-                    "English",
-                    "French",
-                    "Spanish",
-                    "Portuguese",
-                    "Yoruba",
-                    "Arabic",
-                    "Hindi",
-                    "Urdu",
-                    "Mandarin",
-                    "40+ more",
-                  ].map((l) => (
-                    <span key={l} className="langChip">
-                      {l}
-                    </span>
-                  ))}
-                </div>
-              </div>
+              <LanguageExperience />
             </FI>
           </div>
         </section>
@@ -1985,7 +2205,7 @@ button,input,select{font-family:inherit}
 .secTight{padding:26px 0 12px}
 .secTinted{padding:76px 0;background:linear-gradient(180deg,#F5F1EA,${c.bg})}
 
-/* ───── Overlines (replaces pills) ───── */
+/* ───── Overlines ───── */
 .overline{
   display:inline-block;
   font-size:11px;
@@ -2038,7 +2258,10 @@ button,input,select{font-family:inherit}
   transition:all .25s;
   white-space:nowrap
 }
-.btnS:hover{background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.05)}
+.btnS:hover{
+  background:#fff;
+  box-shadow:0 4px 14px rgba(0,0,0,.05)
+}
 
 /* ───── Section headers ───── */
 .shW{text-align:center;max-width:760px;margin:0 auto}
@@ -2114,36 +2337,124 @@ button,input,select{font-family:inherit}
 .navCt{padding:9px 16px!important;font-size:12px!important;flex-shrink:0}
 
 /* ───── Hero ───── */
-.heroSec{padding:48px 0 40px;position:relative;overflow:hidden}
-.heroGrid{display:grid;grid-template-columns:1fr;gap:34px;align-items:center}
-.heroTxt{max-width:590px}
+.heroSec{
+  padding:42px 0 42px;
+  position:relative;
+  overflow:hidden
+}
+.heroGrid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:26px;
+  align-items:center
+}
+.heroTxt{
+  max-width:920px;
+  margin:0 auto;
+  text-align:center
+}
+.heroOverline{
+  position:relative;
+  padding-left:76px
+}
+.heroOverline::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:50%;
+  transform:translateY(-50%);
+  width:62px;
+  height:1px;
+  background:rgba(201,149,107,.5)
+}
 .heroTi{
   margin-top:18px;
-  font-size:clamp(38px,8vw,76px);
+  font-size:clamp(40px,8vw,82px);
   line-height:.94;
   letter-spacing:-.055em
 }
-.heroAc{color:${c.accent};font-style:italic}
+.heroAc{
+  display:block;
+  margin-top:.08em;
+  font-style:italic;
+  background:linear-gradient(135deg,#A97549 0%,#D6A47C 45%,#B98558 72%,#8E5E39 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  text-shadow:0 8px 26px rgba(201,149,107,.12)
+}
 .heroSub{
-  margin-top:20px;
-  font-size:clamp(15px,2.2vw,18px);
+  margin-top:22px;
+  font-size:clamp(15px,2.2vw,19px);
   line-height:1.78;
   color:${c.sub};
-  max-width:560px
+  max-width:780px;
+  margin-left:auto;
+  margin-right:auto
+}
+.heroCredWrap{
+  margin-top:18px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px
+}
+.heroCredLead{
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  color:${c.warm}
 }
 .heroCredLine{
-  margin-top:14px;
-  font-size:14px;
-  line-height:1.7;
-  color:${c.muted};
-  font-style:italic;
-  max-width:560px
+  min-height:28px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  font-size:15px;
+  line-height:1.55;
+  color:${c.sub};
+  font-weight:600;
+  letter-spacing:-.01em;
+  text-align:center
 }
-.heroBt{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
-.heroBoardCol{display:flex;justify-content:center}
+.heroCursor{
+  width:1.5px;
+  height:1.05em;
+  background:${c.warm};
+  display:inline-block;
+  border-radius:99px;
+  animation:blink 1s step-end infinite
+}
+@keyframes blink{
+  0%,49%{opacity:1}
+  50%,100%{opacity:0}
+}
+.heroBt{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  margin-top:28px
+}
+.heroBt .btnP,
+.heroBt .btnS{
+  min-width:230px;
+  min-height:56px;
+  padding:16px 24px;
+  font-size:15px
+}
+.heroBoardCol{
+  display:flex;
+  justify-content:center;
+  width:100%
+}
 
-/* ───── Laura workspace (hero board) ───── */
-.wsWrap{width:100%;max-width:540px;position:relative}
+/* ───── Laura workspace ───── */
+.wsWrap{width:100%;max-width:760px;position:relative}
 .wsGlow{
   position:absolute;
   inset:-30px;
@@ -2213,7 +2524,6 @@ button,input,select{font-family:inherit}
   font-weight:700;
   color:${c.text}
 }
-
 .wsBody{
   display:grid;
   grid-template-columns:1fr;
@@ -2254,7 +2564,7 @@ button,input,select{font-family:inherit}
   border-radius:14px;
   cursor:pointer;
   text-align:left;
-  transition:background .25s;
+  transition:background .25s
 }
 .wsRow + .wsRow{margin-top:4px}
 .wsRowA{
@@ -2372,7 +2682,6 @@ button,input,select{font-family:inherit}
   font-weight:500;
   color:${c.sub}
 }
-
 .wsDtTl{
   margin-top:16px;
   padding-top:14px;
@@ -2435,7 +2744,6 @@ button,input,select{font-family:inherit}
   color:${c.muted};
   font-weight:600
 }
-
 .wsDtNext{
   margin-top:14px;
   padding:12px 14px;
@@ -2548,7 +2856,6 @@ button,input,select{font-family:inherit}
   color:${c.sub};
   max-width:500px
 }
-
 .sceneWrap{padding:0 16px 24px;position:relative}
 .sceneSvg{width:100%;height:auto;display:block;border-radius:16px;overflow:hidden}
 .sceneCap{
@@ -2593,7 +2900,7 @@ button,input,select{font-family:inherit}
 
 /* ───── Language card ───── */
 .langCard{
-  max-width:960px;
+  max-width:980px;
   margin:0 auto;
   padding:36px;
   border-radius:30px;
@@ -2601,7 +2908,12 @@ button,input,select{font-family:inherit}
   border:1px solid ${c.border};
   box-shadow:0 10px 34px rgba(0,0,0,.035)
 }
-.langTop{display:flex;align-items:flex-start;gap:18px}
+.langTop{
+  display:flex;
+  align-items:flex-start;
+  gap:18px
+}
+.langTopText{flex:1}
 .langOrb{
   width:56px;
   height:56px;
@@ -2615,6 +2927,20 @@ button,input,select{font-family:inherit}
   flex-shrink:0;
   box-shadow:0 6px 18px rgba(0,0,0,.03)
 }
+.langOverline{
+  position:relative;
+  padding-left:76px
+}
+.langOverline::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:50%;
+  transform:translateY(-50%);
+  width:62px;
+  height:1px;
+  background:rgba(201,149,107,.45)
+}
 .langTi{
   font-size:clamp(28px,4.5vw,48px);
   line-height:1.02;
@@ -2623,24 +2949,133 @@ button,input,select{font-family:inherit}
 .langTiSpaced{margin-top:12px}
 .langBd{
   margin-top:18px;
-  max-width:740px;
+  max-width:760px;
   font-size:15px;
   line-height:1.82;
   color:${c.sub}
 }
-.langChips{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.langChips{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:24px
+}
 .langChip{
   display:inline-flex;
   align-items:center;
-  min-height:32px;
-  padding:0 14px;
+  gap:8px;
+  min-height:40px;
+  padding:0 16px;
   border-radius:999px;
   background:rgba(255,255,255,.9);
   border:1px solid rgba(227,221,210,.95);
   color:${c.sub};
-  font-size:12px;
-  font-weight:600;
-  letter-spacing:.01em
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.01em;
+  cursor:pointer;
+  transition:all .25s
+}
+.langChip:hover{
+  background:#fff;
+  color:${c.text};
+  transform:translateY(-1px);
+  box-shadow:0 8px 18px rgba(0,0,0,.04)
+}
+.langChipA{
+  background:#fff;
+  color:${c.text};
+  border-color:rgba(201,149,107,.42);
+  box-shadow:0 10px 22px rgba(0,0,0,.04)
+}
+.langChipMore{
+  cursor:default
+}
+.langChipMore:hover{
+  transform:none
+}
+.langChipFlag{
+  font-size:16px;
+  line-height:1
+}
+.langPreview{
+  margin-top:22px;
+  padding:22px;
+  border-radius:24px;
+  background:rgba(255,255,255,.88);
+  border:1px solid rgba(227,221,210,.95);
+  box-shadow:0 10px 28px rgba(0,0,0,.03)
+}
+.langPreviewHead{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap
+}
+.langPreviewId{
+  display:flex;
+  align-items:center;
+  gap:12px
+}
+.langPreviewFlag{
+  width:46px;
+  height:46px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#FFF8F0,#F6F8FF);
+  border:1px solid rgba(201,149,107,.16);
+  font-size:22px;
+  box-shadow:0 6px 18px rgba(0,0,0,.03)
+}
+.langPreviewLabel{
+  font-size:15px;
+  font-weight:800;
+  letter-spacing:-.015em;
+  color:${c.text}
+}
+.langPreviewMeta{
+  margin-top:3px;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:${c.muted}
+}
+.langPreviewTags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px
+}
+.langPreviewTag{
+  display:inline-flex;
+  align-items:center;
+  min-height:30px;
+  padding:0 12px;
+  border-radius:999px;
+  background:${c.warmSoft};
+  border:1px solid rgba(201,149,107,.16);
+  color:${c.warmDk};
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.03em
+}
+.langPreviewBody{
+  margin-top:16px;
+  font-size:clamp(18px,2.2vw,24px);
+  line-height:1.5;
+  letter-spacing:-.02em;
+  color:${c.text};
+  max-width:760px
+}
+.langPreviewNote{
+  margin-top:10px;
+  max-width:760px;
+  font-size:13.5px;
+  line-height:1.78;
+  color:${c.sub}
 }
 
 /* ───── Waitlist ───── */
@@ -2933,13 +3368,29 @@ button,input,select{font-family:inherit}
 .ftBtmRt{color:rgba(255,255,255,.28);font-style:italic}
 
 @media(max-width:639px){
-  .heroBt{flex-direction:column}
-  .heroBt .btnP,.heroBt .btnS{width:100%;text-align:center}
-  .heroSec{padding:32px 0 28px}
+  .heroSec{padding:30px 0 28px}
   .navR{height:52px}
+  .heroOverline,
+  .langOverline{padding-left:0}
+  .heroOverline::before,
+  .langOverline::before{display:none}
+  .heroTi{font-size:clamp(38px,12vw,56px)}
+  .heroBt{
+    flex-direction:column;
+    gap:10px
+  }
+  .heroBt .btnP,
+  .heroBt .btnS{
+    width:100%;
+    min-width:0
+  }
   .langCard{padding:26px}
-  .langTop{gap:14px}
+  .langTop{
+    gap:14px;
+    flex-direction:column
+  }
   .langOrb{width:48px;height:48px}
+  .langPreview{padding:18px}
   .ftCols{grid-template-columns:1fr 1fr;gap:24px}
 }
 
@@ -2950,7 +3401,6 @@ button,input,select{font-family:inherit}
   .navR{height:64px}
   .navLks{display:flex}
   .navSignIn{display:inline-flex}
-  .heroGrid{grid-template-columns:1.02fr .98fr;gap:40px}
   .problemStrip{grid-template-columns:repeat(3,1fr)}
   .proofGrid{grid-template-columns:repeat(3,1fr)}
   .audGrid{grid-template-columns:repeat(3,1fr)}
@@ -2967,11 +3417,11 @@ button,input,select{font-family:inherit}
   .sec{padding:92px 0}
   .secTinted{padding:92px 0}
   .navR{height:68px}
-  .heroSec{padding:60px 0 44px}
+  .heroSec{padding:52px 0 44px}
   .wsShell{padding:20px}
 }
 
 @media(min-width:1100px){
-  .heroTi{font-size:clamp(54px,6.5vw,78px)}
+  .heroTi{font-size:clamp(56px,6.6vw,84px)}
 }
 `;
