@@ -309,7 +309,7 @@ function HomeScene() {
             transition={{ duration: 0.3 }}>
             {["Laura monitors supply levels quietly in the background.",
               "A reminder arrives before the medication runs out.",
-              "The request is ready — no phone calls needed.",
+              "The request is ready. No phone calls needed.",
               "Parent and child both see what is happening.",
               "Request confirmed. Prescription on its way."][step]}
           </motion.span>
