@@ -61,8 +61,9 @@ const c = {
 type Role = "carer" | "household" | "care_team";
 
 const HERO_SIGNAL_LINES = [
-  "See who handled it last.",
-  "See who owns it now.",
+  "See what is due soon.",
+  "See what is delayed.",
+  "See who owns the next step.",
   "See what happens next.",
 ] as const;
 
@@ -147,6 +148,37 @@ const LANGUAGE_OPTIONS: LanguageOption[] = [
       "Helps turn repeat prescription admin into something clearer, more manageable, and easier to explain.",
   },
 ];
+
+function formatTodayLabel(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  }).formatToParts(date);
+
+  const weekday = parts.find((part) => part.type === "weekday")?.value ?? "";
+  const day = parts.find((part) => part.type === "day")?.value ?? "";
+  const month = parts.find((part) => part.type === "month")?.value ?? "";
+
+  return `${weekday}, ${day} ${month}`;
+}
+
+function useTodayLabel() {
+  const [todayLabel, setTodayLabel] = useState("");
+
+  useEffect(() => {
+    const update = () => {
+      setTodayLabel(formatTodayLabel(new Date()));
+    };
+
+    update();
+
+    const interval = window.setInterval(update, 60_000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  return todayLabel;
+}
 
 function FI({
   children,
@@ -424,11 +456,6 @@ function SuccessModal({
   );
 }
 
-/* ─────────────────────────────────────────────────────────────
-   Laura workspace — detail-first layout
-   Left: compact people list with initial avatars
-   Right: rich detail card for the selected person
-   ───────────────────────────────────────────────────────────── */
 function LauraWorkspace() {
   type Step = {
     state: "done" | "active";
@@ -497,6 +524,7 @@ function LauraWorkspace() {
   ];
 
   const [active, setActive] = useState(0);
+  const todayLabel = useTodayLabel();
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -514,7 +542,11 @@ function LauraWorkspace() {
         animate={{ opacity: [0.08, 0.18, 0.08] }}
         transition={{ duration: 6, repeat: Infinity }}
       />
-      <div className="wsShell">
+      <motion.div
+        className="wsShell"
+        animate={{ y: [0, -4, 0] }}
+        transition={{ duration: 7.5, repeat: Infinity, ease: "easeInOut" }}
+      >
         <div className="wsHead">
           <div className="wsBrand">
             <div className="wsMark">
@@ -534,7 +566,7 @@ function LauraWorkspace() {
 
           <div className="wsHeadMeta">
             <span className="wsHeadMetaLbl">Today</span>
-            <span className="wsHeadMetaVal">Tue, 7 Apr</span>
+            <span className="wsHeadMetaVal">{todayLabel || "..."}</span>
           </div>
         </div>
 
@@ -637,14 +669,11 @@ function LauraWorkspace() {
             </AnimatePresence>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
 
-/* ─────────────────────────────────────────────────────────────
-   HomeScene — illustrated "helping a parent" scene
-   ───────────────────────────────────────────────────────────── */
 function HomeScene() {
   const captions = [
     "Laura quietly keeps track before supply becomes urgent.",
@@ -724,7 +753,14 @@ function HomeScene() {
           stroke="#C8D8E5"
           strokeWidth="1"
         />
-        <rect x="171" y="19" width="138" height="108" rx="5" fill="url(#winGlow)" />
+        <rect
+          x="171"
+          y="19"
+          width="138"
+          height="108"
+          rx="5"
+          fill="url(#winGlow)"
+        />
         <defs>
           <linearGradient id="winGlow" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#E8F4FC" />
@@ -761,13 +797,67 @@ function HomeScene() {
         <rect x="28" y="175" width="70" height="8" rx="3" fill="#C4B090" />
         <rect x="38" y="183" width="8" height="17" rx="2" fill="#B8A880" />
         <rect x="52" y="183" width="8" height="17" rx="2" fill="#B8A880" />
-        <rect x="32" y="158" width="14" height="18" rx="3" fill="#C9956B" opacity="0.85" />
-        <rect x="33" y="155" width="12" height="5" rx="1.5" fill="#B8844A" opacity="0.85" />
-        <rect x="50" y="160" width="12" height="16" rx="3" fill="#7EA8D4" opacity="0.85" />
-        <rect x="51" y="157" width="10" height="5" rx="1.5" fill="#5E88B4" opacity="0.85" />
-        <rect x="66" y="163" width="10" height="13" rx="2.5" fill="#A8C890" opacity="0.85" />
-        <rect x="34" y="163" width="10" height="1.5" rx="1" fill="rgba(255,255,255,0.5)" />
-        <rect x="34" y="166" width="8" height="1.5" rx="1" fill="rgba(255,255,255,0.5)" />
+        <rect
+          x="32"
+          y="158"
+          width="14"
+          height="18"
+          rx="3"
+          fill="#C9956B"
+          opacity="0.85"
+        />
+        <rect
+          x="33"
+          y="155"
+          width="12"
+          height="5"
+          rx="1.5"
+          fill="#B8844A"
+          opacity="0.85"
+        />
+        <rect
+          x="50"
+          y="160"
+          width="12"
+          height="16"
+          rx="3"
+          fill="#7EA8D4"
+          opacity="0.85"
+        />
+        <rect
+          x="51"
+          y="157"
+          width="10"
+          height="5"
+          rx="1.5"
+          fill="#5E88B4"
+          opacity="0.85"
+        />
+        <rect
+          x="66"
+          y="163"
+          width="10"
+          height="13"
+          rx="2.5"
+          fill="#A8C890"
+          opacity="0.85"
+        />
+        <rect
+          x="34"
+          y="163"
+          width="10"
+          height="1.5"
+          rx="1"
+          fill="rgba(255,255,255,0.5)"
+        />
+        <rect
+          x="34"
+          y="166"
+          width="8"
+          height="1.5"
+          rx="1"
+          fill="rgba(255,255,255,0.5)"
+        />
 
         <rect x="300" y="162" width="120" height="38" rx="10" fill="#C9B898" />
         <rect x="308" y="168" width="104" height="28" rx="7" fill="#D4C4A8" />
@@ -779,7 +869,15 @@ function HomeScene() {
         <rect x="404" y="196" width="8" height="14" rx="3" fill="#A89070" />
 
         <rect x="334" y="148" width="52" height="42" rx="12" fill="#E8D8C4" />
-        <rect x="334" y="158" width="52" height="32" rx="10" fill="#B8A888" opacity="0.7" />
+        <rect
+          x="334"
+          y="158"
+          width="52"
+          height="32"
+          rx="10"
+          fill="#B8A888"
+          opacity="0.7"
+        />
         <circle cx="360" cy="135" r="20" fill="#E8D4B8" />
         <path d="M340,130 Q342,112 360,112 Q378,112 380,130" fill="#E8E4DC" />
         <path
@@ -1224,9 +1322,6 @@ function HomeScene() {
   );
 }
 
-/* ─────────────────────────────────────────────────────────────
-   CareHomeScene — care team illustrated scene
-   ───────────────────────────────────────────────────────────── */
 function CareHomeScene() {
   const [tick, setTick] = useState(0);
 
@@ -1519,7 +1614,9 @@ function CareHomeScene() {
                     height="56"
                     rx="10"
                     fill="#fff"
-                    style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.07))" }}
+                    style={{
+                      filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.07))",
+                    }}
                   />
                   <rect
                     x={bx - 14}
@@ -1709,9 +1806,83 @@ export default function Page() {
     }
   }
 
+  const valueCards = [
+    {
+      icon: <Bell size={22} />,
+      title: "Less chasing",
+      body: "Surface what is due soon, delayed, or still unresolved before it turns into repeated checking and calls.",
+      tone: "warm",
+    },
+    {
+      icon: <RefreshCw size={22} />,
+      title: "Clear ownership",
+      body: "See who handled it last, who owns it now, and what the next action is across shifts, households, or teams.",
+      tone: "blue",
+    },
+    {
+      icon: <FileText size={22} />,
+      title: "Shared context",
+      body: "Keep notes, updates, and timelines together so staff and family are not working from fragments.",
+      tone: "green",
+    },
+    {
+      icon: <Users size={22} />,
+      title: "Better handover",
+      body: "Make follow-through easier when one person prepares the request and someone else needs to carry it forward.",
+      tone: "warm",
+    },
+  ] as const;
+
+  const roadmapCards = [
+    {
+      title: "Shared medication timelines",
+      body: "A clearer history of what was requested, when it changed, and what still needs attention.",
+    },
+    {
+      title: "Delayed queue and escalation",
+      body: "Flag requests that are stuck too long and surface what needs a call, reminder, or handoff.",
+    },
+    {
+      title: "Proxy and consent support",
+      body: "Capture who is allowed to act, who should be updated, and how responsibility is shared.",
+    },
+    {
+      title: "Family-safe updates",
+      body: "Turn messy status changes into simple summaries that can be passed to relatives or support workers.",
+    },
+    {
+      title: "Bilingual letters and explanations",
+      body: "Explain updates, letters, and next steps in simpler language and across multiple languages.",
+    },
+    {
+      title: "Collection and delivery coordination",
+      body: "Track whether medicine is ready, delayed, collected, or waiting on a delivery decision.",
+    },
+  ] as const;
+
+  const trustCards = [
+    {
+      title: "Secure authentication",
+      body: "A web-first foundation with controlled access and modern account security from day one.",
+    },
+    {
+      title: "Role-based visibility",
+      body: "Design the product so family, staff, and future managers see only what is relevant to them.",
+    },
+    {
+      title: "Audit history",
+      body: "Keep track of what changed, when it changed, and who handled it to support safer follow-through.",
+    },
+    {
+      title: "Least-data design",
+      body: "Start narrow, collect only what is needed for the workflow, and avoid pretending to replace clinical systems.",
+    },
+  ] as const;
+
   return (
     <>
       <style>{CSS}</style>
+
       <SuccessModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -1748,8 +1919,8 @@ export default function Page() {
               <a href="#who" className="navLk">
                 Who it helps
               </a>
-              <a href="#waitlist" className="navLk">
-                Early access
+              <a href="#roadmap" className="navLk">
+                Roadmap
               </a>
             </div>
 
@@ -1757,8 +1928,11 @@ export default function Page() {
               <Link href="/login" className="navSignIn">
                 Sign in
               </Link>
-              <a href="#waitlist" className="btnP navCt">
-                Join early access
+              <a
+                href="mailto:hello@omela.ai?subject=Omela%20pilot%20conversation"
+                className="btnP navCt"
+              >
+                Book a demo
                 <ArrowRight size={13} />
               </a>
             </div>
@@ -1768,13 +1942,7 @@ export default function Page() {
         <section className="heroSec">
           <div className="container heroGrid">
             <div className="heroTxt">
-              <FI delay={0.04}>
-                <Overline tone="warm" className="heroOverline">
-                  Laura by Omela
-                </Overline>
-              </FI>
-
-              <FI delay={0.08}>
+              <FI delay={0.06}>
                 <h1 className="serif heroTi">
                   Coordinate repeat prescriptions
                   <span className="heroAc">without the chasing.</span>
@@ -1783,30 +1951,32 @@ export default function Page() {
 
               <FI delay={0.12}>
                 <p className="heroSub">
-                  Laura helps carers and care teams stay on top of medication
-                  admin across multiple people. Shared visibility, clearer
-                  ownership, and calmer follow-through.
+                  Omela helps carers and care teams track requests, assign
+                  ownership, and follow medication admin across multiple people.
                 </p>
               </FI>
 
-              <FI delay={0.16}>
+              <FI delay={0.18}>
                 <HeroSignal />
               </FI>
 
-              <FI delay={0.2}>
+              <FI delay={0.24}>
                 <div className="heroBt">
-                  <a href="#waitlist" className="btnP">
-                    Join early access
+                  <a
+                    href="mailto:hello@omela.ai?subject=Omela%20pilot%20conversation"
+                    className="btnP"
+                  >
+                    Book pilot conversation
                     <ArrowRight size={14} />
                   </a>
-                  <a href="#how" className="btnS">
-                    See how Laura works
+                  <a href="#waitlist" className="btnS">
+                    Join early access
                   </a>
                 </div>
               </FI>
             </div>
 
-            <FI delay={0.18} className="heroBoardCol">
+            <FI delay={0.16} className="heroBoardCol">
               <LauraWorkspace />
             </FI>
           </div>
@@ -1819,15 +1989,15 @@ export default function Page() {
                 {[
                   {
                     n: "01",
-                    t: "Nobody is fully sure who handled the next step.",
+                    t: "Requests get delayed and nobody is fully sure who is following up.",
                   },
                   {
                     n: "02",
-                    t: "A request can be sent, delayed, part-ready, or still unresolved.",
+                    t: "A repeat request can be due soon, requested, approved, ready, delayed, or still unresolved.",
                   },
                   {
                     n: "03",
-                    t: "Simple follow-up turns into repeated checking, calling, and memory work.",
+                    t: "Small admin turns into repeated calling, shift-handover confusion, and memory work.",
                   },
                 ].map((p) => (
                   <div className="problemStripItem" key={p.n}>
@@ -1844,13 +2014,14 @@ export default function Page() {
           <div className="container">
             <FI>
               <div className="shW">
-                <Overline>How Laura works</Overline>
+                <Overline>How Omela works</Overline>
                 <h2 className="serif shT shTSpaced">
                   One calm workflow from due soon to ready.
                 </h2>
                 <p className="shB">
-                  Laura makes repeat-prescription admin feel visible, owned, and
-                  easier to follow across households and care teams.
+                  Omela is not a pharmacy. It is the coordination layer around
+                  repeat-prescription admin for carers, households, and care
+                  teams.
                 </p>
               </div>
             </FI>
@@ -1859,20 +2030,20 @@ export default function Page() {
               {[
                 {
                   icon: <Bell size={22} />,
-                  title: "See what needs attention",
-                  body: "Know what is due soon, what is delayed, and what needs follow-up right now.",
+                  title: "Track",
+                  body: "See what is due soon, what is delayed, and what needs follow-up right now.",
                   tone: "warm",
                 },
                 {
                   icon: <FileText size={22} />,
-                  title: "Keep ownership clear",
-                  body: "See who updated the request last, who owns the next step, and what comes after.",
+                  title: "Own",
+                  body: "See who handled the request last, who owns the next step, and what should happen next.",
                   tone: "blue",
                 },
                 {
                   icon: <Package size={22} />,
-                  title: "Follow every update",
-                  body: "Track progress from preparation to ready-to-collect without losing context along the way.",
+                  title: "Follow through",
+                  body: "Track progress from preparation to ready or delayed without losing context along the way.",
                   tone: "green",
                 },
               ].map((item, i) => (
@@ -1900,14 +2071,13 @@ export default function Page() {
               <FI delay={0.04}>
                 <div className="sceneCard">
                   <div className="sceneCardHead">
-                    <Overline tone="warm">Home coordination</Overline>
+                    <Overline tone="warm">For family carers</Overline>
                     <h3 className="serif sceneCardTitle">
                       Helping a parent stay on top of repeat prescriptions.
                     </h3>
                     <p className="sceneCardBody">
-                      Laura keeps supply, preparation, and status visible, so
-                      the next request feels calmer before it ever becomes
-                      urgent.
+                      Omela keeps supply, preparation, and status visible, so
+                      the next request feels calmer before it becomes urgent.
                     </p>
                   </div>
                   <HomeScene />
@@ -1917,14 +2087,14 @@ export default function Page() {
               <FI delay={0.08}>
                 <div className="sceneCard">
                   <div className="sceneCardHead">
-                    <Overline tone="blue">Care team coordination</Overline>
+                    <Overline tone="blue">For care teams</Overline>
                     <h3 className="serif sceneCardTitle">
                       Tracking requests across residents without losing
                       visibility.
                     </h3>
                     <p className="sceneCardBody">
-                      No spreadsheets, no fragmented updates, no guessing. Laura
-                      keeps the workflow visible from due soon to ready.
+                      No spreadsheets, no fragmented updates, no guessing.
+                      Omela keeps the workflow visible from due soon to ready.
                     </p>
                   </div>
                   <CareHomeScene />
@@ -1934,16 +2104,47 @@ export default function Page() {
           </div>
         </section>
 
+        <section className="sec secSoft">
+          <div className="container">
+            <FI>
+              <div className="shW">
+                <Overline>Why teams pay for this</Overline>
+                <h2 className="serif shT shTSpaced">
+                  Built to reduce follow-up chaos, not add another system.
+                </h2>
+                <p className="shB">
+                  The value is operational clarity. Less chasing, clearer
+                  ownership, better handover, and fewer status blind spots.
+                </p>
+              </div>
+            </FI>
+
+            <div className="valueGrid">
+              {valueCards.map((item, i) => (
+                <FI key={item.title} delay={i * 0.05}>
+                  <div className="valueCard">
+                    <div className={`valueIc valueIc--${item.tone}`}>
+                      {item.icon}
+                    </div>
+                    <h3 className="valueTi">{item.title}</h3>
+                    <p className="valueBd">{item.body}</p>
+                  </div>
+                </FI>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section id="who" className="sec secTinted">
           <div className="container">
             <FI>
               <div className="shW">
-                <Overline>Who Laura is for</Overline>
+                <Overline>Who Omela is for</Overline>
                 <h2 className="serif shT shTSpaced">
-                  Built for real responsibility.
+                  Built for the people carrying the admin.
                 </h2>
                 <p className="shB">
-                  Laura is designed for the people doing the follow-through, not
+                  Omela is designed for the people doing the follow-through, not
                   just the ordering.
                 </p>
               </div>
@@ -1990,7 +2191,40 @@ export default function Page() {
           </div>
         </section>
 
-        <section className="sec">
+        <section id="roadmap" className="sec">
+          <div className="container">
+            <FI>
+              <div className="shW">
+                <Overline tone="warm">Product direction</Overline>
+                <h2 className="serif shT shTSpaced">
+                  Starting with repeat prescriptions. Expanding into calmer
+                  medication coordination.
+                </h2>
+                <p className="shB">
+                  The wedge is repeat-prescription coordination. The broader
+                  platform is shared medication workflow for carers and care
+                  teams.
+                </p>
+              </div>
+            </FI>
+
+            <div className="roadmapGrid">
+              {roadmapCards.map((item, i) => (
+                <FI key={item.title} delay={i * 0.04}>
+                  <div className="roadmapCard">
+                    <div className="roadmapNo">
+                      {String(i + 1).padStart(2, "0")}
+                    </div>
+                    <h3 className="roadmapTi">{item.title}</h3>
+                    <p className="roadmapBd">{item.body}</p>
+                  </div>
+                </FI>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="sec secLanguage">
           <div className="container">
             <FI>
               <LanguageExperience />
@@ -1998,14 +2232,47 @@ export default function Page() {
           </div>
         </section>
 
-        <section id="waitlist" className="sec secTinted">
+        <section id="security" className="sec secSoft secSecurity">
+          <div className="container">
+            <FI>
+              <div className="trustWrap">
+                <div className="boundaryCard">
+                  <Overline>Boundaries and trust</Overline>
+                  <h3 className="serif boundaryTi">
+                    Omela sits alongside GP and pharmacy workflows.
+                  </h3>
+                  <p className="boundaryBd">
+                    It is not a pharmacy, not telehealth, and not a diagnosis
+                    tool. It is the operational layer that helps people follow
+                    through more clearly and securely.
+                  </p>
+                </div>
+
+                <div className="trustGrid">
+                  {trustCards.map((item, i) => (
+                    <FI key={item.title} delay={i * 0.04}>
+                      <div className="trustCard">
+                        <h4 className="trustTi">{item.title}</h4>
+                        <p className="trustBd">{item.body}</p>
+                      </div>
+                    </FI>
+                  ))}
+                </div>
+              </div>
+            </FI>
+          </div>
+        </section>
+
+        <section id="waitlist" className="sec secTinted secWaitlist">
           <div className="container">
             <FI>
               <div className="wlC">
                 <Overline>Early access</Overline>
-                <h2 className="serif wlTi wlTiSpaced">Join Laura early.</h2>
+                <h2 className="serif wlTi wlTiSpaced">
+                  Join the first Omela pilots.
+                </h2>
                 <p className="wlSub">
-                  Starting in the UK with repeat prescription coordination for
+                  Starting in the UK with repeat-prescription coordination for
                   carers, households, and selected care teams.
                 </p>
 
@@ -2025,12 +2292,8 @@ export default function Page() {
                     value={role}
                     onChange={(e) => setRole(e.target.value as Role)}
                   >
-                    <option value="carer">
-                      I help manage prescriptions for a family member
-                    </option>
-                    <option value="household">
-                      I manage medication admin across my household
-                    </option>
+                    <option value="carer">I manage for a family member</option>
+                    <option value="household">I manage across my household</option>
                     <option value="care_team">I work in a care team</option>
                   </select>
 
@@ -2086,10 +2349,13 @@ export default function Page() {
                 {error ? <div className="fmEr">{error}</div> : null}
 
                 <p className="wlAlready">
-                  Already have access?{" "}
-                  <Link href="/login" className="wlAlreadyLk">
-                    Sign in
-                  </Link>
+                  Prefer a team conversation?{" "}
+                  <a
+                    href="mailto:hello@omela.ai?subject=Omela%20pilot%20conversation"
+                    className="wlAlreadyLk"
+                  >
+                    Book a demo
+                  </a>
                 </p>
               </div>
             </FI>
@@ -2120,7 +2386,7 @@ export default function Page() {
                   </div>
                 </Link>
                 <p className="ftBrDesc">
-                  A calmer coordination layer for repeat-prescription admin.
+                  A calmer coordination platform for repeat-prescription admin.
                   Built for the people doing the follow-through.
                 </p>
               </div>
@@ -2134,12 +2400,12 @@ export default function Page() {
                   <a href="#who" className="ftLk">
                     Who it helps
                   </a>
+                  <a href="#roadmap" className="ftLk">
+                    Roadmap
+                  </a>
                   <a href="#waitlist" className="ftLk">
                     Early access
                   </a>
-                  <Link href="/login" className="ftLk">
-                    Sign in
-                  </Link>
                 </div>
 
                 <div className="ftCol">
@@ -2147,6 +2413,12 @@ export default function Page() {
                   <span className="ftLk ftLkStatic">Omela</span>
                   <a href="mailto:hello@omela.ai" className="ftLk">
                     Contact
+                  </a>
+                  <a
+                    href="mailto:hello@omela.ai?subject=Omela%20pilot%20conversation"
+                    className="ftLk"
+                  >
+                    Book a demo
                   </a>
                 </div>
 
@@ -2166,9 +2438,10 @@ export default function Page() {
             </div>
 
             <div className="ftDsc">
-              Laura is Omela&apos;s coordination agent for repeat-prescription
-              admin and next-step guidance. She does not provide diagnosis,
-              treatment, or emergency care. In an emergency, call 999.
+              Laura is Omela&apos;s coordination layer for repeat-prescription
+              admin, ownership, and next-step guidance. She does not provide
+              diagnosis, treatment, or emergency care. In an emergency, call
+              999.
             </div>
 
             <div className="ftBtm">
@@ -2201,9 +2474,13 @@ button,input,select{font-family:inherit}
 .wrap{width:100%;overflow-x:clip}
 .container{max-width:1120px;margin:0 auto;padding:0 20px}
 
-.sec{padding:72px 0}
-.secTight{padding:26px 0 12px}
-.secTinted{padding:76px 0;background:linear-gradient(180deg,#F5F1EA,${c.bg})}
+.sec{padding:60px 0}
+.secTight{padding:18px 0 8px}
+.secTinted{padding:64px 0;background:linear-gradient(180deg,#F5F1EA,${c.bg})}
+.secSoft{padding:60px 0;background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(248,246,241,.65))}
+.secLanguage{padding-top:56px;padding-bottom:34px}
+.secSecurity{padding-top:34px;padding-bottom:54px}
+.secWaitlist{padding-top:34px;padding-bottom:54px}
 
 /* ───── Overlines ───── */
 .overline{
@@ -2213,7 +2490,8 @@ button,input,select{font-family:inherit}
   letter-spacing:.16em;
   text-transform:uppercase;
   color:${c.muted};
-  line-height:1
+  line-height:1;
+  user-select:none
 }
 .overline--warm{color:${c.warm}}
 .overline--blue{color:${c.accent}}
@@ -2270,12 +2548,12 @@ button,input,select{font-family:inherit}
   line-height:1.05;
   letter-spacing:-.045em
 }
-.shTSpaced{margin-top:14px}
+.shTSpaced{margin-top:12px}
 .shB{
   font-size:clamp(14px,2.2vw,16px);
-  line-height:1.78;
-  margin-top:14px;
-  max-width:600px;
+  line-height:1.72;
+  margin-top:12px;
+  max-width:620px;
   margin-left:auto;
   margin-right:auto;
   color:${c.sub}
@@ -2315,7 +2593,8 @@ button,input,select{font-family:inherit}
   letter-spacing:.1em;
   text-transform:uppercase;
   color:${c.muted};
-  margin-top:2px
+  margin-top:2px;
+  user-select:none
 }
 .navLks{display:none;align-items:center;gap:22px}
 .navLk{
@@ -2338,40 +2617,25 @@ button,input,select{font-family:inherit}
 
 /* ───── Hero ───── */
 .heroSec{
-  padding:42px 0 42px;
+  padding:44px 0 34px;
   position:relative;
   overflow:hidden
 }
 .heroGrid{
   display:grid;
   grid-template-columns:1fr;
-  gap:26px;
+  gap:24px;
   align-items:center
 }
 .heroTxt{
-  max-width:920px;
+  max-width:900px;
   margin:0 auto;
   text-align:center
 }
-.heroOverline{
-  position:relative;
-  padding-left:76px
-}
-.heroOverline::before{
-  content:"";
-  position:absolute;
-  left:0;
-  top:50%;
-  transform:translateY(-50%);
-  width:62px;
-  height:1px;
-  background:rgba(201,149,107,.5)
-}
 .heroTi{
-  margin-top:18px;
-  font-size:clamp(40px,8vw,82px);
-  line-height:.94;
-  letter-spacing:-.055em
+  font-size:clamp(42px,8vw,84px);
+  line-height:.93;
+  letter-spacing:-.058em
 }
 .heroAc{
   display:block;
@@ -2384,21 +2648,22 @@ button,input,select{font-family:inherit}
   text-shadow:0 8px 26px rgba(201,149,107,.12)
 }
 .heroSub{
-  margin-top:22px;
+  margin-top:18px;
   font-size:clamp(15px,2.2vw,19px);
-  line-height:1.78;
+  line-height:1.72;
   color:${c.sub};
-  max-width:780px;
+  max-width:760px;
   margin-left:auto;
   margin-right:auto
 }
 .heroCredWrap{
-  margin-top:18px;
+  margin-top:16px;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:8px
+  gap:7px;
+  user-select:none
 }
 .heroCredLead{
   font-size:10px;
@@ -2408,13 +2673,13 @@ button,input,select{font-family:inherit}
   color:${c.warm}
 }
 .heroCredLine{
-  min-height:28px;
+  min-height:26px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
   gap:4px;
   font-size:15px;
-  line-height:1.55;
+  line-height:1.5;
   color:${c.sub};
   font-weight:600;
   letter-spacing:-.01em;
@@ -2438,23 +2703,24 @@ button,input,select{font-family:inherit}
   justify-content:center;
   align-items:center;
   gap:12px;
-  margin-top:28px
+  margin-top:24px
 }
 .heroBt .btnP,
 .heroBt .btnS{
-  min-width:230px;
-  min-height:56px;
-  padding:16px 24px;
+  min-width:220px;
+  min-height:54px;
+  padding:15px 24px;
   font-size:15px
 }
 .heroBoardCol{
   display:flex;
   justify-content:center;
-  width:100%
+  width:100%;
+  margin-top:8px
 }
 
 /* ───── Laura workspace ───── */
-.wsWrap{width:100%;max-width:760px;position:relative}
+.wsWrap{width:100%;max-width:740px;position:relative}
 .wsGlow{
   position:absolute;
   inset:-30px;
@@ -2468,7 +2734,7 @@ button,input,select{font-family:inherit}
   background:rgba(255,255,255,.96);
   border:1px solid rgba(227,221,210,.92);
   border-radius:28px;
-  padding:18px;
+  padding:16px;
   box-shadow:0 22px 48px rgba(14,18,26,.07)
 }
 .wsHead{
@@ -2476,8 +2742,9 @@ button,input,select{font-family:inherit}
   align-items:center;
   justify-content:space-between;
   gap:12px;
-  padding:6px 6px 16px;
-  border-bottom:1px solid rgba(227,221,210,.7)
+  padding:6px 6px 14px;
+  border-bottom:1px solid rgba(227,221,210,.7);
+  user-select:none
 }
 .wsBrand{display:flex;align-items:center;gap:11px}
 .wsMark{
@@ -2527,8 +2794,8 @@ button,input,select{font-family:inherit}
 .wsBody{
   display:grid;
   grid-template-columns:1fr;
-  gap:14px;
-  margin-top:16px
+  gap:12px;
+  margin-top:14px
 }
 
 /* People list */
@@ -2547,7 +2814,8 @@ button,input,select{font-family:inherit}
   text-transform:uppercase;
   letter-spacing:.11em;
   color:${c.muted};
-  padding:6px 8px 10px
+  padding:6px 8px 10px;
+  user-select:none
 }
 .wsListCt{
   font-size:10px;
@@ -2582,7 +2850,8 @@ button,input,select{font-family:inherit}
   font-size:11px;
   font-weight:800;
   letter-spacing:.03em;
-  border:1px solid rgba(0,0,0,.04)
+  border:1px solid rgba(0,0,0,.04);
+  user-select:none
 }
 .wsAv--warm{
   background:linear-gradient(135deg,#F7E7D2,#F0D5B6);
@@ -2628,8 +2897,8 @@ button,input,select{font-family:inherit}
   background:${c.cream};
   border:1px solid ${c.borderSoft};
   border-radius:20px;
-  padding:20px;
-  min-height:260px
+  padding:18px;
+  min-height:250px
 }
 .wsDtHd{
   display:flex;
@@ -2669,7 +2938,8 @@ button,input,select{font-family:inherit}
   font-weight:700;
   letter-spacing:.1em;
   text-transform:uppercase;
-  color:${c.muted}
+  color:${c.muted};
+  user-select:none
 }
 .wsDtMetaVal{
   font-weight:700;
@@ -2693,7 +2963,8 @@ button,input,select{font-family:inherit}
   letter-spacing:.1em;
   text-transform:uppercase;
   color:${c.muted};
-  margin-bottom:10px
+  margin-bottom:10px;
+  user-select:none
 }
 .wsDtTlList{display:flex;flex-direction:column;gap:8px}
 .wsTlStep{
@@ -2711,7 +2982,8 @@ button,input,select{font-family:inherit}
   justify-content:center;
   flex-shrink:0;
   background:#fff;
-  border:1px solid ${c.border}
+  border:1px solid ${c.border};
+  user-select:none
 }
 .wsTlStep--done .wsTlMark{
   background:${c.greenSoft};
@@ -2742,7 +3014,8 @@ button,input,select{font-family:inherit}
 .wsTlMeta{
   font-size:10.5px;
   color:${c.muted};
-  font-weight:600
+  font-weight:600;
+  user-select:none
 }
 .wsDtNext{
   margin-top:14px;
@@ -2757,7 +3030,8 @@ button,input,select{font-family:inherit}
   letter-spacing:.1em;
   text-transform:uppercase;
   color:${c.muted};
-  margin-bottom:5px
+  margin-bottom:5px;
+  user-select:none
 }
 .wsDtNextTx{
   font-size:12.5px;
@@ -2772,7 +3046,7 @@ button,input,select{font-family:inherit}
   display:flex;
   align-items:flex-start;
   gap:12px;
-  padding:16px 18px;
+  padding:14px 16px;
   border-radius:18px;
   background:rgba(255,255,255,.84);
   border:1px solid rgba(227,221,210,.8)
@@ -2784,11 +3058,12 @@ button,input,select{font-family:inherit}
   width:22px;
   flex-shrink:0;
   margin-top:1px;
-  letter-spacing:.05em
+  letter-spacing:.05em;
+  user-select:none
 }
 .problemStripItem p{
-  font-size:14px;
-  line-height:1.66;
+  font-size:13.5px;
+  line-height:1.62;
   color:${c.sub}
 }
 
@@ -2797,10 +3072,10 @@ button,input,select{font-family:inherit}
   display:grid;
   grid-template-columns:1fr;
   gap:14px;
-  margin-top:42px
+  margin-top:32px
 }
 .proofCard{
-  padding:26px;
+  padding:22px;
   border-radius:22px;
   background:rgba(255,255,255,.94);
   border:1px solid ${c.border};
@@ -2812,26 +3087,70 @@ button,input,select{font-family:inherit}
   transform:translateY(-1px)
 }
 .proofIc{
-  width:48px;
-  height:48px;
+  width:46px;
+  height:46px;
   border-radius:14px;
   display:flex;
   align-items:center;
   justify-content:center;
-  margin-bottom:14px
+  margin-bottom:12px
 }
 .proofIc--warm{background:${c.warmSoft};color:${c.warm}}
 .proofIc--blue{background:${c.accentSoft};color:${c.accent}}
 .proofIc--green{background:${c.greenSoft};color:${c.greenDk}}
-.proofTi{font-size:17px;font-weight:800;letter-spacing:-.02em}
-.proofBd{margin-top:6px;font-size:13.5px;line-height:1.78;color:${c.sub}}
+.proofTi{font-size:16px;font-weight:800;letter-spacing:-.02em}
+.proofBd{margin-top:6px;font-size:13.2px;line-height:1.72;color:${c.sub}}
+
+/* ───── Value grid ───── */
+.valueGrid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:14px;
+  margin-top:32px
+}
+.valueCard{
+  padding:22px;
+  border-radius:22px;
+  background:rgba(255,255,255,.92);
+  border:1px solid rgba(227,221,210,.9);
+  box-shadow:0 4px 18px rgba(0,0,0,.02);
+  transition:transform .25s, box-shadow .25s
+}
+.valueCard:hover{
+  transform:translateY(-1px);
+  box-shadow:0 10px 28px rgba(0,0,0,.04)
+}
+.valueIc{
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:12px
+}
+.valueIc--warm{background:${c.warmSoft};color:${c.warm}}
+.valueIc--blue{background:${c.accentSoft};color:${c.accent}}
+.valueIc--green{background:${c.greenSoft};color:${c.greenDk}}
+.valueTi{
+  font-size:16px;
+  font-weight:800;
+  letter-spacing:-.02em;
+  color:${c.text}
+}
+.valueBd{
+  margin-top:6px;
+  font-size:13.2px;
+  line-height:1.72;
+  color:${c.sub}
+}
 
 /* ───── Scene cards ───── */
 .scenesGrid{
   display:grid;
   grid-template-columns:1fr;
-  gap:20px;
-  margin-top:42px
+  gap:18px;
+  margin-top:34px
 }
 .sceneCard{
   background:rgba(255,255,255,.94);
@@ -2842,26 +3161,26 @@ button,input,select{font-family:inherit}
   transition:box-shadow .3s
 }
 .sceneCard:hover{box-shadow:0 12px 44px rgba(0,0,0,.07)}
-.sceneCardHead{padding:30px 30px 22px}
+.sceneCardHead{padding:24px 24px 18px}
 .sceneCardTitle{
-  margin-top:14px;
+  margin-top:12px;
   font-size:clamp(22px,3vw,28px);
-  line-height:1.1;
+  line-height:1.08;
   letter-spacing:-.04em;
-  margin-bottom:10px
+  margin-bottom:8px
 }
 .sceneCardBody{
-  font-size:14px;
-  line-height:1.78;
+  font-size:13.8px;
+  line-height:1.72;
   color:${c.sub};
   max-width:500px
 }
-.sceneWrap{padding:0 16px 24px;position:relative}
+.sceneWrap{padding:0 14px 18px;position:relative}
 .sceneSvg{width:100%;height:auto;display:block;border-radius:16px;overflow:hidden}
 .sceneCap{
   text-align:center;
-  padding:14px 20px 0;
-  min-height:44px;
+  padding:12px 18px 0;
+  min-height:40px;
   display:flex;
   align-items:center;
   justify-content:center
@@ -2870,16 +3189,16 @@ button,input,select{font-family:inherit}
   font-size:12.5px;
   color:${c.muted};
   font-weight:500;
-  line-height:1.6;
+  line-height:1.58;
   text-align:center;
   max-width:360px;
   font-style:italic
 }
 
 /* ───── Audience grid ───── */
-.audGrid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:40px}
+.audGrid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:34px}
 .audCard{
-  padding:26px;
+  padding:22px;
   border:1px solid ${c.border};
   border-radius:22px;
   background:rgba(255,255,255,.94);
@@ -2887,22 +3206,70 @@ button,input,select{font-family:inherit}
 }
 .audCard:hover{box-shadow:0 8px 24px rgba(0,0,0,.04)}
 .audIc{
-  width:48px;
-  height:48px;
+  width:46px;
+  height:46px;
   border-radius:14px;
   display:flex;
   align-items:center;
   justify-content:center;
   margin-bottom:12px
 }
-.audTi{font-size:17px;font-weight:800;letter-spacing:-.02em}
-.audBd{margin-top:6px;font-size:13.5px;line-height:1.78;color:${c.sub}}
+.audTi{font-size:16px;font-weight:800;letter-spacing:-.02em}
+.audBd{margin-top:6px;font-size:13.2px;line-height:1.72;color:${c.sub}}
+
+/* ───── Roadmap ───── */
+.roadmapGrid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:14px;
+  margin-top:34px
+}
+.roadmapCard{
+  padding:22px;
+  border-radius:22px;
+  background:rgba(255,255,255,.94);
+  border:1px solid rgba(227,221,210,.92);
+  box-shadow:0 4px 18px rgba(0,0,0,.02);
+  transition:transform .25s, box-shadow .25s
+}
+.roadmapCard:hover{
+  transform:translateY(-1px);
+  box-shadow:0 10px 28px rgba(0,0,0,.04)
+}
+.roadmapNo{
+  width:34px;
+  height:34px;
+  border-radius:999px;
+  background:${c.warmSoft};
+  color:${c.warmDk};
+  border:1px solid rgba(201,149,107,.16);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.08em;
+  margin-bottom:12px;
+  user-select:none
+}
+.roadmapTi{
+  font-size:16px;
+  font-weight:800;
+  letter-spacing:-.02em;
+  color:${c.text}
+}
+.roadmapBd{
+  margin-top:6px;
+  font-size:13.2px;
+  line-height:1.72;
+  color:${c.sub}
+}
 
 /* ───── Language card ───── */
 .langCard{
   max-width:980px;
   margin:0 auto;
-  padding:36px;
+  padding:30px;
   border-radius:30px;
   background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(255,248,240,.88));
   border:1px solid ${c.border};
@@ -2948,17 +3315,17 @@ button,input,select{font-family:inherit}
 }
 .langTiSpaced{margin-top:12px}
 .langBd{
-  margin-top:18px;
+  margin-top:16px;
   max-width:760px;
-  font-size:15px;
-  line-height:1.82;
+  font-size:14.5px;
+  line-height:1.78;
   color:${c.sub}
 }
 .langChips{
   display:flex;
   flex-wrap:wrap;
   gap:10px;
-  margin-top:24px
+  margin-top:22px
 }
 .langChip{
   display:inline-flex;
@@ -2974,7 +3341,8 @@ button,input,select{font-family:inherit}
   font-weight:700;
   letter-spacing:.01em;
   cursor:pointer;
-  transition:all .25s
+  transition:all .25s;
+  user-select:none
 }
 .langChip:hover{
   background:#fff;
@@ -2988,19 +3356,15 @@ button,input,select{font-family:inherit}
   border-color:rgba(201,149,107,.42);
   box-shadow:0 10px 22px rgba(0,0,0,.04)
 }
-.langChipMore{
-  cursor:default
-}
-.langChipMore:hover{
-  transform:none
-}
+.langChipMore{cursor:default}
+.langChipMore:hover{transform:none}
 .langChipFlag{
   font-size:16px;
   line-height:1
 }
 .langPreview{
-  margin-top:22px;
-  padding:22px;
+  margin-top:18px;
+  padding:20px;
   border-radius:24px;
   background:rgba(255,255,255,.88);
   border:1px solid rgba(227,221,210,.95);
@@ -3028,7 +3392,8 @@ button,input,select{font-family:inherit}
   background:linear-gradient(135deg,#FFF8F0,#F6F8FF);
   border:1px solid rgba(201,149,107,.16);
   font-size:22px;
-  box-shadow:0 6px 18px rgba(0,0,0,.03)
+  box-shadow:0 6px 18px rgba(0,0,0,.03);
+  user-select:none
 }
 .langPreviewLabel{
   font-size:15px;
@@ -3042,7 +3407,8 @@ button,input,select{font-family:inherit}
   font-weight:700;
   letter-spacing:.12em;
   text-transform:uppercase;
-  color:${c.muted}
+  color:${c.muted};
+  user-select:none
 }
 .langPreviewTags{
   display:flex;
@@ -3060,10 +3426,11 @@ button,input,select{font-family:inherit}
   color:${c.warmDk};
   font-size:11px;
   font-weight:700;
-  letter-spacing:.03em
+  letter-spacing:.03em;
+  user-select:none
 }
 .langPreviewBody{
-  margin-top:16px;
+  margin-top:14px;
   font-size:clamp(18px,2.2vw,24px);
   line-height:1.5;
   letter-spacing:-.02em;
@@ -3071,10 +3438,60 @@ button,input,select{font-family:inherit}
   max-width:760px
 }
 .langPreviewNote{
+  margin-top:8px;
+  max-width:760px;
+  font-size:13.2px;
+  line-height:1.72;
+  color:${c.sub}
+}
+
+/* ───── Trust and boundary ───── */
+.trustWrap{
+  max-width:980px;
+  margin:0 auto
+}
+.boundaryCard{
+  padding:24px;
+  border-radius:24px;
+  background:rgba(255,255,255,.94);
+  border:1px solid rgba(227,221,210,.92);
+  box-shadow:0 8px 24px rgba(0,0,0,.03)
+}
+.boundaryTi{
+  margin-top:10px;
+  font-size:clamp(24px,3vw,34px);
+  line-height:1.08;
+  letter-spacing:-.04em
+}
+.boundaryBd{
   margin-top:10px;
   max-width:760px;
-  font-size:13.5px;
-  line-height:1.78;
+  font-size:14px;
+  line-height:1.74;
+  color:${c.sub}
+}
+.trustGrid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:14px;
+  margin-top:18px
+}
+.trustCard{
+  padding:20px;
+  border-radius:20px;
+  background:rgba(255,255,255,.9);
+  border:1px solid rgba(227,221,210,.88)
+}
+.trustTi{
+  font-size:15px;
+  font-weight:800;
+  letter-spacing:-.02em;
+  color:${c.text}
+}
+.trustBd{
+  margin-top:6px;
+  font-size:13.2px;
+  line-height:1.7;
   color:${c.sub}
 }
 
@@ -3083,20 +3500,20 @@ button,input,select{font-family:inherit}
   background:rgba(255,255,255,.94);
   border:1px solid ${c.border};
   border-radius:28px;
-  padding:36px 30px;
+  padding:30px 24px;
   max-width:720px;
   margin:0 auto;
   box-shadow:0 4px 18px rgba(0,0,0,.03);
   text-align:center
 }
 .wlTi{font-size:clamp(26px,4.5vw,42px);letter-spacing:-.045em}
-.wlTiSpaced{margin-top:14px}
+.wlTiSpaced{margin-top:12px}
 .wlSub{
-  margin-top:14px;
-  font-size:14.5px;
-  line-height:1.78;
+  margin-top:12px;
+  font-size:14.2px;
+  line-height:1.72;
   color:${c.sub};
-  max-width:520px;
+  max-width:540px;
   margin-left:auto;
   margin-right:auto
 }
@@ -3104,7 +3521,7 @@ button,input,select{font-family:inherit}
   display:grid;
   grid-template-columns:1fr;
   gap:8px;
-  margin-top:24px;
+  margin-top:22px;
   position:relative
 }
 .wlBt{height:48px;width:100%}
@@ -3128,7 +3545,7 @@ button,input,select{font-family:inherit}
   display:flex;
   align-items:flex-start;
   gap:6px;
-  margin-top:14px;
+  margin-top:12px;
   color:${c.sub};
   font-size:11px;
   line-height:1.55;
@@ -3171,8 +3588,8 @@ button,input,select{font-family:inherit}
   font-weight:600
 }
 .wlAlready{
-  margin-top:22px;
-  padding-top:18px;
+  margin-top:18px;
+  padding-top:16px;
   border-top:1px solid rgba(227,221,210,.7);
   font-size:12px;
   color:${c.muted}
@@ -3292,12 +3709,16 @@ button,input,select{font-family:inherit}
 }
 
 /* ───── Footer ───── */
-.ft{background:${c.dark};padding:56px 0 22px;color:#fff}
+.ft{
+  background:${c.dark};
+  padding:38px 0 18px;
+  color:#fff
+}
 .ftTop{
   display:grid;
   grid-template-columns:1fr;
-  gap:34px;
-  padding-bottom:34px;
+  gap:28px;
+  padding-bottom:24px;
   border-bottom:1px solid rgba(255,255,255,.06)
 }
 .ftBrand{max-width:340px}
@@ -3314,9 +3735,9 @@ button,input,select{font-family:inherit}
   margin-top:4px
 }
 .ftBrDesc{
-  margin-top:16px;
-  font-size:12.5px;
-  line-height:1.72;
+  margin-top:14px;
+  font-size:12.2px;
+  line-height:1.68;
   color:rgba(255,255,255,.48);
   max-width:300px
 }
@@ -3344,8 +3765,8 @@ button,input,select{font-family:inherit}
 .ftLkStatic{cursor:default}
 .ftLkStatic:hover{color:rgba(255,255,255,.52)}
 .ftDsc{
-  margin-top:26px;
-  padding:16px 0;
+  margin-top:18px;
+  padding:14px 0;
   font-size:10.5px;
   color:rgba(255,255,255,.32);
   line-height:1.7;
@@ -3356,7 +3777,7 @@ button,input,select{font-family:inherit}
 }
 .ftBtm{
   border-top:1px solid rgba(255,255,255,.05);
-  padding-top:16px;
+  padding-top:14px;
   display:flex;
   justify-content:space-between;
   align-items:center;
@@ -3368,12 +3789,10 @@ button,input,select{font-family:inherit}
 .ftBtmRt{color:rgba(255,255,255,.28);font-style:italic}
 
 @media(max-width:639px){
-  .heroSec{padding:30px 0 28px}
-  .navR{height:52px}
-  .heroOverline,
+  .heroSec{padding:30px 0 26px}
   .langOverline{padding-left:0}
-  .heroOverline::before,
   .langOverline::before{display:none}
+  .navR{height:52px}
   .heroTi{font-size:clamp(38px,12vw,56px)}
   .heroBt{
     flex-direction:column;
@@ -3384,44 +3803,59 @@ button,input,select{font-family:inherit}
     width:100%;
     min-width:0
   }
-  .langCard{padding:26px}
+  .langCard{padding:24px}
   .langTop{
     gap:14px;
     flex-direction:column
   }
   .langOrb{width:48px;height:48px}
   .langPreview{padding:18px}
-  .ftCols{grid-template-columns:1fr 1fr;gap:24px}
+  .langPreviewHead{gap:12px}
+  .langPreviewBody{font-size:clamp(17px,6vw,22px)}
+  .ftCols{grid-template-columns:1fr 1fr;gap:22px}
 }
 
 @media(min-width:640px){
   .container{padding:0 24px}
-  .sec{padding:84px 0}
-  .secTinted{padding:84px 0}
+  .sec{padding:74px 0}
+  .secTinted{padding:78px 0}
+  .secSoft{padding:72px 0}
+  .secLanguage{padding-top:70px;padding-bottom:40px}
+  .secSecurity{padding-top:40px;padding-bottom:62px}
+  .secWaitlist{padding-top:40px;padding-bottom:62px}
   .navR{height:64px}
   .navLks{display:flex}
   .navSignIn{display:inline-flex}
   .problemStrip{grid-template-columns:repeat(3,1fr)}
   .proofGrid{grid-template-columns:repeat(3,1fr)}
+  .valueGrid{grid-template-columns:repeat(2,1fr)}
   .audGrid{grid-template-columns:repeat(3,1fr)}
   .scenesGrid{grid-template-columns:repeat(2,1fr)}
+  .roadmapGrid{grid-template-columns:repeat(2,1fr)}
+  .trustGrid{grid-template-columns:repeat(2,1fr)}
   .wlF{grid-template-columns:1.2fr .9fr auto}
   .wlBt{width:auto}
-  .ftTop{grid-template-columns:1.2fr 2fr;gap:48px}
-  .ftCols{grid-template-columns:repeat(3,1fr);gap:32px}
+  .ftTop{grid-template-columns:1.2fr 2fr;gap:42px}
+  .ftCols{grid-template-columns:repeat(3,1fr);gap:28px}
   .wsBody{grid-template-columns:.9fr 1.1fr}
 }
 
 @media(min-width:960px){
   .container{padding:0 32px}
-  .sec{padding:92px 0}
-  .secTinted{padding:92px 0}
+  .sec{padding:86px 0}
+  .secTinted{padding:90px 0}
+  .secSoft{padding:82px 0}
+  .secLanguage{padding-top:82px;padding-bottom:46px}
+  .secSecurity{padding-top:46px;padding-bottom:72px}
+  .secWaitlist{padding-top:46px;padding-bottom:72px}
   .navR{height:68px}
-  .heroSec{padding:52px 0 44px}
-  .wsShell{padding:20px}
+  .heroSec{padding:50px 0 38px}
+  .wsShell{padding:18px}
+  .roadmapGrid{grid-template-columns:repeat(3,1fr)}
+  .valueGrid{grid-template-columns:repeat(4,1fr)}
 }
 
 @media(min-width:1100px){
-  .heroTi{font-size:clamp(56px,6.6vw,84px)}
+  .heroTi{font-size:clamp(58px,6.7vw,86px)}
 }
 `;
