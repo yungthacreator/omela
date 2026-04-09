@@ -6,6 +6,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type FormEvent,
   type ReactNode,
 } from "react";
 import { AnimatePresence, motion, useInView } from "framer-motion";
@@ -79,17 +80,17 @@ const LANGUAGE_OPTIONS: LanguageOption[] = [
     label: "English",
     emoji: "🇬🇧",
     sample:
-      "Clear status updates that feel natural, calm, and easy to act on.",
+      "Clear updates that feel calm, natural, and easy to act on.",
     note:
-      "Helpful for everyday follow-through when someone needs to know what has been requested, what is ready, and what still needs attention.",
+      "Helpful when carers, relatives, or support staff need a shared view of what has been requested, what is ready, and what still needs attention.",
   },
   {
     label: "French",
     emoji: "🇫🇷",
     sample:
-      "Softer wording for updates, handovers, and next steps around repeat prescriptions.",
+      "Softer wording for updates, letters, and next steps around repeat prescriptions.",
     note:
-      "Useful when medication admin needs to feel more familiar and less clinical for households and carers.",
+      "Designed to make medication admin feel more familiar and less stressful for households and carers.",
   },
   {
     label: "Spanish",
@@ -97,7 +98,7 @@ const LANGUAGE_OPTIONS: LanguageOption[] = [
     sample:
       "Simple guidance that makes requests and progress easier to follow together.",
     note:
-      "Designed to reduce repeated checking and make it easier to pass an update on to someone else.",
+      "Useful when one person starts the process and someone else needs to carry it forward.",
   },
   {
     label: "Portuguese",
@@ -113,15 +114,15 @@ const LANGUAGE_OPTIONS: LanguageOption[] = [
     sample:
       "Familiar communication that helps people stay aligned on the next step.",
     note:
-      "Especially useful when one person prepares the request and another person follows it through.",
+      "Especially useful when several people are helping one person stay on top of repeat prescriptions.",
   },
   {
     label: "Arabic",
     emoji: "🇸🇦",
     sample:
-      "Calmer updates for letters, status changes, and repeat prescription follow-through.",
+      "Calmer updates for letters, status changes, and follow-through.",
     note:
-      "Made to help reduce friction when people are already carrying enough care admin.",
+      "Made to reduce friction when people are already carrying a lot of care admin.",
   },
   {
     label: "Hindi",
@@ -129,13 +130,13 @@ const LANGUAGE_OPTIONS: LanguageOption[] = [
     sample:
       "Straightforward language that reduces confusion around requests and collection.",
     note:
-      "Designed so the important part stays clear without making the experience feel cold or technical.",
+      "Designed so the important part stays clear without the experience feeling cold or technical.",
   },
   {
     label: "Urdu",
     emoji: "🇵🇰",
     sample:
-      "Simple, shared visibility that makes handover easier across family members.",
+      "Simple shared visibility that makes handover easier across family members.",
     note:
       "Useful when more than one person needs to understand what has happened and what still needs doing.",
   },
@@ -145,7 +146,7 @@ const LANGUAGE_OPTIONS: LanguageOption[] = [
     sample:
       "Easier status updates for households and care teams managing more than one person.",
     note:
-      "Helps turn repeat prescription admin into something clearer, more manageable, and easier to explain.",
+      "Helps turn repeat prescription admin into something clearer, calmer, and easier to explain.",
   },
 ];
 
@@ -172,8 +173,8 @@ function useTodayLabel() {
     };
 
     update();
-
     const interval = window.setInterval(update, 60_000);
+
     return () => window.clearInterval(interval);
   }, []);
 
@@ -287,7 +288,7 @@ function LanguageExperience() {
       <p className="langBd">
         Laura is being designed to explain updates, letters, and next steps in
         simpler language and across 40+ languages, so repeat prescription admin
-        feels easier to follow, easier to hand over, and less stressful to keep
+        feels easier to follow, easier to hand over, and less stressful to stay
         on top of.
       </p>
 
@@ -378,6 +379,7 @@ function SuccessModal({
 
   async function shareLink() {
     if (!link) return;
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -414,7 +416,9 @@ function SuccessModal({
             <div className="modSeal">
               <CheckCircle2 size={22} />
             </div>
+
             <h3 className="serif modTi">You&apos;re on the list.</h3>
+
             <p className="modBd">
               We&apos;ll be in touch as Laura opens up, starting with carers,
               households, and selected care teams in the UK.
@@ -425,6 +429,7 @@ function SuccessModal({
                 <p className="modRefLbl">
                   Share with a family member or care team
                 </p>
+
                 <div className="modRefBox">
                   <span className="modRefUrl">
                     {link.replace("https://", "").replace("http://", "")}
@@ -433,6 +438,7 @@ function SuccessModal({
                     {copied ? <Check size={13} /> : <Copy size={13} />}
                   </button>
                 </div>
+
                 <div className="modRefBts">
                   <button
                     onClick={shareLink}
@@ -530,6 +536,7 @@ function LauraWorkspace() {
     const timer = window.setInterval(() => {
       setActive((p) => (p + 1) % people.length);
     }, 3800);
+
     return () => window.clearInterval(timer);
   }, [people.length]);
 
@@ -542,6 +549,7 @@ function LauraWorkspace() {
         animate={{ opacity: [0.08, 0.18, 0.08] }}
         transition={{ duration: 6, repeat: Infinity }}
       />
+
       <motion.div
         className="wsShell"
         animate={{ y: [0, -4, 0] }}
@@ -558,6 +566,7 @@ function LauraWorkspace() {
                 style={{ width: "100%", height: "100%", objectFit: "contain" }}
               />
             </div>
+
             <div className="wsBrandTx">
               <div className="wsName serif">Laura</div>
               <div className="wsBy">by Omela</div>
@@ -579,6 +588,7 @@ function LauraWorkspace() {
 
             {people.map((p, i) => {
               const isActive = i === active;
+
               return (
                 <button
                   key={p.initials}
@@ -587,6 +597,7 @@ function LauraWorkspace() {
                   className={`wsRow ${isActive ? "wsRowA" : ""}`}
                 >
                   <div className={`wsAv wsAv--${p.tone}`}>{p.initials}</div>
+
                   <div className="wsRowTx">
                     <div className="wsRowNm">{p.name}</div>
                     <div className="wsRowMd">{p.med}</div>
@@ -612,6 +623,7 @@ function LauraWorkspace() {
                   <div className={`wsAv wsAvLg wsAv--${current.tone}`}>
                     {current.initials}
                   </div>
+
                   <div className="wsDtHdTx">
                     <div className="wsDtNm">{current.name}</div>
                     <div className="wsDtMd">{current.med}</div>
@@ -627,10 +639,12 @@ function LauraWorkspace() {
                       {current.status}
                     </span>
                   </div>
+
                   <div className="wsDtMetaRow">
                     <span className="wsDtMetaLbl">Owner</span>
                     <span className="wsDtMetaVal">{current.owner}</span>
                   </div>
+
                   <div className="wsDtMetaRow">
                     <span className="wsDtMetaLbl">Detail</span>
                     <span className="wsDtMetaVal wsDtMetaValSub">
@@ -641,6 +655,7 @@ function LauraWorkspace() {
 
                 <div className="wsDtTl">
                   <div className="wsDtTlHd">Timeline</div>
+
                   <div className="wsDtTlList">
                     {current.timeline.map((step, i) => (
                       <div
@@ -654,6 +669,7 @@ function LauraWorkspace() {
                             <span className="wsTlPulse" />
                           )}
                         </div>
+
                         <span className="wsTlLbl">{step.label}</span>
                         <span className="wsTlMeta">{step.meta}</span>
                       </div>
@@ -670,1073 +686,6 @@ function LauraWorkspace() {
           </div>
         </div>
       </motion.div>
-    </div>
-  );
-}
-
-function HomeScene() {
-  const captions = [
-    "Laura quietly keeps track before supply becomes urgent.",
-    "A reminder arrives before anyone starts chasing.",
-    "The next request is prepared and easy to review.",
-    "Parent and carer can both see what is happening.",
-    "The request is confirmed and nothing is dropped.",
-  ];
-
-  const [step, setStep] = useState(0);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setStep((s) => (s + 1) % 5);
-    }, 2200);
-
-    return () => window.clearInterval(timer);
-  }, []);
-
-  return (
-    <div className="sceneWrap">
-      <svg
-        viewBox="0 0 480 300"
-        className="sceneSvg"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <rect x="0" y="0" width="480" height="300" fill="#FAF7F2" rx="20" />
-        <rect x="0" y="0" width="480" height="195" fill="#F2EDE4" rx="20" />
-        <rect x="0" y="188" width="480" height="7" fill="#E8E0D5" />
-        <rect x="0" y="195" width="480" height="105" fill="#EDE8DF" />
-        {[210, 240, 270].map((y) => (
-          <line
-            key={y}
-            x1="0"
-            y1={y}
-            x2="480"
-            y2={y}
-            stroke="#E3DDD2"
-            strokeWidth="0.6"
-          />
-        ))}
-        {[80, 160, 240, 320, 400].map((x) => (
-          <line
-            key={x}
-            x1={x}
-            y1="195"
-            x2={x}
-            y2="300"
-            stroke="#E3DDD2"
-            strokeWidth="0.6"
-          />
-        ))}
-
-        <rect
-          x="170"
-          y="18"
-          width="140"
-          height="110"
-          rx="6"
-          fill="#D8EDF5"
-          stroke="#C8D8E5"
-          strokeWidth="1.5"
-        />
-        <line
-          x1="240"
-          y1="18"
-          x2="240"
-          y2="128"
-          stroke="#C8D8E5"
-          strokeWidth="1"
-        />
-        <line
-          x1="170"
-          y1="73"
-          x2="310"
-          y2="73"
-          stroke="#C8D8E5"
-          strokeWidth="1"
-        />
-        <rect
-          x="171"
-          y="19"
-          width="138"
-          height="108"
-          rx="5"
-          fill="url(#winGlow)"
-        />
-        <defs>
-          <linearGradient id="winGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#E8F4FC" />
-            <stop offset="100%" stopColor="#C8E8F8" />
-          </linearGradient>
-        </defs>
-        <path
-          d="M170,18 Q158,60 163,128 L170,128 Z"
-          fill="#D4CCBC"
-          opacity="0.6"
-        />
-        <path
-          d="M310,18 Q322,60 317,128 L310,128 Z"
-          fill="#D4CCBC"
-          opacity="0.6"
-        />
-        <circle cx="220" cy="50" r="14" fill="#F5D78A" opacity="0.5" />
-        <ellipse cx="270" cy="42" rx="18" ry="9" fill="#fff" opacity="0.6" />
-        <ellipse cx="284" cy="38" rx="12" ry="8" fill="#fff" opacity="0.6" />
-
-        <rect
-          x="36"
-          y="28"
-          width="72"
-          height="54"
-          rx="3"
-          fill="#E8E0D0"
-          stroke="#D8D0C0"
-          strokeWidth="1.2"
-        />
-        <ellipse cx="72" cy="55" rx="18" ry="14" fill="#C4B898" opacity="0.6" />
-        <path d="M54,68 Q72,44 90,68" fill="#B8C8A8" opacity="0.5" />
-
-        <rect x="28" y="175" width="70" height="8" rx="3" fill="#C4B090" />
-        <rect x="38" y="183" width="8" height="17" rx="2" fill="#B8A880" />
-        <rect x="52" y="183" width="8" height="17" rx="2" fill="#B8A880" />
-        <rect
-          x="32"
-          y="158"
-          width="14"
-          height="18"
-          rx="3"
-          fill="#C9956B"
-          opacity="0.85"
-        />
-        <rect
-          x="33"
-          y="155"
-          width="12"
-          height="5"
-          rx="1.5"
-          fill="#B8844A"
-          opacity="0.85"
-        />
-        <rect
-          x="50"
-          y="160"
-          width="12"
-          height="16"
-          rx="3"
-          fill="#7EA8D4"
-          opacity="0.85"
-        />
-        <rect
-          x="51"
-          y="157"
-          width="10"
-          height="5"
-          rx="1.5"
-          fill="#5E88B4"
-          opacity="0.85"
-        />
-        <rect
-          x="66"
-          y="163"
-          width="10"
-          height="13"
-          rx="2.5"
-          fill="#A8C890"
-          opacity="0.85"
-        />
-        <rect
-          x="34"
-          y="163"
-          width="10"
-          height="1.5"
-          rx="1"
-          fill="rgba(255,255,255,0.5)"
-        />
-        <rect
-          x="34"
-          y="166"
-          width="8"
-          height="1.5"
-          rx="1"
-          fill="rgba(255,255,255,0.5)"
-        />
-
-        <rect x="300" y="162" width="120" height="38" rx="10" fill="#C9B898" />
-        <rect x="308" y="168" width="104" height="28" rx="7" fill="#D4C4A8" />
-        <rect x="300" y="130" width="120" height="36" rx="10" fill="#C9B898" />
-        <rect x="308" y="135" width="104" height="28" rx="6" fill="#D4C4A8" />
-        <rect x="296" y="148" width="18" height="38" rx="6" fill="#BEA888" />
-        <rect x="406" y="148" width="18" height="38" rx="6" fill="#BEA888" />
-        <rect x="308" y="196" width="8" height="14" rx="3" fill="#A89070" />
-        <rect x="404" y="196" width="8" height="14" rx="3" fill="#A89070" />
-
-        <rect x="334" y="148" width="52" height="42" rx="12" fill="#E8D8C4" />
-        <rect
-          x="334"
-          y="158"
-          width="52"
-          height="32"
-          rx="10"
-          fill="#B8A888"
-          opacity="0.7"
-        />
-        <circle cx="360" cy="135" r="20" fill="#E8D4B8" />
-        <path d="M340,130 Q342,112 360,112 Q378,112 380,130" fill="#E8E4DC" />
-        <path
-          d="M340,128 Q338,120 344,116"
-          stroke="#D8D4CC"
-          strokeWidth="3"
-          strokeLinecap="round"
-          fill="none"
-        />
-        <path
-          d="M380,128 Q382,120 376,116"
-          stroke="#D8D4CC"
-          strokeWidth="3"
-          strokeLinecap="round"
-          fill="none"
-        />
-        <circle
-          cx="353"
-          cy="135"
-          r="6"
-          fill="none"
-          stroke="#8A7A6A"
-          strokeWidth="1.2"
-        />
-        <circle
-          cx="367"
-          cy="135"
-          r="6"
-          fill="none"
-          stroke="#8A7A6A"
-          strokeWidth="1.2"
-        />
-        <line x1="359" y1="135" x2="361" y2="135" stroke="#8A7A6A" strokeWidth="1" />
-        <line x1="347" y1="135" x2="343" y2="134" stroke="#8A7A6A" strokeWidth="1" />
-        <line x1="373" y1="135" x2="377" y2="134" stroke="#8A7A6A" strokeWidth="1" />
-        <circle cx="353" cy="135" r="2.5" fill="#5A4A3A" />
-        <circle cx="367" cy="135" r="2.5" fill="#5A4A3A" />
-        {step >= 3 ? (
-          <path
-            d="M354,143 Q360,149 366,143"
-            stroke="#8A6A5A"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            fill="none"
-          />
-        ) : (
-          <line
-            x1="355"
-            y1="143"
-            x2="365"
-            y2="143"
-            stroke="#8A6A5A"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
-        )}
-        <path
-          d="M334,168 Q322,172 318,182"
-          stroke="#E8D4B8"
-          strokeWidth="12"
-          strokeLinecap="round"
-          fill="none"
-        />
-        <path
-          d="M386,168 Q398,172 402,180"
-          stroke="#E8D4B8"
-          strokeWidth="12"
-          strokeLinecap="round"
-          fill="none"
-        />
-
-        <rect x="50" y="165" width="180" height="35" rx="10" fill="#A8B8C8" />
-        <rect x="58" y="171" width="164" height="26" rx="7" fill="#B8C8D8" />
-        <rect x="50" y="140" width="180" height="30" rx="10" fill="#A8B8C8" />
-        <rect x="58" y="145" width="164" height="24" rx="6" fill="#B8C8D8" />
-        <rect x="46" y="150" width="16" height="36" rx="6" fill="#98A8B8" />
-        <rect x="218" y="150" width="16" height="36" rx="6" fill="#98A8B8" />
-        <rect x="60" y="196" width="8" height="14" rx="3" fill="#7A8898" />
-        <rect x="212" y="196" width="8" height="14" rx="3" fill="#7A8898" />
-
-        <rect x="102" y="143" width="56" height="44" rx="12" fill="#7A9CB8" />
-        <circle cx="130" cy="126" r="22" fill="#E8C8A8" />
-        <path d="M108,120 Q110,100 130,98 Q150,100 152,120" fill="#3A3028" />
-        <circle cx="123" cy="125" r="2.5" fill="#2A2018" />
-        <circle cx="137" cy="125" r="2.5" fill="#2A2018" />
-        <path
-          d="M124,133 Q130,138 136,133"
-          stroke="#8A6A5A"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          fill="none"
-        />
-        <path
-          d="M102,157 Q88,162 82,172"
-          stroke="#E8C8A8"
-          strokeWidth="12"
-          strokeLinecap="round"
-          fill="none"
-        />
-        <path
-          d="M158,157 Q172,165 176,172"
-          stroke="#E8C8A8"
-          strokeWidth="12"
-          strokeLinecap="round"
-          fill="none"
-        />
-
-        <motion.g
-          animate={{
-            rotate: step >= 2 ? 18 : 0,
-            x: step >= 2 ? 30 : 0,
-            y: step >= 2 ? -8 : 0,
-          }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          style={{ transformOrigin: "82px 172px" }}
-        >
-          <rect x="68" y="163" width="28" height="48" rx="5" fill="#1A1A1E" />
-          <rect x="70" y="166" width="24" height="42" rx="3.5" fill="#F8F6F2" />
-          <rect x="78" y="165" width="12" height="3" rx="1.5" fill="#111" />
-          <rect
-            x="72"
-            y="170"
-            width="20"
-            height="3"
-            rx="1.5"
-            fill={step === 0 ? "#D8D4CC" : "#ECF2FF"}
-          />
-          <rect
-            x="72"
-            y="175"
-            width="14"
-            height="2.5"
-            rx="1"
-            fill={step === 0 ? "#E4E0D8" : "#BDD0F8"}
-          />
-          <rect
-            x="72"
-            y="179"
-            width="16"
-            height="2.5"
-            rx="1"
-            fill={step === 0 ? "#E4E0D8" : "#BDD0F8"}
-          />
-          {step >= 1 && (
-            <motion.circle
-              cx="91"
-              cy="168"
-              r="4"
-              fill="#EF4444"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 500, damping: 15 }}
-            />
-          )}
-          {step >= 1 && (
-            <motion.g
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              <circle cx="82" cy="185" r="5" fill="#C9956B" opacity="0.9" />
-              <rect x="76" y="192" width="12" height="9" rx="2" fill="#ECF2FF" />
-              <rect
-                x="77"
-                y="193.5"
-                width="10"
-                height="1.5"
-                rx="0.75"
-                fill="#2563EB"
-                opacity="0.8"
-              />
-              <rect
-                x="77"
-                y="196"
-                width="7"
-                height="1.5"
-                rx="0.75"
-                fill="#2563EB"
-                opacity="0.5"
-              />
-            </motion.g>
-          )}
-        </motion.g>
-
-        <AnimatePresence>
-          {step === 1 && (
-            <motion.g
-              initial={{ opacity: 0, y: 10, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -6, scale: 0.95 }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <rect
-                x="96"
-                y="82"
-                width="148"
-                height="54"
-                rx="12"
-                fill="#fff"
-                filter="url(#notifShadow)"
-              />
-              <rect
-                x="96"
-                y="82"
-                width="148"
-                height="54"
-                rx="12"
-                fill="none"
-                stroke="#E3DDD2"
-                strokeWidth="1"
-              />
-              <circle cx="115" cy="97" r="8" fill="#C9956B" opacity="0.9" />
-              <circle cx="115" cy="94" r="3.5" fill="#E8D4B8" />
-              <path
-                d="M109,100 Q115,104 121,100"
-                stroke="#E8D4B8"
-                strokeWidth="2"
-                fill="none"
-                strokeLinecap="round"
-              />
-              <rect x="128" y="91" width="56" height="4" rx="2" fill="#111214" />
-              <rect
-                x="128"
-                y="97"
-                width="72"
-                height="3.5"
-                rx="1.75"
-                fill="#888E9C"
-              />
-              <rect
-                x="128"
-                y="102"
-                width="60"
-                height="3.5"
-                rx="1.75"
-                fill="#888E9C"
-              />
-              <rect
-                x="128"
-                y="116"
-                width="48"
-                height="14"
-                rx="7"
-                fill="#FFF8F0"
-                stroke="rgba(201,149,107,0.2)"
-                strokeWidth="1"
-              />
-              <rect x="134" y="121" width="36" height="3" rx="1.5" fill="#C9956B" />
-              <defs>
-                <filter
-                  id="notifShadow"
-                  x="-10%"
-                  y="-10%"
-                  width="120%"
-                  height="140%"
-                >
-                  <feDropShadow
-                    dx="0"
-                    dy="4"
-                    stdDeviation="8"
-                    floodColor="rgba(0,0,0,0.08)"
-                  />
-                </filter>
-              </defs>
-            </motion.g>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {step >= 2 && step <= 3 && (
-            <motion.g
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35 }}
-            >
-              <rect
-                x="220"
-                y="96"
-                width="140"
-                height="62"
-                rx="12"
-                fill="#ECF2FF"
-                stroke="rgba(37,99,235,0.15)"
-                strokeWidth="1"
-              />
-              <path d="M310,158 L322,168 L330,158" fill="#ECF2FF" />
-              <rect
-                x="232"
-                y="107"
-                width="80"
-                height="4"
-                rx="2"
-                fill="#1E40AF"
-                opacity="0.8"
-              />
-              <rect
-                x="232"
-                y="113"
-                width="112"
-                height="3.5"
-                rx="1.75"
-                fill="#3B82F6"
-                opacity="0.6"
-              />
-              <rect
-                x="232"
-                y="119"
-                width="96"
-                height="3.5"
-                rx="1.75"
-                fill="#3B82F6"
-                opacity="0.6"
-              />
-              <rect
-                x="232"
-                y="128"
-                width="116"
-                height="18"
-                rx="6"
-                fill="rgba(37,99,235,0.06)"
-                stroke="rgba(37,99,235,0.1)"
-                strokeWidth="1"
-              />
-              <rect
-                x="240"
-                y="133"
-                width="10"
-                height="8"
-                rx="2"
-                fill="#C9956B"
-                opacity="0.8"
-              />
-              <rect
-                x="254"
-                y="134"
-                width="68"
-                height="3.5"
-                rx="1.75"
-                fill="#C9956B"
-                opacity="0.7"
-              />
-              <rect
-                x="254"
-                y="139"
-                width="48"
-                height="3"
-                rx="1.5"
-                fill="#888E9C"
-                opacity="0.7"
-              />
-            </motion.g>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {step === 4 && (
-            <motion.g
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ type: "spring", stiffness: 400, damping: 20 }}
-            >
-              <circle
-                cx="360"
-                cy="90"
-                r="22"
-                fill="#ECFDF3"
-                stroke="rgba(34,197,94,0.25)"
-                strokeWidth="1.5"
-              />
-              <motion.path
-                d="M349,90 L357,98 L371,82"
-                stroke="#15803D"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-              />
-              <rect
-                x="258"
-                y="78"
-                width="84"
-                height="24"
-                rx="8"
-                fill="#fff"
-                stroke="#E3DDD2"
-                strokeWidth="1"
-              />
-              <rect
-                x="266"
-                y="85"
-                width="68"
-                height="3.5"
-                rx="1.75"
-                fill="#15803D"
-                opacity="0.8"
-              />
-              <rect
-                x="266"
-                y="91"
-                width="50"
-                height="3"
-                rx="1.5"
-                fill="#888E9C"
-                opacity="0.7"
-              />
-            </motion.g>
-          )}
-        </AnimatePresence>
-
-        <ellipse cx="240" cy="225" rx="130" ry="26" fill="#D4C8B4" opacity="0.4" />
-        <ellipse
-          cx="240"
-          cy="225"
-          rx="116"
-          ry="20"
-          fill="none"
-          stroke="#C8BCA8"
-          strokeWidth="1"
-          opacity="0.4"
-        />
-      </svg>
-
-      <div className="sceneCap">
-        <AnimatePresence mode="wait">
-          <motion.span
-            key={step}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.3 }}
-          >
-            {captions[step]}
-          </motion.span>
-        </AnimatePresence>
-      </div>
-    </div>
-  );
-}
-
-function CareHomeScene() {
-  const [tick, setTick] = useState(0);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setTick((p) => p + 1), 2600);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  const residents = [
-    {
-      name: "Evelyn",
-      col: "#C9956B",
-      statuses: ["3 days left", "Request sent", "GP approved", "Ready"],
-      medCol: ["#FFFBEB", "#FFF8F0", "#ECF2FF", "#ECFDF3"],
-      textCol: ["#D97706", "#C9956B", "#2563EB", "#15803D"],
-    },
-    {
-      name: "Bernard",
-      col: "#7EA8D4",
-      statuses: ["5 days left", "Draft ready", "Submitted", "In review"],
-      medCol: ["#ECFDF3", "#FFF8F0", "#FFF8F0", "#ECF2FF"],
-      textCol: ["#15803D", "#C9956B", "#C9956B", "#2563EB"],
-    },
-    {
-      name: "Irene",
-      col: "#A8C890",
-      statuses: ["7 days left", "7 days left", "Request sent", "Ready"],
-      medCol: ["#ECFDF3", "#ECFDF3", "#FFF8F0", "#ECFDF3"],
-      textCol: ["#15803D", "#15803D", "#C9956B", "#15803D"],
-    },
-  ] as const;
-
-  return (
-    <div className="sceneWrap">
-      <svg
-        viewBox="0 0 480 300"
-        className="sceneSvg"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <rect x="0" y="0" width="480" height="300" fill="#FAF7F2" rx="20" />
-        <rect x="0" y="0" width="480" height="185" fill="#F0EBE2" rx="20" />
-        <rect x="0" y="178" width="480" height="7" fill="#E4DDD4" />
-        <rect x="0" y="185" width="480" height="115" fill="#EDE8DF" />
-        {[200, 230, 260].map((y) => (
-          <line
-            key={y}
-            x1="0"
-            y1={y}
-            x2="480"
-            y2={y}
-            stroke="#E3DDD2"
-            strokeWidth="0.5"
-          />
-        ))}
-
-        <rect
-          x="14"
-          y="18"
-          width="88"
-          height="68"
-          rx="4"
-          fill="#E8D8B8"
-          stroke="#D4C4A4"
-          strokeWidth="1"
-        />
-        <rect x="20" y="24" width="76" height="10" rx="2" fill="#C9956B" opacity="0.6" />
-        <rect x="22" y="38" width="40" height="3" rx="1.5" fill="#A89070" opacity="0.7" />
-        <rect x="22" y="44" width="56" height="3" rx="1.5" fill="#A89070" opacity="0.5" />
-        <rect x="22" y="50" width="48" height="3" rx="1.5" fill="#A89070" opacity="0.5" />
-        <rect x="22" y="56" width="52" height="3" rx="1.5" fill="#A89070" opacity="0.5" />
-        <rect x="22" y="62" width="36" height="3" rx="1.5" fill="#A89070" opacity="0.5" />
-        <circle cx="58" cy="19" r="3" fill="#A89070" opacity="0.6" />
-
-        <rect
-          x="380"
-          y="14"
-          width="88"
-          height="72"
-          rx="6"
-          fill="#D8EDF5"
-          stroke="#C8D8E5"
-          strokeWidth="1.2"
-        />
-        <line x1="424" y1="14" x2="424" y2="86" stroke="#C8D8E5" strokeWidth="0.8" />
-        <line x1="380" y1="50" x2="468" y2="50" stroke="#C8D8E5" strokeWidth="0.8" />
-        <circle cx="400" cy="34" r="9" fill="#F5D78A" opacity="0.5" />
-
-        <rect x="40" y="185" width="400" height="10" rx="4" fill="#BEB098" />
-        <rect x="50" y="195" width="14" height="30" rx="3" fill="#A89878" />
-        <rect x="416" y="195" width="14" height="30" rx="3" fill="#A89878" />
-
-        {[78, 228, 378].map((x, i) => (
-          <g key={i}>
-            <rect x={x} y="152" width="44" height="32" rx="8" fill="#C4B8A4" />
-            <rect x={x + 4} y="157" width="36" height="24" rx="5" fill="#D4C8B4" />
-          </g>
-        ))}
-
-        {residents.map((r, i) => {
-          const bx = [78, 228, 378][i];
-          return (
-            <g key={r.name}>
-              <rect
-                x={bx + 4}
-                y="157"
-                width="36"
-                height="28"
-                rx="8"
-                fill={["#D4C4B0", "#B8C8D8", "#C4D4B8"][i]}
-              />
-              <circle
-                cx={bx + 22}
-                cy="144"
-                r="16"
-                fill={["#E8C8A8", "#D4B898", "#E0CAAC"][i]}
-              />
-              {i === 0 && (
-                <path
-                  d={`M${bx + 6},138 Q${bx + 8},125 ${bx + 22},124 Q${bx + 36},125 ${bx + 38},138`}
-                  fill="#E8E4DC"
-                />
-              )}
-              {i === 1 && (
-                <path
-                  d={`M${bx + 8},136 Q${bx + 10},126 ${bx + 22},125 Q${bx + 34},126 ${bx + 36},136`}
-                  fill="#3A3028"
-                />
-              )}
-              {i === 2 && (
-                <path
-                  d={`M${bx + 7},137 Q${bx + 9},126 ${bx + 22},125 Q${bx + 35},126 ${bx + 37},137`}
-                  fill="#7A6858"
-                />
-              )}
-              {i === 0 && (
-                <>
-                  <circle
-                    cx={bx + 17}
-                    cy="145"
-                    r="4.5"
-                    fill="none"
-                    stroke="#8A7A6A"
-                    strokeWidth="0.9"
-                  />
-                  <circle
-                    cx={bx + 27}
-                    cy="145"
-                    r="4.5"
-                    fill="none"
-                    stroke="#8A7A6A"
-                    strokeWidth="0.9"
-                  />
-                  <line
-                    x1={bx + 21.5}
-                    y1="145"
-                    x2={bx + 22.5}
-                    y2="145"
-                    stroke="#8A7A6A"
-                    strokeWidth="0.8"
-                  />
-                </>
-              )}
-              <circle cx={bx + 17} cy="145" r="1.8" fill="#2A2018" />
-              <circle cx={bx + 27} cy="145" r="1.8" fill="#2A2018" />
-              <path
-                d={`M${bx + 16},151 Q${bx + 22},155 ${bx + 28},151`}
-                stroke="#8A6A5A"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                fill="none"
-              />
-              <path
-                d={`M${bx + 8},170 Q${bx + 4},180 ${bx + 8},185`}
-                stroke={["#E8C8A8", "#D4B898", "#E0CAAC"][i]}
-                strokeWidth="9"
-                strokeLinecap="round"
-                fill="none"
-              />
-              <path
-                d={`M${bx + 36},170 Q${bx + 40},180 ${bx + 36},185`}
-                stroke={["#E8C8A8", "#D4B898", "#E0CAAC"][i]}
-                strokeWidth="9"
-                strokeLinecap="round"
-                fill="none"
-              />
-              <rect
-                x={bx + 14}
-                y="182"
-                width="16"
-                height="12"
-                rx="3"
-                fill={["#F0C890", "#90B8D0", "#A8C890"][i]}
-                opacity="0.6"
-              />
-              <path
-                d={`M${bx + 30},184 Q${bx + 34},188 ${bx + 30},192`}
-                stroke={["#E0B870", "#7A9EC0", "#90B870"][i]}
-                strokeWidth="2"
-                fill="none"
-                strokeLinecap="round"
-                opacity="0.6"
-              />
-            </g>
-          );
-        })}
-
-        <rect x="424" y="168" width="38" height="36" rx="10" fill="#8888B8" />
-        <rect x="432" y="175" width="12" height="16" rx="2" fill="#fff" opacity="0.8" />
-        <rect x="433" y="177" width="10" height="2" rx="1" fill="#8888B8" opacity="0.6" />
-        <circle cx="443" cy="154" r="17" fill="#DDB898" />
-        <path d="M426,148 Q428,135 443,133 Q458,135 460,148" fill="#2A3048" />
-        <circle cx="437" cy="154" r="2" fill="#2A2018" />
-        <circle cx="449" cy="154" r="2" fill="#2A2018" />
-        <path
-          d="M438,161 Q443,165 448,161"
-          stroke="#8A6A5A"
-          strokeWidth="1.2"
-          strokeLinecap="round"
-          fill="none"
-        />
-        <path
-          d="M424,178 Q414,188 412,196"
-          stroke="#DDB898"
-          strokeWidth="10"
-          strokeLinecap="round"
-          fill="none"
-        />
-        <path
-          d="M462,178 Q466,184 462,196"
-          stroke="#DDB898"
-          strokeWidth="10"
-          strokeLinecap="round"
-          fill="none"
-        />
-        <rect x="408" y="192" width="52" height="36" rx="5" fill="#1A1A1E" />
-        <rect x="410" y="194" width="48" height="32" rx="3.5" fill="#F0EDF8" />
-        <rect x="414" y="198" width="28" height="3" rx="1.5" fill="#2563EB" opacity="0.8" />
-        {residents.map((r, i) => (
-          <motion.g
-            key={r.name}
-            animate={{ opacity: [0.6, 1, 0.6] }}
-            transition={{ duration: 2.6, repeat: Infinity, delay: i * 0.3 }}
-          >
-            <rect
-              x="414"
-              y={204 + i * 7}
-              width="5"
-              height="5"
-              rx="1"
-              fill={r.col}
-              opacity="0.8"
-            />
-            <rect
-              x="421"
-              y={205 + i * 7}
-              width="28"
-              height="3"
-              rx="1.5"
-              fill="#888E9C"
-              opacity="0.7"
-            />
-          </motion.g>
-        ))}
-
-        {residents.map((r, i) => {
-          const si = tick % r.statuses.length;
-          const bx = [78, 228, 378][i];
-          return (
-            <motion.g
-              key={`card-${r.name}`}
-              animate={{ y: [0, -3, 0] }}
-              transition={{
-                duration: 3 + i * 0.4,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            >
-              <AnimatePresence mode="wait">
-                <motion.g
-                  key={`${r.name}-${si}`}
-                  initial={{ opacity: 0, y: 6, scale: 0.94 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <rect
-                    x={bx - 14}
-                    y="50"
-                    width="72"
-                    height="56"
-                    rx="10"
-                    fill="#fff"
-                    style={{
-                      filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.07))",
-                    }}
-                  />
-                  <rect
-                    x={bx - 14}
-                    y="50"
-                    width="72"
-                    height="56"
-                    rx="10"
-                    fill="none"
-                    stroke="#E3DDD2"
-                    strokeWidth="0.8"
-                  />
-                  <line
-                    x1={bx + 22}
-                    y1="106"
-                    x2={bx + 22}
-                    y2="127"
-                    stroke="#D4CCC0"
-                    strokeWidth="1"
-                    strokeDasharray="3 2"
-                  />
-                  <circle cx={bx - 2} cy="64" r="7" fill={r.medCol[si]} />
-                  <rect
-                    x={bx - 5.5}
-                    y="61"
-                    width="7"
-                    height="6"
-                    rx="1.5"
-                    fill={r.textCol[si]}
-                    opacity="0.7"
-                  />
-                  <rect
-                    x={bx + 8}
-                    y="61"
-                    width="36"
-                    height="3.5"
-                    rx="1.75"
-                    fill="#111214"
-                    opacity="0.7"
-                  />
-                  <rect
-                    x={bx - 10}
-                    y="72"
-                    width="60"
-                    height="3"
-                    rx="1.5"
-                    fill="#888E9C"
-                    opacity="0.6"
-                  />
-                  <rect
-                    x={bx - 10}
-                    y="79"
-                    width="62"
-                    height="20"
-                    rx="6"
-                    fill={r.medCol[si]}
-                    stroke="rgba(17,18,20,0.05)"
-                    strokeWidth="0.8"
-                  />
-                  <rect
-                    x={bx - 4}
-                    y="86"
-                    width="42"
-                    height="3.5"
-                    rx="1.75"
-                    fill={r.textCol[si]}
-                    opacity="0.8"
-                  />
-                </motion.g>
-              </AnimatePresence>
-            </motion.g>
-          );
-        })}
-
-        <rect
-          x="196"
-          y="186"
-          width="88"
-          height="52"
-          rx="8"
-          fill="#fff"
-          stroke="#E3DDD2"
-          strokeWidth="1"
-          opacity="0.9"
-        />
-        <rect x="200" y="191" width="40" height="4" rx="2" fill="#2563EB" opacity="0.7" />
-        <rect x="200" y="197" width="78" height="3" rx="1.5" fill="#888E9C" opacity="0.5" />
-        <rect x="200" y="203" width="62" height="3" rx="1.5" fill="#888E9C" opacity="0.5" />
-        <rect x="200" y="211" width="76" height="6" rx="3" fill="#F2EDE4" />
-        <motion.rect
-          x="200"
-          y="211"
-          height="6"
-          rx="3"
-          fill="#22C55E"
-          animate={{ width: [20, 56, 20] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <circle cx="267" cy="194" r="4.5" fill="#C9956B" opacity="0.7" />
-      </svg>
-
-      <div className="sceneCap">
-        <AnimatePresence mode="wait">
-          <motion.span
-            key={tick % 4}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            {
-              [
-                "Every resident stays visible in one place.",
-                "Drafts are prepared before supply becomes urgent.",
-                "Staff can see status across residents at a glance.",
-                "Less switching, less calling, less uncertainty.",
-              ][tick % 4]
-            }
-          </motion.span>
-        </AnimatePresence>
-      </div>
     </div>
   );
 }
@@ -1761,7 +710,7 @@ export default function Page() {
     }
   }, []);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!agreed) return;
 
@@ -1806,6 +755,48 @@ export default function Page() {
     }
   }
 
+  const workflowCards = [
+    {
+      icon: <Bell size={22} />,
+      title: "See what needs attention",
+      body: "Know what is due soon, what is delayed, and what needs follow-up right now.",
+      tone: "warm",
+    },
+    {
+      icon: <RefreshCw size={22} />,
+      title: "Keep ownership clear",
+      body: "See who handled the request last, who owns the next step, and what should happen next.",
+      tone: "blue",
+    },
+    {
+      icon: <Package size={22} />,
+      title: "Follow every update",
+      body: "Track progress from preparation to ready without losing the thread along the way.",
+      tone: "green",
+    },
+  ] as const;
+
+  const audienceCards = [
+    {
+      icon: <Users size={22} />,
+      title: "Family carers",
+      body: "For people helping a parent, partner, or relative stay on top of repeat prescriptions without carrying every detail alone.",
+      tone: "warm",
+    },
+    {
+      icon: <RefreshCw size={22} />,
+      title: "Households",
+      body: "For homes managing medication admin across more than one person, where visibility and handoff matter.",
+      tone: "blue",
+    },
+    {
+      icon: <Building2 size={22} />,
+      title: "Care teams",
+      body: "For supported living, residential care, and teams coordinating repeat-prescription workflows across residents.",
+      tone: "green",
+    },
+  ] as const;
+
   const valueCards = [
     {
       icon: <Bell size={22} />,
@@ -1814,21 +805,21 @@ export default function Page() {
       tone: "warm",
     },
     {
-      icon: <RefreshCw size={22} />,
-      title: "Clear ownership",
-      body: "See who handled it last, who owns it now, and what the next action is across shifts, households, or teams.",
-      tone: "blue",
-    },
-    {
       icon: <FileText size={22} />,
       title: "Shared context",
       body: "Keep notes, updates, and timelines together so staff and family are not working from fragments.",
-      tone: "green",
+      tone: "blue",
     },
     {
       icon: <Users size={22} />,
       title: "Better handover",
       body: "Make follow-through easier when one person prepares the request and someone else needs to carry it forward.",
+      tone: "green",
+    },
+    {
+      icon: <Package size={22} />,
+      title: "Calmer follow-through",
+      body: "Turn a messy process into something clearer, more visible, and easier to stay on top of.",
       tone: "warm",
     },
   ] as const;
@@ -1840,42 +831,42 @@ export default function Page() {
     },
     {
       title: "Delayed queue and escalation",
-      body: "Flag requests that are stuck too long and surface what needs a call, reminder, or handoff.",
+      body: "Flag requests that are stuck too long and surface what needs a reminder, a call, or a handoff.",
     },
     {
       title: "Proxy and consent support",
-      body: "Capture who is allowed to act, who should be updated, and how responsibility is shared.",
+      body: "Make it clearer who is allowed to act, who should be updated, and how responsibility is shared.",
     },
     {
-      title: "Family-safe updates",
-      body: "Turn messy status changes into simple summaries that can be passed to relatives or support workers.",
-    },
-    {
-      title: "Bilingual letters and explanations",
-      body: "Explain updates, letters, and next steps in simpler language and across multiple languages.",
-    },
-    {
-      title: "Collection and delivery coordination",
+      title: "Collection and delivery guidance",
       body: "Track whether medicine is ready, delayed, collected, or waiting on a delivery decision.",
+    },
+    {
+      title: "Bilingual explanations",
+      body: "Explain status changes, letters, and next steps in simpler language and across multiple languages.",
+    },
+    {
+      title: "Team and manager views",
+      body: "A clearer picture across residents, households, and staff, without depending on memory or scattered notes.",
     },
   ] as const;
 
   const trustCards = [
     {
-      title: "Secure authentication",
-      body: "A web-first foundation with controlled access and modern account security from day one.",
+      title: "Protected access",
+      body: "Built with secure sign-in and controlled access from day one.",
     },
     {
-      title: "Role-based visibility",
-      body: "Design the product so family, staff, and future managers see only what is relevant to them.",
+      title: "Clear visibility",
+      body: "The right people see the right information, with clearer boundaries across family and care teams.",
     },
     {
       title: "Audit history",
-      body: "Keep track of what changed, when it changed, and who handled it to support safer follow-through.",
+      body: "A clearer record of updates, ownership changes, and follow-through over time.",
     },
     {
-      title: "Least-data design",
-      body: "Start narrow, collect only what is needed for the workflow, and avoid pretending to replace clinical systems.",
+      title: "Focused data collection",
+      body: "Designed to stay narrow and collect only what is needed for the workflow.",
     },
   ] as const;
 
@@ -1906,6 +897,7 @@ export default function Page() {
                   style={{ width: "100%", height: "100%", objectFit: "contain" }}
                 />
               </div>
+
               <div className="navBrTx">
                 <span className="navNm serif">Laura</span>
                 <span className="navBy">by Omela</span>
@@ -1919,8 +911,8 @@ export default function Page() {
               <a href="#who" className="navLk">
                 Who it helps
               </a>
-              <a href="#roadmap" className="navLk">
-                Roadmap
+              <a href="#coming-next" className="navLk">
+                Coming next
               </a>
             </div>
 
@@ -1951,8 +943,9 @@ export default function Page() {
 
               <FI delay={0.12}>
                 <p className="heroSub">
-                  Omela helps carers and care teams track requests, assign
-                  ownership, and follow medication admin across multiple people.
+                  Laura helps carers and care teams keep repeat prescription
+                  requests visible across multiple people, with clearer
+                  ownership, calmer follow-through, and less admin friction.
                 </p>
               </FI>
 
@@ -1974,6 +967,13 @@ export default function Page() {
                   </a>
                 </div>
               </FI>
+
+              <FI delay={0.28}>
+                <p className="heroFoot">
+                  Starting in the UK with repeat prescription coordination for
+                  carers, households, and selected care teams.
+                </p>
+              </FI>
             </div>
 
             <FI delay={0.16} className="heroBoardCol">
@@ -1993,11 +993,11 @@ export default function Page() {
                   },
                   {
                     n: "02",
-                    t: "A repeat request can be due soon, requested, approved, ready, delayed, or still unresolved.",
+                    t: "Updates often sit across calls, shifts, notes, and memory instead of one clear view.",
                   },
                   {
                     n: "03",
-                    t: "Small admin turns into repeated calling, shift-handover confusion, and memory work.",
+                    t: "Small prescription admin turns into repeated checking, repeated calls, and repeated stress.",
                   },
                 ].map((p) => (
                   <div className="problemStripItem" key={p.n}>
@@ -2014,39 +1014,20 @@ export default function Page() {
           <div className="container">
             <FI>
               <div className="shW">
-                <Overline>How Omela works</Overline>
+                <Overline>How Laura works</Overline>
                 <h2 className="serif shT shTSpaced">
-                  One calm workflow from due soon to ready.
+                  One calmer workflow from due soon to ready.
                 </h2>
                 <p className="shB">
-                  Omela is not a pharmacy. It is the coordination layer around
-                  repeat-prescription admin for carers, households, and care
-                  teams.
+                  Laura is not a pharmacy, not telehealth, and not a diagnosis
+                  tool. She is the coordination layer around repeat-prescription
+                  admin.
                 </p>
               </div>
             </FI>
 
             <div className="proofGrid">
-              {[
-                {
-                  icon: <Bell size={22} />,
-                  title: "Track",
-                  body: "See what is due soon, what is delayed, and what needs follow-up right now.",
-                  tone: "warm",
-                },
-                {
-                  icon: <FileText size={22} />,
-                  title: "Own",
-                  body: "See who handled the request last, who owns the next step, and what should happen next.",
-                  tone: "blue",
-                },
-                {
-                  icon: <Package size={22} />,
-                  title: "Follow through",
-                  body: "Track progress from preparation to ready or delayed without losing context along the way.",
-                  tone: "green",
-                },
-              ].map((item, i) => (
+              {workflowCards.map((item, i) => (
                 <FI key={item.title} delay={i * 0.06}>
                   <div className="proofCard">
                     <motion.div
@@ -2060,46 +1041,12 @@ export default function Page() {
                     >
                       {item.icon}
                     </motion.div>
+
                     <h3 className="proofTi">{item.title}</h3>
                     <p className="proofBd">{item.body}</p>
                   </div>
                 </FI>
               ))}
-            </div>
-
-            <div className="scenesGrid">
-              <FI delay={0.04}>
-                <div className="sceneCard">
-                  <div className="sceneCardHead">
-                    <Overline tone="warm">For family carers</Overline>
-                    <h3 className="serif sceneCardTitle">
-                      Helping a parent stay on top of repeat prescriptions.
-                    </h3>
-                    <p className="sceneCardBody">
-                      Omela keeps supply, preparation, and status visible, so
-                      the next request feels calmer before it becomes urgent.
-                    </p>
-                  </div>
-                  <HomeScene />
-                </div>
-              </FI>
-
-              <FI delay={0.08}>
-                <div className="sceneCard">
-                  <div className="sceneCardHead">
-                    <Overline tone="blue">For care teams</Overline>
-                    <h3 className="serif sceneCardTitle">
-                      Tracking requests across residents without losing
-                      visibility.
-                    </h3>
-                    <p className="sceneCardBody">
-                      No spreadsheets, no fragmented updates, no guessing.
-                      Omela keeps the workflow visible from due soon to ready.
-                    </p>
-                  </div>
-                  <CareHomeScene />
-                </div>
-              </FI>
             </div>
           </div>
         </section>
@@ -2108,7 +1055,7 @@ export default function Page() {
           <div className="container">
             <FI>
               <div className="shW">
-                <Overline>Why teams pay for this</Overline>
+                <Overline tone="warm">Why people switch</Overline>
                 <h2 className="serif shT shTSpaced">
                   Built to reduce follow-up chaos, not add another system.
                 </h2>
@@ -2139,51 +1086,26 @@ export default function Page() {
           <div className="container">
             <FI>
               <div className="shW">
-                <Overline>Who Omela is for</Overline>
+                <Overline>Who Laura is for</Overline>
                 <h2 className="serif shT shTSpaced">
                   Built for the people carrying the admin.
                 </h2>
                 <p className="shB">
-                  Omela is designed for the people doing the follow-through, not
+                  Laura is designed for the people doing the follow-through, not
                   just the ordering.
                 </p>
               </div>
             </FI>
 
             <div className="audGrid">
-              {[
-                {
-                  icon: <Users size={22} />,
-                  title: "Family carers",
-                  desc: "For people helping a parent, partner, or relative stay on top of repeat prescriptions without carrying every detail alone.",
-                  color: c.warm,
-                },
-                {
-                  icon: <RefreshCw size={22} />,
-                  title: "Households",
-                  desc: "For homes managing medication admin across more than one person, where visibility and handoff matter.",
-                  color: c.accent,
-                },
-                {
-                  icon: <Building2 size={22} />,
-                  title: "Care teams",
-                  desc: "For supported living, residential care, and teams coordinating repeat-prescription workflows across residents.",
-                  color: c.green,
-                },
-              ].map((item, i) => (
+              {audienceCards.map((item, i) => (
                 <FI key={item.title} delay={i * 0.06}>
                   <div className="audCard">
-                    <div
-                      className="audIc"
-                      style={{
-                        background: `${item.color}0A`,
-                        color: item.color,
-                      }}
-                    >
+                    <div className={`audIc audIc--${item.tone}`}>
                       {item.icon}
                     </div>
                     <h3 className="audTi">{item.title}</h3>
-                    <p className="audBd">{item.desc}</p>
+                    <p className="audBd">{item.body}</p>
                   </div>
                 </FI>
               ))}
@@ -2191,19 +1113,19 @@ export default function Page() {
           </div>
         </section>
 
-        <section id="roadmap" className="sec">
+        <section id="coming-next" className="sec">
           <div className="container">
             <FI>
               <div className="shW">
-                <Overline tone="warm">Product direction</Overline>
+                <Overline tone="warm">Coming next</Overline>
                 <h2 className="serif shT shTSpaced">
                   Starting with repeat prescriptions. Expanding into calmer
                   medication coordination.
                 </h2>
                 <p className="shB">
-                  The wedge is repeat-prescription coordination. The broader
-                  platform is shared medication workflow for carers and care
-                  teams.
+                  The first wedge is repeat-prescription admin. The broader
+                  direction is shared medication coordination for carers and
+                  care teams.
                 </p>
               </div>
             </FI>
@@ -2232,19 +1154,19 @@ export default function Page() {
           </div>
         </section>
 
-        <section id="security" className="sec secSoft secSecurity">
+        <section className="sec secSoft secSecurity">
           <div className="container">
             <FI>
               <div className="trustWrap">
                 <div className="boundaryCard">
                   <Overline>Boundaries and trust</Overline>
                   <h3 className="serif boundaryTi">
-                    Omela sits alongside GP and pharmacy workflows.
+                    Built to sit alongside existing care workflows.
                   </h3>
                   <p className="boundaryBd">
-                    It is not a pharmacy, not telehealth, and not a diagnosis
-                    tool. It is the operational layer that helps people follow
-                    through more clearly and securely.
+                    Omela is not a pharmacy, not telehealth, and not a diagnosis
+                    tool. It is the coordination layer that helps carers and
+                    care teams follow repeat-prescription admin more clearly.
                   </p>
                 </div>
 
@@ -2272,7 +1194,7 @@ export default function Page() {
                   Join the first Omela pilots.
                 </h2>
                 <p className="wlSub">
-                  Starting in the UK with repeat-prescription coordination for
+                  Starting in the UK with repeat prescription coordination for
                   carers, households, and selected care teams.
                 </p>
 
@@ -2380,11 +1302,13 @@ export default function Page() {
                       }}
                     />
                   </div>
+
                   <div className="ftBrTx">
                     <span className="ftBrN serif">Laura</span>
                     <span className="ftBrBy">by Omela</span>
                   </div>
                 </Link>
+
                 <p className="ftBrDesc">
                   A calmer coordination platform for repeat-prescription admin.
                   Built for the people doing the follow-through.
@@ -2400,8 +1324,8 @@ export default function Page() {
                   <a href="#who" className="ftLk">
                     Who it helps
                   </a>
-                  <a href="#roadmap" className="ftLk">
-                    Roadmap
+                  <a href="#coming-next" className="ftLk">
+                    Coming next
                   </a>
                   <a href="#waitlist" className="ftLk">
                     Early access
@@ -2711,6 +1635,12 @@ button,input,select{font-family:inherit}
   min-height:54px;
   padding:15px 24px;
   font-size:15px
+}
+.heroFoot{
+  margin-top:16px;
+  font-size:12.5px;
+  line-height:1.65;
+  color:${c.muted}
 }
 .heroBoardCol{
   display:flex;
@@ -3067,7 +1997,7 @@ button,input,select{font-family:inherit}
   color:${c.sub}
 }
 
-/* ───── Proof grid ───── */
+/* ───── Workflow cards ───── */
 .proofGrid{
   display:grid;
   grid-template-columns:1fr;
@@ -3145,56 +2075,6 @@ button,input,select{font-family:inherit}
   color:${c.sub}
 }
 
-/* ───── Scene cards ───── */
-.scenesGrid{
-  display:grid;
-  grid-template-columns:1fr;
-  gap:18px;
-  margin-top:34px
-}
-.sceneCard{
-  background:rgba(255,255,255,.94);
-  border:1px solid ${c.border};
-  border-radius:28px;
-  overflow:hidden;
-  box-shadow:0 6px 28px rgba(0,0,0,.04);
-  transition:box-shadow .3s
-}
-.sceneCard:hover{box-shadow:0 12px 44px rgba(0,0,0,.07)}
-.sceneCardHead{padding:24px 24px 18px}
-.sceneCardTitle{
-  margin-top:12px;
-  font-size:clamp(22px,3vw,28px);
-  line-height:1.08;
-  letter-spacing:-.04em;
-  margin-bottom:8px
-}
-.sceneCardBody{
-  font-size:13.8px;
-  line-height:1.72;
-  color:${c.sub};
-  max-width:500px
-}
-.sceneWrap{padding:0 14px 18px;position:relative}
-.sceneSvg{width:100%;height:auto;display:block;border-radius:16px;overflow:hidden}
-.sceneCap{
-  text-align:center;
-  padding:12px 18px 0;
-  min-height:40px;
-  display:flex;
-  align-items:center;
-  justify-content:center
-}
-.sceneCap span{
-  font-size:12.5px;
-  color:${c.muted};
-  font-weight:500;
-  line-height:1.58;
-  text-align:center;
-  max-width:360px;
-  font-style:italic
-}
-
 /* ───── Audience grid ───── */
 .audGrid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:34px}
 .audCard{
@@ -3214,6 +2094,9 @@ button,input,select{font-family:inherit}
   justify-content:center;
   margin-bottom:12px
 }
+.audIc--warm{background:${c.warmSoft};color:${c.warm}}
+.audIc--blue{background:${c.accentSoft};color:${c.accent}}
+.audIc--green{background:${c.greenSoft};color:${c.greenDk}}
 .audTi{font-size:16px;font-weight:800;letter-spacing:-.02em}
 .audBd{margin-top:6px;font-size:13.2px;line-height:1.72;color:${c.sub}}
 
@@ -3830,7 +2713,6 @@ button,input,select{font-family:inherit}
   .proofGrid{grid-template-columns:repeat(3,1fr)}
   .valueGrid{grid-template-columns:repeat(2,1fr)}
   .audGrid{grid-template-columns:repeat(3,1fr)}
-  .scenesGrid{grid-template-columns:repeat(2,1fr)}
   .roadmapGrid{grid-template-columns:repeat(2,1fr)}
   .trustGrid{grid-template-columns:repeat(2,1fr)}
   .wlF{grid-template-columns:1.2fr .9fr auto}
