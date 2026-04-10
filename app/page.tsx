@@ -527,7 +527,7 @@ button,input,select{font-family:inherit}
 .navLk{font-size:14px;font-weight:600;color:${c.sub};transition:color .2s}
 .navLk:hover{color:${c.text}}
 .navRight{display:flex;align-items:center;gap:16px}
-.navSignIn{display:none;font-size:14px;font-weight:700;color:${c.sub}}
+.navSignIn{display:inline-flex;font-size:14px;font-weight:700;color:${c.sub};transition:color .2s}
 .navSignIn:hover{color:${c.text}}
 .navCt{padding:11px 18px!important;font-size:13px!important}
 
@@ -760,9 +760,16 @@ button,input,select{font-family:inherit}
 @media(max-width:639px){
   .sec{padding:56px 0}
   .heroSec{padding:36px 0 44px}
-  .heroTi{font-size:clamp(34px,11vw,52px)}
-  .heroBt{flex-direction:column;width:100%}
-  .heroBtP,.heroBtS{width:100%}
+  .heroTi{font-size:clamp(30px,9vw,48px)}
+  .heroBt{flex-wrap:nowrap;gap:8px;justify-content:center}
+  .heroBtP,.heroBtS{flex:1;min-width:0;min-height:50px;padding:14px 14px;font-size:13.5px}
+  .heroBtP{gap:5px}
+  .navR{gap:6px;height:60px}
+  .navNm{font-size:18px}
+  .navLo{width:30px;height:30px}
+  .navRight{gap:10px}
+  .navCt{padding:9px 14px!important;font-size:12px!important}
+  .navSignIn{font-size:13px}
   .processStrip{padding:48px 0}
   .processGrid{gap:32px}
   .statBand{padding:60px 0}
@@ -782,7 +789,6 @@ button,input,select{font-family:inherit}
   .container{padding:0 28px}
   .navR{height:72px}
   .navLks{display:flex}
-  .navSignIn{display:inline-flex}
   .processGrid{grid-template-columns:1fr 40px 1fr 40px 1fr;gap:12px}
   .processLine{display:block}
   .featGrid{grid-template-columns:repeat(3,1fr)}
