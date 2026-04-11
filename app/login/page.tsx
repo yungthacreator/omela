@@ -308,6 +308,56 @@ button{font-family:inherit}
   flex-shrink:0;
 }
 
+.formAlt{
+  margin-top:10px;
+}
+
+.msBtn{
+  width:100%;
+  min-height:54px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  background:#fff;
+  color:var(--text);
+  border:1.5px solid var(--borderSoft);
+  border-radius:14px;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all .2s ease;
+  letter-spacing:-.005em;
+  padding:0 18px;
+}
+
+.msBtn:hover{
+  border-color:var(--text);
+  box-shadow:0 6px 18px rgba(0,0,0,.05);
+  transform:translateY(-1px);
+}
+
+.msBtn:active{transform:translateY(0)}
+
+.msIcon{
+  width:18px;
+  height:18px;
+  flex-shrink:0;
+}
+
+.msBtnTag{
+  margin-left:auto;
+  padding:3px 8px;
+  background:#F2EDE4;
+  color:#888E9C;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+  border-radius:5px;
+  border:1px solid var(--borderSoft);
+}
+
 .divider{
   display:flex;
   align-items:center;
@@ -504,6 +554,30 @@ export default function LoginPage() {
                   />
                 </svg>
                 Continue with Google
+              </button>
+            </form>
+
+            <form
+              className="formAlt"
+              action={async () => {
+                "use server";
+                await signIn("microsoft-entra-id", { redirectTo: "/portal" });
+              }}
+            >
+              <button type="submit" className="msBtn">
+                <svg
+                  className="msIcon"
+                  viewBox="0 0 23 23"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                >
+                  <rect x="1" y="1" width="10" height="10" fill="#F25022" />
+                  <rect x="12" y="1" width="10" height="10" fill="#7FBA00" />
+                  <rect x="1" y="12" width="10" height="10" fill="#00A4EF" />
+                  <rect x="12" y="12" width="10" height="10" fill="#FFB900" />
+                </svg>
+                Continue with work account
+                <span className="msBtnTag">Microsoft</span>
               </button>
             </form>
 

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { AnimatePresence, motion, useInView } from "framer-motion";
 import { DM_Sans, Instrument_Serif } from "next/font/google";
-import { Activity, ArrowRight, Bell, Building2, Check, CheckCircle2, Clock, Copy, Database, Eye, FileText, Heart, History, Home, Package, RefreshCw, Share2, Shield, Stethoscope, Users } from "lucide-react";
+import { Activity, ArrowRight, Bell, Building2, Check, CheckCircle2, Clock, Copy, Database, Eye, GraduationCap, History, Home, Package, PawPrint, RefreshCw, Scale, Share2, Shield, Sparkles, Stethoscope, Users, Wrench } from "lucide-react";
 
 const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400","500","600","700","800"], variable: "--font-dm-sans" });
 const instrumentSerif = Instrument_Serif({ subsets: ["latin"], weight: "400", variable: "--font-instrument-serif" });
@@ -172,6 +172,10 @@ function LauraWorkspace() {
         </div>
 
         <div className="wsFeed">
+          <div className="wsNarr" aria-hidden="true">
+            <Sparkles size={11}/>
+            <span>Drafting next refill</span>
+          </div>
           <div className="wsFeedHd"><Activity size={11}/><span>Recent activity</span></div>
           <div className="wsFeedList">
             {activity.map((a, i) => (
@@ -252,17 +256,27 @@ export default function Page() {
   ];
 
   const industries = [
-    { icon:<Users size={24}/>, title:"Family carers", body:"Helping a parent, partner, or relative stay on top of repeat prescriptions without carrying every detail alone." },
-    { icon:<Home size={24}/>, title:"Supported living", body:"Giving staff and families a shared view of medication admin across residents and shift handovers." },
-    { icon:<Building2 size={24}/>, title:"Residential care", body:"Coordinating repeat-prescription workflows across many residents, practices, and pharmacies in one place." },
-    { icon:<Stethoscope size={24}/>, title:"Community pharmacies", body:"A clearer incoming queue with context on who ordered what, for whom, and what the collection window looks like." },
+    { icon:<Users size={22}/>, title:"Family carers", body:"Helping a parent, partner, or relative stay on top of repeat prescriptions without carrying every detail alone.", live:true, players:"Family · GP · Pharmacy" },
+    { icon:<Building2 size={22}/>, title:"Residential care", body:"Coordinating repeat-prescription workflows across many residents, practices, and pharmacies in one place.", live:true, players:"Care team · GP · Pharmacy" },
+    { icon:<Home size={22}/>, title:"Supported living", body:"Giving staff and families a shared view of medication admin across residents and shift handovers.", live:true, players:"Staff · Family · GP" },
+    { icon:<Stethoscope size={22}/>, title:"Community pharmacies", body:"A clearer incoming queue with context on who ordered what, for whom, and the collection window.", live:true, players:"Pharmacy · Patients · GPs" },
+    { icon:<PawPrint size={22}/>, title:"Veterinary repeat meds", body:"Pet owners, vets, and pharmacies coordinating chronic care prescriptions on the same cycle pattern.", live:false, players:"Owner · Vet · Pharmacy" },
+    { icon:<Scale size={22}/>, title:"Recurring legal filings", body:"Visa renewals, trademark renewals, and annual returns where paralegals chase clients, lawyers, and registries.", live:false, players:"Paralegal · Lawyer · Client" },
+    { icon:<Wrench size={22}/>, title:"Compliance and maintenance", body:"Gas safety, EICR, PAT testing, lift servicing. Recurring certifications coordinated across managers, contractors, and tenants.", live:false, players:"Manager · Vendor · Tenant" },
+    { icon:<GraduationCap size={22}/>, title:"Childcare medication plans", body:"Nurseries, parents, and GPs keeping allergy plans and recurring medications visible across handovers.", live:false, players:"Nursery · Parent · GP" },
+  ];
+
+  const pricing = [
+    { name:"Family", price:"£9", per:"per month", desc:"For one carer managing repeat prescriptions for up to 3 people.", features:["Up to 3 people","Unlimited requests","SMS and email reminders","Activity history"], cta:"Start free trial", featured:false },
+    { name:"Care team", price:"£49", per:"per month", desc:"For supported living, residential care, and small care teams.", features:["Up to 25 residents","Shared workspace","Role permissions","Audit log","Email support"], cta:"Book a demo", featured:true },
+    { name:"Organisation", price:"Custom", per:"annual contract", desc:"For care groups, NHS trusts, and multi-site providers.", features:["Unlimited residents","SSO and Microsoft Entra","Onboarding support","SLA and dedicated CSM","Data residency in UK"], cta:"Talk to sales", featured:false },
   ];
 
   const stats = [
-    { value:"75%", label:"less time spent chasing repeat prescriptions" },
-    { value:"3×", label:"clearer handoffs across family and care teams" },
-    { value:"90%", label:"of requests tracked end to end without gaps" },
-    { value:"5 min", label:"daily check-in replaces scattered calls" },
+    { value:"1.1B", label:"NHS repeat prescription items issued each year in England" },
+    { value:"77%", label:"of all prescription items in England are repeats" },
+    { value:"£300M+", label:"estimated annual cost of prescription waste in the NHS" },
+    { value:"3 to 5", label:"separate people typically involved in a single repeat request" },
   ];
 
   const trustCards = [
@@ -287,7 +301,7 @@ export default function Page() {
             <div className="navLks">
               <a href="#product" className="navLk">Product</a>
               <a href="#industries" className="navLk">Industries</a>
-              <a href="#results" className="navLk">Results</a>
+              <a href="#pricing" className="navLk">Pricing</a>
               <a href="#trust" className="navLk">Trust</a>
             </div>
             <div className="navRight">
@@ -371,19 +385,24 @@ export default function Page() {
           <div className="container">
             <FI>
               <div className="shW">
-                <Overline tone="warm">Tailored solutions</Overline>
-                <h2 className="serif shT">Built for every part of the care chain.</h2>
-                <p className="shB">From a single family carer at home to multi-resident care teams, Omela keeps the next step visible.</p>
+                <Overline tone="warm">Built on a pattern, not a niche</Overline>
+                <h2 className="serif shT">One coordination layer. Many recurring requests.</h2>
+                <p className="shB">Omela starts with repeat prescriptions because the cost of a missed handoff is highest there. The same shape applies anywhere a recurring request crosses households, professionals, and fulfillers.</p>
               </div>
             </FI>
             <div className="indGrid">
               {industries.map((ind, i) => (
-                <FI key={ind.title} delay={i * 0.05}>
-                  <div className="indCard">
-                    <div className="indIc">{ind.icon}</div>
+                <FI key={ind.title} delay={i * 0.04}>
+                  <div className={`indCard ${ind.live ? "indCardLive" : "indCardSoon"}`}>
+                    <div className="indCardTop">
+                      <div className="indIc">{ind.icon}</div>
+                      <span className={`indTag ${ind.live ? "indTagLive" : "indTagSoon"}`}>
+                        {ind.live ? <><span className="indTagDot"/>Live</> : "Coming soon"}
+                      </span>
+                    </div>
                     <h3 className="indTi">{ind.title}</h3>
                     <p className="indBd">{ind.body}</p>
-                    <span className="indLink"><ArrowRight size={16}/></span>
+                    <div className="indPlayers">{ind.players}</div>
                   </div>
                 </FI>
               ))}
@@ -395,9 +414,9 @@ export default function Page() {
           <div className="container">
             <FI>
               <div className="statHd">
-                <Overline tone="warm">Proven direction</Overline>
-                <h2 className="serif statTi">Early pilots show real operational clarity.</h2>
-                <p className="statSub">Target outcomes from our first pilot conversations with family carers and care teams.</p>
+                <Overline tone="warm">The market we're in</Overline>
+                <h2 className="serif statTi">Repeat prescriptions are the largest unfixed admin workflow in UK healthcare.</h2>
+                <p className="statSub">Sources: NHS Business Services Authority, OECD prescribing data, Health Foundation analysis.</p>
               </div>
             </FI>
             <div className="statGrid">
@@ -410,6 +429,37 @@ export default function Page() {
                 </FI>
               ))}
             </div>
+          </div>
+        </section>
+
+        <section id="pricing" className="sec">
+          <div className="container">
+            <FI>
+              <div className="shW">
+                <Overline tone="warm">Simple pricing</Overline>
+                <h2 className="serif shT">Pay for the people you coordinate, not the seats.</h2>
+                <p className="shB">Transparent monthly pricing. No hidden setup fees. Cancel any time during early access.</p>
+              </div>
+            </FI>
+            <div className="prGrid">
+              {pricing.map((p, i) => (
+                <FI key={p.name} delay={i * 0.06}>
+                  <div className={`prCard ${p.featured ? "prCardFeat" : ""}`}>
+                    {p.featured ? <div className="prBadge"><Sparkles size={11}/>Most popular</div> : null}
+                    <div className="prName">{p.name}</div>
+                    <div className="prPrice"><span className="prPriceVal serif">{p.price}</span><span className="prPricePer">{p.per}</span></div>
+                    <p className="prDesc">{p.desc}</p>
+                    <ul className="prFeats">
+                      {p.features.map(f => <li key={f}><Check size={14}/><span>{f}</span></li>)}
+                    </ul>
+                    <a href="#waitlist" className={p.featured ? "btnP prBt" : "btnS prBt"}>{p.cta}{p.featured ? <ArrowRight size={14}/> : null}</a>
+                  </div>
+                </FI>
+              ))}
+            </div>
+            <FI delay={0.2}>
+              <p className="prFoot">All plans include UK data residency, role-based access, and full audit history. Need something different? <a href="mailto:hello@omela.ai">Contact sales.</a></p>
+            </FI>
           </div>
         </section>
 
@@ -475,7 +525,7 @@ export default function Page() {
                 <p className="ftBrDesc">The coordination platform for repeat-prescription admin. Built for the people doing the follow-through.</p>
               </div>
               <div className="ftCols">
-                <div className="ftCol"><div className="ftColT">Product</div><a href="#product" className="ftLk">How it works</a><a href="#industries" className="ftLk">Industries</a><a href="#results" className="ftLk">Results</a><a href="#waitlist" className="ftLk">Early access</a></div>
+                <div className="ftCol"><div className="ftColT">Product</div><a href="#product" className="ftLk">How it works</a><a href="#industries" className="ftLk">Industries</a><a href="#pricing" className="ftLk">Pricing</a><a href="#waitlist" className="ftLk">Early access</a></div>
                 <div className="ftCol"><div className="ftColT">Company</div><span className="ftLk ftLkStatic">Omela Ltd.</span><a href="mailto:hello@omela.ai" className="ftLk">Contact</a><a href="mailto:hello@omela.ai?subject=Omela%20pilot%20conversation" className="ftLk">Book a demo</a></div>
                 <div className="ftCol"><div className="ftColT">Legal</div><Link href="/privacy" className="ftLk">Privacy</Link><Link href="/terms" className="ftLk">Terms</Link><a href="mailto:notice@omela.ai" className="ftLk">Notices</a></div>
               </div>
@@ -654,7 +704,10 @@ button,input,select{font-family:inherit}
 .wsFeedWhenFresh{color:${c.accent}!important;font-weight:800!important;text-transform:uppercase;letter-spacing:.04em;font-size:9.5px!important}
 @keyframes wsPulse{0%,100%{opacity:.5;transform:translateY(-50%) scale(.9)}50%{opacity:1;transform:translateY(-50%) scale(1.15)}}
 
-.wsFeed{margin-top:12px;padding:13px 15px;background:${c.cream};border:1px solid ${c.borderSoft};border-radius:18px}
+.wsFeed{margin-top:12px;padding:13px 15px;background:${c.cream};border:1px solid ${c.borderSoft};border-radius:18px;position:relative}
+.wsNarr{position:absolute;top:-14px;right:18px;display:inline-flex;align-items:center;gap:6px;padding:7px 13px;background:${c.dark};color:#fff;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:.02em;box-shadow:0 8px 22px rgba(14,18,26,.22);z-index:5;animation:wsNarrFloat 3.6s ease-in-out infinite}
+.wsNarr svg{color:${c.warm}}
+@keyframes wsNarrFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 .wsFeedHd{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:${c.muted};margin-bottom:9px}
 .wsFeedList{display:flex;flex-direction:column;gap:7px}
 .wsFeedItem{display:flex;align-items:center;gap:8px;font-size:11px;line-height:1.4;color:${c.sub}}
@@ -686,14 +739,40 @@ button,input,select{font-family:inherit}
 .featTi{font-size:19px;font-weight:800;letter-spacing:-.02em;color:${c.text}}
 .featBd{margin-top:8px;font-size:15px;line-height:1.68;color:${c.sub}}
 
-.indGrid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:20px}
-.indCard{padding:28px;border-radius:22px;background:#fff;border:1px solid ${c.border};position:relative;transition:all .3s;cursor:pointer}
-.indCard:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.06);border-color:rgba(201,149,107,.35)}
-.indIc{width:52px;height:52px;border-radius:14px;background:${c.warmSoft};color:${c.warmDk};display:flex;align-items:center;justify-content:center;margin-bottom:16px;border:1px solid rgba(201,149,107,.2)}
-.indTi{font-size:19px;font-weight:800;letter-spacing:-.02em;color:${c.text}}
-.indBd{margin-top:8px;font-size:14.5px;line-height:1.68;color:${c.sub};min-height:48px}
-.indLink{display:inline-flex;align-items:center;margin-top:14px;color:${c.warmDk};transition:transform .25s}
-.indCard:hover .indLink{transform:translateX(4px)}
+.indGrid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:20px}
+.indCard{padding:24px;border-radius:20px;background:#fff;border:1px solid ${c.border};position:relative;transition:all .3s;display:flex;flex-direction:column}
+.indCardLive:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.06);border-color:rgba(201,149,107,.4)}
+.indCardSoon{background:rgba(255,255,255,.55);border-style:dashed;border-color:rgba(201,149,107,.25)}
+.indCardSoon:hover{background:#fff;border-style:solid}
+.indCardSoon .indIc{opacity:.55}
+.indCardSoon .indTi{opacity:.7}
+.indCardSoon .indBd{opacity:.55}
+.indCardTop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.indIc{width:44px;height:44px;border-radius:12px;background:${c.warmSoft};color:${c.warmDk};display:flex;align-items:center;justify-content:center;border:1px solid rgba(201,149,107,.2);transition:opacity .25s}
+.indTag{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;padding:4px 9px;border-radius:999px;border:1px solid}
+.indTagLive{background:${c.greenSoft};color:${c.greenDk};border-color:rgba(34,197,94,.25)}
+.indTagDot{width:5px;height:5px;border-radius:50%;background:${c.green};box-shadow:0 0 0 2px rgba(34,197,94,.18);animation:wsPulse 1.6s ease-in-out infinite}
+.indTagSoon{background:${c.warmSoft};color:${c.warmDk};border-color:rgba(201,149,107,.3)}
+.indTi{font-size:18px;font-weight:800;letter-spacing:-.02em;color:${c.text}}
+.indBd{margin-top:8px;font-size:14px;line-height:1.65;color:${c.sub};flex:1}
+.indPlayers{margin-top:14px;padding-top:12px;border-top:1px solid ${c.borderSoft};font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:${c.muted}}
+
+.prGrid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:24px;max-width:1080px;margin-left:auto;margin-right:auto}
+.prCard{padding:32px 28px;border-radius:24px;background:#fff;border:1px solid ${c.border};position:relative;display:flex;flex-direction:column;transition:transform .3s,box-shadow .3s}
+.prCard:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.06)}
+.prCardFeat{border:1.5px solid ${c.warm};box-shadow:0 14px 40px rgba(201,149,107,.18);background:linear-gradient(180deg,#fff,#FFFCF8)}
+.prBadge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:${c.dark};color:#fff;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.prName{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:${c.warmDk}}
+.prPrice{display:flex;align-items:baseline;gap:8px;margin-top:14px}
+.prPriceVal{font-size:52px;line-height:1;letter-spacing:-.04em;color:${c.text}}
+.prPricePer{font-size:13px;color:${c.muted};font-weight:600}
+.prDesc{margin-top:14px;font-size:14px;line-height:1.6;color:${c.sub};min-height:42px}
+.prFeats{list-style:none;margin:22px 0;padding:0;display:flex;flex-direction:column;gap:10px;flex:1}
+.prFeats li{display:flex;align-items:flex-start;gap:9px;font-size:13.5px;color:${c.text};line-height:1.5}
+.prFeats li svg{color:${c.greenDk};flex-shrink:0;margin-top:3px}
+.prBt{width:100%;justify-content:center}
+.prFoot{margin-top:30px;text-align:center;font-size:13px;color:${c.muted};line-height:1.65}
+.prFoot a{color:${c.text};font-weight:700;text-decoration:underline;text-underline-offset:2px}
 
 .statBand{background:${c.navy};padding:80px 0;color:#fff}
 .statHd{text-align:center;max-width:720px;margin:0 auto 44px}
@@ -793,6 +872,7 @@ button,input,select{font-family:inherit}
   .processLine{display:block}
   .featGrid{grid-template-columns:repeat(3,1fr)}
   .indGrid{grid-template-columns:repeat(2,1fr)}
+  .prGrid{grid-template-columns:repeat(3,1fr);gap:16px}
   .statGrid{grid-template-columns:repeat(4,1fr)}
   .trustGrid{grid-template-columns:repeat(2,1fr)}
   .wlF{grid-template-columns:1.2fr .9fr auto}
@@ -810,6 +890,7 @@ button,input,select{font-family:inherit}
   .heroSub{margin-left:0;margin-right:0}
   .heroBt{justify-content:flex-start}
   .heroBoardCol{justify-content:flex-end}
+  .indGrid{grid-template-columns:repeat(4,1fr)}
   .trustGrid{grid-template-columns:repeat(4,1fr)}
   .statBand{padding:104px 0}
 }
