@@ -5,14 +5,14 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { AnimatePresence, motion, useInView } from "framer-motion";
 import { DM_Sans, Instrument_Serif } from "next/font/google";
-import { Activity, ArrowRight, Bell, Building2, Check, CheckCircle2, Clock, Copy, Database, Eye, GraduationCap, History, Home, Package, PawPrint, RefreshCw, Scale, Share2, Shield, Sparkles, Stethoscope, Users, Wrench } from "lucide-react";
+import { Activity, ArrowRight, Bell, Building2, Check, CheckCircle2, ChevronDown, Clock, Copy, Database, Eye, GraduationCap, History, Home, Package, PawPrint, RefreshCw, Scale, Share2, Shield, Sparkles, Stethoscope, Users, Wrench } from "lucide-react";
 
 const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400","500","600","700","800"], variable: "--font-dm-sans" });
 const instrumentSerif = Instrument_Serif({ subsets: ["latin"], weight: "400", variable: "--font-instrument-serif" });
 
 const c = { bg:"#F8F6F1", card:"#FFFFFF", cream:"#FAF7F2", dark:"#0A0E1A", navy:"#0F1829", text:"#111214", sub:"#4A4F5C", muted:"#888E9C", accent:"#2563EB", accentSoft:"#ECF2FF", border:"#E3DDD2", borderSoft:"#EDE8DF", green:"#22C55E", greenSoft:"#ECFDF3", greenDk:"#15803D", warm:"#C9956B", warmDk:"#A07545", warmSoft:"#FFF8F0", red:"#EF4444", redSoft:"#FEF2F2", redDk:"#B91C1C" };
 
-type Role = "carer" | "household" | "care_team";
+type Role = "carer" | "household" | "care_team" | "pharmacy" | "vet" | "legal" | "property" | "other";
 
 function formatTodayLabel(d: Date) {
   const p = new Intl.DateTimeFormat("en-GB", { weekday:"short", day:"numeric", month:"short" }).formatToParts(d);
@@ -68,6 +68,10 @@ function LauraWorkspace() {
     return () => window.clearInterval(id);
   }, []);
   const evalTasks = ["Checking Margaret's amlodipine supply", "Drafting Metformin refill for David", "Confirming Sertraline collection at Boots"];
+  const narrMessages = ["Drafting next refill", "Flagging vet Rx due", "Chasing trademark renewal", "Gas safety cert expiring"];
+  const [narrIdx, setNarrIdx] = useState(0);
+  useEffect(() => { const id = window.setInterval(() => setNarrIdx(i => (i + 1) % narrMessages.length), 3200); return () => window.clearInterval(id); }, [narrMessages.length]);
+  const narr = narrMessages[narrIdx];
   const cur = people[active];
 
   return (
@@ -174,7 +178,7 @@ function LauraWorkspace() {
         <div className="wsFeed">
           <div className="wsNarr" aria-hidden="true">
             <Sparkles size={11}/>
-            <span>Drafting next refill</span>
+            <span className="wsNarrTx">{narr}</span>
           </div>
           <div className="wsFeedHd"><Activity size={11}/><span>Recent activity</span></div>
           <div className="wsFeedList">
@@ -221,6 +225,38 @@ function SuccessModal({ open, onClose, referralCode }: { open: boolean; onClose:
   );
 }
 
+function Faq({ items }: { items: { q: string; a: string }[] }) {
+  const [open, setOpen] = useState<number | null>(0);
+  return (
+    <div className="faqList">
+      {items.map((it, i) => {
+        const isOpen = open === i;
+        return (
+          <div key={i} className={`faqItem ${isOpen ? "faqItemOpen" : ""}`}>
+            <button type="button" className="faqQ" onClick={() => setOpen(isOpen ? null : i)} aria-expanded={isOpen}>
+              <span className="faqQTx">{it.q}</span>
+              <span className="faqQIc"><ChevronDown size={16}/></span>
+            </button>
+            <AnimatePresence initial={false}>
+              {isOpen ? (
+                <motion.div
+                  className="faqA"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <div className="faqAInner">{it.a}</div>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function Page() {
   const [role, setRole] = useState<Role>("carer");
   const [email, setEmail] = useState("");
@@ -250,9 +286,9 @@ export default function Page() {
   }
 
   const features = [
-    { icon:<Bell size={22}/>, title:"See what needs attention", body:"Know what is due soon, what is delayed, and what needs follow-up right now, across every person you care for.", tone:"warm" as const },
-    { icon:<RefreshCw size={22}/>, title:"Keep ownership clear", body:"See who handled the request last, who owns the next step, and what should happen next without calls or guesswork.", tone:"blue" as const },
-    { icon:<Package size={22}/>, title:"Follow every update", body:"Track progress from preparation through GP approval to ready-for-collection without losing the thread.", tone:"green" as const },
+    { icon:<Bell size={22}/>, title:"See what needs attention", body:"Know what is due soon, what is delayed, and what needs follow-up right now. Works for prescriptions, renewals, certifications, or any recurring request.", tone:"warm" as const },
+    { icon:<RefreshCw size={22}/>, title:"Keep ownership clear", body:"See who handled the request last, who owns the next step, and what should happen next. No more CC chains or ambiguous handoffs.", tone:"blue" as const },
+    { icon:<Package size={22}/>, title:"Follow every update", body:"Track progress from draft, through approval, to completion without losing the thread. One shared timeline for every stakeholder.", tone:"green" as const },
   ];
 
   const industries = [
@@ -272,11 +308,22 @@ export default function Page() {
     { name:"Organisation", price:"Custom", per:"annual contract", desc:"For care groups, NHS trusts, and multi-site providers.", features:["Unlimited residents","SSO and Microsoft Entra","Onboarding support","SLA and dedicated CSM","Data residency in UK"], cta:"Talk to sales", featured:false },
   ];
 
+  const faq = [
+    { q:"Is Omela only for healthcare?", a:"No. Healthcare is our first focus because the cost of a missed handoff is highest there. The underlying pattern, coordinating recurring requests across multiple people, applies to veterinary prescriptions, legal filings, property compliance, equipment maintenance, and more. If you have a recurring workflow that crosses households, professionals, and fulfillers, Omela is built for you." },
+    { q:"How is this different from a task manager like Asana or Trello?", a:"Task managers assume everyone on the thread is on the same team. Omela is built for the opposite case, where the people doing the work are not all inside one organisation. A family carer, a GP practice, and a pharmacy are three separate systems. Omela is the shared layer between them." },
+    { q:"Do you need access to NHS records or patient data?", a:"No. Omela stores the metadata of a request, not clinical records. We track who ordered what, when, and what stage it is at. Clinical data stays where it belongs, in the practice's EHR and the pharmacy's PMR." },
+    { q:"Is this a medical device or regulated software?", a:"Omela is a coordination and admin tool. It does not provide diagnosis, treatment recommendations, or clinical decisions. It is classified as general-purpose workflow software, similar to Notion or Linear, not a medical device." },
+    { q:"What happens when I join early access?", a:"You'll get a personal onboarding call with us, your workspace is set up within 48 hours, and your first month is free. You can invite household members or teammates from day one. If it's not right, you can cancel before any charge." },
+    { q:"Where is my data stored?", a:"All data is stored in the UK on infrastructure compliant with UK GDPR. Organisation plans include a formal Data Processing Agreement and optional regional data residency commitments. We are aligned with NHS Data Security and Protection Toolkit principles." },
+    { q:"Can I use my work Microsoft or Google account to sign in?", a:"Yes. Omela supports Google sign-in for individuals and Microsoft Entra ID (formerly Azure AD) for organisations with work accounts. SSO is available on the Organisation plan." },
+    { q:"Are you hiring or looking for pilot partners?", a:"Yes to both. We're running paid pilots with UK care teams and community pharmacies in 2026. If you work in one of the coming-soon domains and want to be an early partner, email us at hello@omela.ai with a short note about your workflow." },
+  ];
+
   const stats = [
-    { value:"1.1B", label:"NHS repeat prescription items issued each year in England" },
-    { value:"77%", label:"of all prescription items in England are repeats" },
-    { value:"£300M+", label:"estimated annual cost of prescription waste in the NHS" },
-    { value:"3 to 5", label:"separate people typically involved in a single repeat request" },
+    { value:"1.1B", label:"prescription items issued each year in England (NHSBSA)" },
+    { value:"~77%", label:"of prescription items are repeats (NHS England)" },
+    { value:"£300M", label:"estimated medicines waste each year (NHS England)" },
+    { value:"Multi-party", label:"workflow across patient, GP practice, and pharmacy" },
   ];
 
   const trustCards = [
@@ -302,7 +349,7 @@ export default function Page() {
               <a href="#product" className="navLk">Product</a>
               <a href="#industries" className="navLk">Industries</a>
               <a href="#pricing" className="navLk">Pricing</a>
-              <a href="#trust" className="navLk">Trust</a>
+              <a href="#faq" className="navLk">FAQ</a>
             </div>
             <div className="navRight">
               <Link href="/login" className="navSignIn">Sign in</Link>
@@ -314,8 +361,8 @@ export default function Page() {
         <section className="heroSec">
           <div className="container heroGrid">
             <div className="heroTxt">
-              <FI delay={0.1}><h1 className="serif heroTi">The coordination platform for repeat prescriptions.</h1></FI>
-              <FI delay={0.16}><p className="heroSub">Omela helps carers, households, and care teams keep repeat prescription requests visible across multiple people, with clearer ownership and less admin friction.</p></FI>
+              <FI delay={0.1}><h1 className="serif heroTi">The coordination platform for recurring requests.</h1></FI>
+              <FI delay={0.16}><p className="heroSub">Omela keeps recurring requests visible across the people who own them, starting with repeat prescriptions for carers, households, and care teams in the UK.</p></FI>
               <FI delay={0.22}>
                 <div className="heroBt">
                   <a href="mailto:hello@omela.ai?subject=Omela%20pilot%20conversation" className="btnP heroBtP">Book a demo<ArrowRight size={14}/></a>
@@ -363,8 +410,8 @@ export default function Page() {
             <FI>
               <div className="shW">
                 <Overline>Product</Overline>
-                <h2 className="serif shT">One workflow from due soon to ready.</h2>
-                <p className="shB">Omela is the coordination layer around repeat-prescription admin. Not a pharmacy. Not telehealth. Not a diagnosis tool.</p>
+                <h2 className="serif shT">One workflow from due soon to done.</h2>
+                <p className="shB">Omela is the coordination layer around recurring requests. Not a pharmacy, not a law firm, not a contractor. Just the shared workspace that keeps everyone on the same page.</p>
               </div>
             </FI>
             <div className="featGrid">
@@ -415,8 +462,8 @@ export default function Page() {
             <FI>
               <div className="statHd">
                 <Overline tone="warm">The market we're in</Overline>
-                <h2 className="serif statTi">Repeat prescriptions are the largest unfixed admin workflow in UK healthcare.</h2>
-                <p className="statSub">Sources: NHS Business Services Authority, OECD prescribing data, Health Foundation analysis.</p>
+                <h2 className="serif statTi">We're starting with the largest unfixed admin workflow in UK healthcare.</h2>
+                <p className="statSub">England sees around 1.1 billion prescription items a year, and about 77% are repeat prescriptions. Medicines waste has been estimated at around £300 million annually. The repeat prescription workflow often spans multiple people across patient, GP practice, and pharmacy. The same coordination shape applies to any recurring request.</p>
               </div>
             </FI>
             <div className="statGrid">
@@ -468,8 +515,8 @@ export default function Page() {
             <FI>
               <div className="shW">
                 <Overline>Trust and boundaries</Overline>
-                <h2 className="serif shT">Built to sit alongside existing care workflows.</h2>
-                <p className="shB">Omela is the coordination layer. It does not replace pharmacies, practices, or clinical judgement.</p>
+                <h2 className="serif shT">Built to sit alongside your existing workflows.</h2>
+                <p className="shB">Omela is the coordination layer. It does not replace pharmacies, practices, lawyers, contractors, or the professional judgement of the people doing the work.</p>
               </div>
             </FI>
             <div className="trustGrid">
@@ -486,6 +533,23 @@ export default function Page() {
           </div>
         </section>
 
+        <section id="faq" className="sec">
+          <div className="container">
+            <FI>
+              <div className="shW">
+                <Overline>Questions</Overline>
+                <h2 className="serif shT">Answers to what most people ask.</h2>
+                <p className="shB">If your question isn&apos;t here, send a note to <a href="mailto:hello@omela.ai" className="pvLk">hello@omela.ai</a> and a real person will reply.</p>
+              </div>
+            </FI>
+            <FI delay={0.1}>
+              <div className="faqWrap">
+                <Faq items={faq}/>
+              </div>
+            </FI>
+          </div>
+        </section>
+
         <section id="waitlist" className="sec secTinted">
           <div className="container">
             <FI>
@@ -496,9 +560,18 @@ export default function Page() {
                 <form className="wlF" onSubmit={handleSubmit}>
                   <input className="inp" type="email" placeholder="Your email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email"/>
                   <select className="inp" value={role} onChange={e => setRole(e.target.value as Role)}>
-                    <option value="carer">I manage for a family member</option>
-                    <option value="household">I manage across my household</option>
-                    <option value="care_team">I work in a care team</option>
+                    <optgroup label="Healthcare (live)">
+                      <option value="carer">I manage for a family member</option>
+                      <option value="household">I manage across my household</option>
+                      <option value="care_team">I work in a care team</option>
+                      <option value="pharmacy">I work in a pharmacy</option>
+                    </optgroup>
+                    <optgroup label="Other (coming soon)">
+                      <option value="vet">Veterinary practice</option>
+                      <option value="legal">Legal or compliance work</option>
+                      <option value="property">Property management</option>
+                      <option value="other">Something else</option>
+                    </optgroup>
                   </select>
                   <input type="text" name="website" value={website} onChange={e => setWebsite(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" style={{position:"absolute",left:"-9999px",opacity:0,pointerEvents:"none",height:0,width:0}}/>
                   <button type="submit" className="btnP wlBt" disabled={submitting || !agreed}>{submitting ? "Submitting..." : "Join early access"}</button>
@@ -792,6 +865,18 @@ button,input,select{font-family:inherit}
 .trustIc{width:36px;height:36px;border-radius:11px;background:${c.warmSoft};color:${c.warmDk};display:flex;align-items:center;justify-content:center;border:1px solid rgba(201,149,107,.2)}
 .trustTi{font-size:17px;font-weight:800;letter-spacing:-.02em;color:${c.text}}
 .trustBd{margin-top:8px;font-size:14px;line-height:1.68;color:${c.sub}}
+
+.faqWrap{max-width:780px;margin:24px auto 0}
+.faqList{display:flex;flex-direction:column;gap:10px}
+.faqItem{background:#fff;border:1px solid ${c.border};border-radius:18px;overflow:hidden;transition:border-color .25s,box-shadow .25s}
+.faqItem:hover{border-color:rgba(201,149,107,.35)}
+.faqItemOpen{border-color:rgba(201,149,107,.4);box-shadow:0 8px 24px rgba(0,0,0,.04)}
+.faqQ{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;padding:20px 24px;background:none;border:none;cursor:pointer;text-align:left;color:${c.text}}
+.faqQTx{font-size:16px;font-weight:800;letter-spacing:-.015em;line-height:1.4;flex:1}
+.faqQIc{flex-shrink:0;color:${c.warmDk};transition:transform .3s cubic-bezier(.22,1,.36,1)}
+.faqItemOpen .faqQIc{transform:rotate(180deg)}
+.faqA{overflow:hidden}
+.faqAInner{padding:0 24px 22px;font-size:14.5px;line-height:1.72;color:${c.sub}}
 
 .wlC{background:#fff;border:1px solid ${c.border};border-radius:28px;padding:40px 32px;max-width:760px;margin:0 auto;box-shadow:0 4px 24px rgba(0,0,0,.04);text-align:center}
 .wlTi{font-size:clamp(28px,4.5vw,44px);letter-spacing:-.045em;margin-top:14px}
