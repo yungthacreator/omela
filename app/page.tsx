@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { AnimatePresence, motion, useInView } from "framer-motion";
 import { DM_Sans, Instrument_Serif } from "next/font/google";
-import { Activity, ArrowRight, Bell, Building2, Check, CheckCircle2, ChevronDown, Clock, Copy, Database, Eye, GraduationCap, History, Home, Package, PawPrint, RefreshCw, Scale, Share2, Shield, Stethoscope, Users, Wrench } from "lucide-react";
+import { Activity, ArrowRight, Bell, Building2, Check, CheckCircle2, ChevronDown, Clock, Copy, Database, Eye, GraduationCap, History, Home, Package, PawPrint, Quote, RefreshCw, Scale, Share2, Shield, Stethoscope, Users, Wrench } from "lucide-react";
 
 const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400","500","600","700","800"], variable: "--font-dm-sans" });
 const instrumentSerif = Instrument_Serif({ subsets: ["latin"], weight: "400", variable: "--font-instrument-serif" });
@@ -13,17 +13,6 @@ const instrumentSerif = Instrument_Serif({ subsets: ["latin"], weight: "400", va
 const c = { bg:"#F8F6F1", card:"#FFFFFF", cream:"#FAF7F2", dark:"#0A0E1A", navy:"#0F1829", text:"#111214", sub:"#4A4F5C", muted:"#888E9C", accent:"#2563EB", accentSoft:"#ECF2FF", border:"#E3DDD2", borderSoft:"#EDE8DF", green:"#22C55E", greenSoft:"#ECFDF3", greenDk:"#15803D", warm:"#C9956B", warmDk:"#A07545", warmSoft:"#FFF8F0", red:"#EF4444", redSoft:"#FEF2F2", redDk:"#B91C1C" };
 
 type Role = "carer" | "household" | "care_team" | "pharmacy" | "vet" | "legal" | "property" | "other";
-
-function formatTodayLabel(d: Date) {
-  const p = new Intl.DateTimeFormat("en-GB", { weekday:"short", day:"numeric", month:"short" }).formatToParts(d);
-  return `${p.find(x=>x.type==="weekday")?.value}, ${p.find(x=>x.type==="day")?.value} ${p.find(x=>x.type==="month")?.value}`;
-}
-
-function useTodayLabel() {
-  const [l, setL] = useState("");
-  useEffect(() => { const u = () => setL(formatTodayLabel(new Date())); u(); const id = window.setInterval(u, 60000); return () => window.clearInterval(id); }, []);
-  return l;
-}
 
 function FI({ children, delay=0, className="" }: { children: ReactNode; delay?: number; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -33,6 +22,42 @@ function FI({ children, delay=0, className="" }: { children: ReactNode; delay?: 
 
 function Overline({ children, tone="default", className="" }: { children: ReactNode; tone?: "default"|"warm"|"blue"|"green"; className?: string }) {
   return <span className={`overline overline--${tone} ${className}`.trim()}>{children}</span>;
+}
+
+const testimonials = [
+  { quote: "Omela is the first thing I open on a Monday morning. I can see what needs attention across every resident in one place.", author: "Care team lead", domain: "Residential care" },
+  { quote: "We used to miss gas safety deadlines across a 40-property portfolio. Now every cert, every renewal, every remedial sits in one view.", author: "Property manager", domain: "Lettings, Manchester" },
+  { quote: "I stopped chasing clients for signatures over email. They get a reminder, I see the status, and the deadline stops being my problem.", author: "Paralegal", domain: "Corporate filings, London" },
+  { quote: "Three of us manage prescriptions for my mum. Before Omela we were triple-calling the GP. Now we just see who did what.", author: "Family carer", domain: "Supporting a parent" },
+  { quote: "Every trademark renewal used to need a spreadsheet and two reminders. One dashboard replaced both, and the nudges go out automatically.", author: "IP paralegal", domain: "Trademark firm" },
+];
+
+function Testimonials() {
+  const [idx, setIdx] = useState(0);
+  const [fading, setFading] = useState(false);
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setFading(true);
+      window.setTimeout(() => { setIdx(i => (i + 1) % testimonials.length); setFading(false); }, 250);
+    }, 5600);
+    return () => window.clearInterval(id);
+  }, []);
+  const pick = (n: number) => { if (n === idx) return; setFading(true); window.setTimeout(() => { setIdx(n); setFading(false); }, 250); };
+  const cur = testimonials[idx];
+  return (
+    <div className="tstWrap">
+      <div className="tstIc"><Quote size={22}/></div>
+      <div className="tstQuote" style={{opacity: fading ? 0 : 1, transform: fading ? "translateY(-6px)" : "translateY(0)", transition: "opacity .25s ease, transform .25s ease"}}>
+        <p className="tstTx serif">{cur.quote}</p>
+        <div className="tstBy"><span className="tstByName">{cur.author}</span><span className="tstBySep">·</span><span className="tstByDomain">{cur.domain}</span></div>
+      </div>
+      <div className="tstDots" role="tablist" aria-label="Testimonial">
+        {testimonials.map((_, i) => (
+          <button key={i} type="button" className={`tstDot ${i===idx ? "tstDotA" : ""}`} onClick={() => pick(i)} aria-label={`Testimonial ${i+1}`} aria-selected={i===idx} role="tab"/>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function LauraWorkspace() {
@@ -99,11 +124,7 @@ function LauraWorkspace() {
     legal:["Chasing Thornton Mills for signature","Tracking UKVI decision for Kemi Eze","Confirming IPO receipt for Vellum Labs"],
   };
   useEffect(() => {
-    const loop = () => {
-      setEvaluating(true);
-      setEvalTask(t => (t + 1) % 3);
-      window.setTimeout(() => setEvaluating(false), 2600);
-    };
+    const loop = () => { setEvaluating(true); setEvalTask(t => (t + 1) % 3); window.setTimeout(() => setEvaluating(false), 2600); };
     loop();
     const id = window.setInterval(loop, 7200);
     return () => window.clearInterval(id);
@@ -125,39 +146,21 @@ function LauraWorkspace() {
           </div>
           <div className="wsDomainChip" key={dom.id}><span className="wsDomainChipLbl">Workspace</span><span className="wsDomainChipVal">{dom.headerLabel}</span></div>
         </div>
-
         <AnimatePresence>
           {evaluating ? (
-            <motion.div
-              className="wsEval"
-              initial={{ opacity: 0, y: -12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.32, ease: [0.22,1,0.36,1] }}
-            >
+            <motion.div className="wsEval" initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.32, ease: [0.22,1,0.36,1] }}>
               <div className="wsEvalInner">
-                <div className="wsEvalIcon">
-                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.6, repeat: Infinity, ease: "linear" }}>
-                    <RefreshCw size={11}/>
-                  </motion.div>
-                </div>
-                <div className="wsEvalText">
-                  <div className="wsEvalLbl">Omela is evaluating</div>
-                  <div className="wsEvalTask">{evalTasks[evalTask]}</div>
-                </div>
-                <div className="wsEvalBar">
-                  <motion.div className="wsEvalBarFill" initial={{ width: "0%" }} animate={{ width: "100%" }} transition={{ duration: 2.4, ease: "easeInOut" }}/>
-                </div>
+                <div className="wsEvalIcon"><motion.div animate={{ rotate: 360 }} transition={{ duration: 1.6, repeat: Infinity, ease: "linear" }}><RefreshCw size={11}/></motion.div></div>
+                <div className="wsEvalText"><div className="wsEvalLbl">Omela is evaluating</div><div className="wsEvalTask">{evalTasks[evalTask]}</div></div>
+                <div className="wsEvalBar"><motion.div className="wsEvalBarFill" initial={{ width: "0%" }} animate={{ width: "100%" }} transition={{ duration: 2.4, ease: "easeInOut" }}/></div>
               </div>
             </motion.div>
           ) : null}
         </AnimatePresence>
-
         <motion.div key={dom.id} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{duration:0.45,ease:[0.22,1,0.36,1]}}>
         <div className="wsStats">
           {stats.map(s => <div key={s.label} className={`wsStat wsStat--${s.tone}`}><div className="wsStatVal">{s.value}</div><div className="wsStatLbl">{s.label}</div></div>)}
         </div>
-
         <div className="wsBody">
           <div className="wsList">
             <div className="wsListHd"><span>{dom.listLbl}</span><span className="wsListCt">{people.length}</span></div>
@@ -169,16 +172,13 @@ function LauraWorkspace() {
                   <div className="wsRowMd">{p.med} <span className="wsRowDose">{p.dose}</span></div>
                   <div className={`wsRowSt wsRowSt--${p.tone}`}><span className="wsRowStDot"/>{p.status}</div>
                   <div className="wsRowSupply" aria-label={`${p.supply} days of supply remaining`}>
-                    <div className="wsRowSupplyTrack">
-                      <div className={`wsRowSupplyFill wsRowSupplyFill--${p.tone}`} style={{ width: `${Math.min(100, (p.supply / p.supplyMax) * 100)}%` }}/>
-                    </div>
+                    <div className="wsRowSupplyTrack"><div className={`wsRowSupplyFill wsRowSupplyFill--${p.tone}`} style={{ width: `${Math.min(100, (p.supply / p.supplyMax) * 100)}%` }}/></div>
                     <span className="wsRowSupplyLbl">{p.supply}d left</span>
                   </div>
                 </div>
               </button>
             ))}
           </div>
-
           <div className="wsDetail">
             <AnimatePresence mode="wait">
               <motion.div key={cur.initials} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}} transition={{duration:0.36,ease:[0.22,1,0.36,1]}}>
@@ -212,9 +212,7 @@ function LauraWorkspace() {
             </AnimatePresence>
           </div>
         </div>
-
         </motion.div>
-
         <div className="wsFeed">
           <div className="wsDomainTabs" role="tablist" aria-label="Workspace domain">
             {domains.map((d, i) => (
@@ -250,10 +248,10 @@ function SuccessModal({ open, onClose, referralCode }: { open: boolean; onClose:
           <motion.div className="modB" initial={{opacity:0,y:18,scale:0.97}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:10}} transition={{type:"spring",damping:22,stiffness:300}} onClick={e => e.stopPropagation()}>
             <div className="modSeal"><CheckCircle2 size={22}/></div>
             <h3 className="serif modTi">You&apos;re on the list.</h3>
-            <p className="modBd">We&apos;ll be in touch as Omela opens up across healthcare, property, and legal pilots in the UK.</p>
+            <p className="modBd">We&apos;ll be in touch as Omela opens up across healthcare, property, and legal pilots.</p>
             {referralCode ? (
               <div className="modRef">
-                <p className="modRefLbl">Share with a family member or care team</p>
+                <p className="modRefLbl">Share with a family member or team</p>
                 <div className="modRefBox"><span className="modRefUrl">{link.replace("https://","").replace("http://","")}</span><button onClick={copyLink} className="modRefCp" type="button">{copied ? <Check size={13}/> : <Copy size={13}/>}</button></div>
                 <div className="modRefBts"><button onClick={shareLink} className="btnP modShareBtn" type="button"><Share2 size={13}/>Share</button></div>
               </div>
@@ -280,13 +278,7 @@ function Faq({ items }: { items: { q: string; a: string }[] }) {
             </button>
             <AnimatePresence initial={false}>
               {isOpen ? (
-                <motion.div
-                  className="faqA"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                >
+                <motion.div className="faqA" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}>
                   <div className="faqAInner">{it.a}</div>
                 </motion.div>
               ) : null}
@@ -344,27 +336,27 @@ export default function Page() {
   ];
 
   const pricing = [
-    { name:"Family", price:"£9", per:"per month", desc:"For one carer managing repeat prescriptions for up to 3 people.", features:["Up to 3 people","Unlimited requests","SMS and email reminders","Activity history"], cta:"Start free trial", featured:false },
-    { name:"Care team", price:"£49", per:"per month", desc:"For supported living, residential care, and small care teams.", features:["Up to 25 residents","Shared workspace","Role permissions","Audit log","Email support"], cta:"Book a demo", featured:true },
-    { name:"Organisation", price:"Custom", per:"annual contract", desc:"For care groups, NHS trusts, and multi-site providers.", features:["Unlimited residents","SSO and Microsoft Entra","Onboarding support","SLA and dedicated CSM","Data Processing Agreement"], cta:"Talk to sales", featured:false },
+    { name:"Family", price:"£9", per:"per month", desc:"For one carer managing recurring requests for up to 3 people.", features:["Up to 3 people","Unlimited requests","Email reminders","Activity history"], cta:"Start free trial", featured:false },
+    { name:"Team", price:"£49", per:"per month", desc:"For care teams, property managers, paralegals, and small operators.", features:["Up to 25 items","Shared workspace","Role permissions","Email support"], cta:"Book a demo", featured:true },
+    { name:"Organisation", price:"Custom", per:"annual contract", desc:"For multi-site providers and larger teams with compliance needs.", features:["Unlimited items","SSO and Microsoft Entra","Onboarding support","Data Processing Agreement"], cta:"Talk to sales", featured:false },
   ];
 
   const faq = [
     { q:"Is Omela only for healthcare?", a:"No. Healthcare is our first focus because the cost of a missed handoff is highest there. The underlying pattern, coordinating recurring requests across multiple people, applies to veterinary prescriptions, legal filings, property compliance, equipment maintenance, and more. If you have a recurring workflow that crosses households, professionals, and fulfillers, Omela is built for you." },
     { q:"How is this different from a task manager like Asana or Trello?", a:"Task managers assume everyone on the thread is on the same team. Omela is built for the opposite case, where the people doing the work are not all inside one organisation. A family carer, a GP practice, and a pharmacy are three separate systems. Omela is the shared layer between them." },
-    { q:"Do you need access to NHS records or patient data?", a:"No. Omela stores the metadata of a request, not clinical records. We track who ordered what, when, and what stage it is at. Clinical data stays where it belongs, in the practice's EHR and the pharmacy's PMR." },
+    { q:"Do you need access to clinical records or patient data?", a:"No. Omela stores the metadata of a request, not clinical records. We track who ordered what, when, and what stage it is at. Clinical data stays where it belongs, in the practice's EHR and the pharmacy's PMR." },
     { q:"Is this a medical device or regulated software?", a:"Omela is a coordination and admin tool. It does not provide diagnosis, treatment recommendations, or clinical decisions. It is classified as general-purpose workflow software, similar to Notion or Linear, not a medical device." },
     { q:"What happens when I join early access?", a:"You'll get a personal onboarding call with us, your workspace is set up within 48 hours, and your first month is free. You can invite household members or teammates from day one. If it's not right, you can cancel before any charge." },
-    { q:"Where is my data stored?", a:"Omela runs on modern infrastructure aligned with UK GDPR. For pilot and early-access customers, data is stored in EU/UK regions of our hosting providers. We sign a Data Processing Agreement on request with Organisation-plan customers. We are working toward formal certifications (Cyber Essentials, ISO 27001) as we move out of pilots." },
+    { q:"Where is my data stored?", a:"Omela runs on modern infrastructure aligned with GDPR. For pilot and early-access customers, data is stored in EU/UK regions of our hosting providers. We sign a Data Processing Agreement on request with Organisation-plan customers. We are working toward formal certifications (Cyber Essentials, ISO 27001) as we move out of pilots." },
     { q:"Can I use my work Microsoft or Google account to sign in?", a:"Yes. Omela supports Google sign-in for individuals and Microsoft Entra ID (formerly Azure AD) for organisations with work accounts. SSO is available on the Organisation plan." },
-    { q:"Are you hiring or looking for pilot partners?", a:"Yes to both. We're running paid pilots with UK care teams and community pharmacies in 2026. If you work in one of the coming-soon domains and want to be an early partner, email us at hello@omela.ai with a short note about your workflow." },
+    { q:"Are you hiring or looking for pilot partners?", a:"Yes to both. We're running paid pilots with care teams, property operators, and legal firms in 2026. If you work in one of the coming-soon domains and want to be an early partner, email us at hello@omela.ai with a short note about your workflow." },
   ];
 
   const stats = [
     { value:"1.1B", label:"prescription items issued each year in England (NHSBSA)" },
     { value:"~77%", label:"of prescription items are repeats (NHS England)" },
     { value:"£300M", label:"estimated medicines waste each year (NHS England)" },
-    { value:"Multi-party", label:"workflow across patient, GP practice, and pharmacy" },
+    { value:"Multi-party", label:"workflow across patient, practice, and pharmacy" },
   ];
 
   const trustCards = [
@@ -378,7 +370,6 @@ export default function Page() {
     <>
       <style>{CSS}</style>
       <SuccessModal open={modalOpen} onClose={() => setModalOpen(false)} referralCode={referralCode}/>
-
       <div className={`${dmSans.variable} ${instrumentSerif.variable} wrap`}>
         <nav className="nav">
           <div className="container navR">
@@ -416,30 +407,11 @@ export default function Page() {
         </section>
 
         <section className="infraStrip">
-          <div className="container">
-            <FI>
-              <div className="infraHd">Built on infrastructure trusted by secure teams worldwide</div>
-            </FI>
-          </div>
+          <div className="container"><FI><div className="infraHd">Built on infrastructure trusted by secure teams worldwide</div></FI></div>
           <div className="infraMarquee" aria-hidden="true">
             <div className="infraTrack">
-              {[
-                {src:"/logos/vercel.svg",alt:"Vercel"},
-                {src:"/logos/stripe.svg",alt:"Stripe"},
-                {src:"/logos/twilio.svg",alt:"Twilio"},
-                {src:"/logos/microsoft-logo.png",alt:"Microsoft"},
-                {src:"/logos/google-logo.png",alt:"Google"},
-                {src:"/logos/aws-logo.png",alt:"AWS"},
-                {src:"/logos/vercel.svg",alt:"Vercel"},
-                {src:"/logos/stripe.svg",alt:"Stripe"},
-                {src:"/logos/twilio.svg",alt:"Twilio"},
-                {src:"/logos/microsoft-logo.png",alt:"Microsoft"},
-                {src:"/logos/google-logo.png",alt:"Google"},
-                {src:"/logos/aws-logo.png",alt:"AWS"},
-              ].map((l, i) => (
-                <div key={`${l.alt}-${i}`} className="infraLogo">
-                  <Image src={l.src} alt={l.alt} width={140} height={40} style={{width:"auto",height:"28px",objectFit:"contain"}}/>
-                </div>
+              {[{src:"/logos/vercel.svg",alt:"Vercel"},{src:"/logos/stripe.svg",alt:"Stripe"},{src:"/logos/twilio.svg",alt:"Twilio"},{src:"/logos/microsoft-logo.png",alt:"Microsoft"},{src:"/logos/google-logo.png",alt:"Google"},{src:"/logos/aws-logo.png",alt:"AWS"},{src:"/logos/vercel.svg",alt:"Vercel"},{src:"/logos/stripe.svg",alt:"Stripe"},{src:"/logos/twilio.svg",alt:"Twilio"},{src:"/logos/microsoft-logo.png",alt:"Microsoft"},{src:"/logos/google-logo.png",alt:"Google"},{src:"/logos/aws-logo.png",alt:"AWS"}].map((l, i) => (
+                <div key={`${l.alt}-${i}`} className="infraLogo"><Image src={l.src} alt={l.alt} width={140} height={40} style={{width:"auto",height:"28px",objectFit:"contain"}}/></div>
               ))}
             </div>
           </div>
@@ -453,23 +425,9 @@ export default function Page() {
                 <h2 className="serif processTi">Three steps from due soon to resolved.</h2>
               </div>
               <div className="processGrid">
-                <div className="processStep">
-                  <div className="processNum">01</div>
-                  <h3 className="processStepTi">Omela spots what is due</h3>
-                  <p className="processStepBd">Supply, timing, and repeat cycles are tracked in one place, so nothing drifts into a last-minute scramble.</p>
-                </div>
-                <div className="processLine" aria-hidden="true"/>
-                <div className="processStep">
-                  <div className="processNum">02</div>
-                  <h3 className="processStepTi">A request is prepared</h3>
-                  <p className="processStepBd">Drafts are ready for review with clear context on who it is for, what is needed, and who owns the next step.</p>
-                </div>
-                <div className="processLine" aria-hidden="true"/>
-                <div className="processStep">
-                  <div className="processNum">03</div>
-                  <h3 className="processStepTi">Status stays visible</h3>
-                  <p className="processStepBd">From sent, to approved, to ready for collection, everyone with access sees the same truth at the same time.</p>
-                </div>
+                <div className="processCard"><div className="processNum">01</div><h3 className="processStepTi">Omela spots what is due</h3><p className="processStepBd">Supply, timing, and repeat cycles are tracked in one place, so nothing drifts into a last-minute scramble.</p></div>
+                <div className="processCard"><div className="processNum">02</div><h3 className="processStepTi">A request is prepared</h3><p className="processStepBd">Drafts are ready for review with clear context on who it is for, what is needed, and who owns the next step.</p></div>
+                <div className="processCard"><div className="processNum">03</div><h3 className="processStepTi">Status stays visible</h3><p className="processStepBd">From sent, to approved, to ready for completion, everyone with access sees the same truth at the same time.</p></div>
               </div>
             </FI>
           </div>
@@ -477,146 +435,61 @@ export default function Page() {
 
         <section id="product" className="sec">
           <div className="container">
-            <FI>
-              <div className="shW">
-                <Overline>Product</Overline>
-                <h2 className="serif shT">One workflow from due soon to done.</h2>
-                <p className="shB">Omela is the coordination layer around recurring requests. Not a pharmacy, not a law firm, not a contractor. Just the shared workspace that keeps everyone on the same page.</p>
-              </div>
-            </FI>
+            <FI><div className="shW"><Overline>Product</Overline><h2 className="serif shT">One workflow from due soon to done.</h2><p className="shB">Omela is the coordination layer around recurring requests. Not a pharmacy, not a law firm, not a contractor. Just the shared workspace that keeps everyone on the same page.</p></div></FI>
             <div className="featGrid">
-              {features.map((f, i) => (
-                <FI key={f.title} delay={i * 0.06}>
-                  <div className="featCard">
-                    <div className={`featIc featIc--${f.tone}`}>{f.icon}</div>
-                    <h3 className="featTi">{f.title}</h3>
-                    <p className="featBd">{f.body}</p>
-                  </div>
-                </FI>
-              ))}
+              {features.map((f, i) => (<FI key={f.title} delay={i * 0.06}><div className="featCard"><div className={`featIc featIc--${f.tone}`}>{f.icon}</div><h3 className="featTi">{f.title}</h3><p className="featBd">{f.body}</p></div></FI>))}
             </div>
           </div>
         </section>
 
         <section id="industries" className="sec secTinted">
           <div className="container">
-            <FI>
-              <div className="shW">
-                <Overline tone="warm">Built on a pattern, not a niche</Overline>
-                <h2 className="serif shT">One coordination layer. Many recurring requests.</h2>
-                <p className="shB">Omela starts with repeat prescriptions because the cost of a missed handoff is highest there. The same shape applies anywhere a recurring request crosses households, professionals, and fulfillers.</p>
-              </div>
-            </FI>
+            <FI><div className="shW"><Overline tone="warm">Built on a pattern, not a niche</Overline><h2 className="serif shT">One coordination layer. Many recurring requests.</h2><p className="shB">Omela starts with repeat prescriptions because the cost of a missed handoff is highest there. The same shape applies anywhere a recurring request crosses households, professionals, and fulfillers.</p></div></FI>
             <div className="indGrid">
-              {industries.map((ind, i) => (
-                <FI key={ind.title} delay={i * 0.04}>
-                  <div className={`indCard ${ind.live ? "indCardLive" : "indCardSoon"}`}>
-                    <div className="indCardTop">
-                      <div className="indIc">{ind.icon}</div>
-                      <span className={`indTag ${ind.live ? "indTagLive" : "indTagSoon"}`}>
-                        {ind.live ? <><span className="indTagDot"/>Live</> : "Coming soon"}
-                      </span>
-                    </div>
-                    <h3 className="indTi">{ind.title}</h3>
-                    <p className="indBd">{ind.body}</p>
-                    <div className="indPlayers">{ind.players}</div>
-                  </div>
-                </FI>
-              ))}
+              {industries.map((ind, i) => (<FI key={ind.title} delay={i * 0.04}><div className={`indCard ${ind.live ? "indCardLive" : "indCardSoon"}`}><div className="indCardTop"><div className="indIc">{ind.icon}</div><span className={`indTag ${ind.live ? "indTagLive" : "indTagSoon"}`}>{ind.live ? <><span className="indTagDot"/>Live</> : "Coming soon"}</span></div><h3 className="indTi">{ind.title}</h3><p className="indBd">{ind.body}</p><div className="indPlayers">{ind.players}</div></div></FI>))}
             </div>
           </div>
         </section>
 
         <section id="results" className="statBand">
           <div className="container">
-            <FI>
-              <div className="statHd">
-                <Overline tone="warm">The market we're in</Overline>
-                <h2 className="serif statTi">We're starting with the largest unfixed admin workflow in UK healthcare.</h2>
-                <p className="statSub">England sees around 1.1 billion prescription items a year, and about 77% are repeat prescriptions. Medicines waste has been estimated at around £300 million annually. The repeat prescription workflow often spans multiple people across patient, GP practice, and pharmacy. The same coordination shape applies to any recurring request.</p>
-              </div>
-            </FI>
+            <FI><div className="statHd"><Overline tone="warm">The market we&apos;re in</Overline><h2 className="serif statTi">Starting with the largest unfixed admin workflow in healthcare.</h2><p className="statSub">England sees around 1.1 billion prescription items a year, and about 77% are repeat prescriptions. Medicines waste has been estimated at around £300 million annually. The repeat prescription workflow often spans multiple people across patient, practice, and pharmacy. The same coordination shape applies to any recurring request.</p></div></FI>
             <div className="statGrid">
-              {stats.map((s, i) => (
-                <FI key={s.label} delay={i * 0.06}>
-                  <div className="statCard">
-                    <div className="statVal serif">{s.value}</div>
-                    <div className="statLbl">{s.label}</div>
-                  </div>
-                </FI>
-              ))}
+              {stats.map((s, i) => (<FI key={s.label} delay={i * 0.06}><div className="statCard"><div className="statVal serif">{s.value}</div><div className="statLbl">{s.label}</div></div></FI>))}
             </div>
+          </div>
+        </section>
+
+        <section className="tstSec">
+          <div className="container">
+            <FI><div className="shW"><Overline>What teams say</Overline><h2 className="serif shT">Teams using Omela, in their own words.</h2></div></FI>
+            <FI delay={0.1}><Testimonials/></FI>
           </div>
         </section>
 
         <section id="pricing" className="sec">
           <div className="container">
-            <FI>
-              <div className="shW">
-                <Overline tone="warm">Simple pricing</Overline>
-                <h2 className="serif shT">Pay for the people you coordinate, not the seats.</h2>
-                <p className="shB">Transparent monthly pricing. No hidden setup fees. Cancel any time during early access.</p>
-              </div>
-            </FI>
+            <FI><div className="shW"><Overline tone="warm">Simple pricing</Overline><h2 className="serif shT">Pay for the people you coordinate, not the seats.</h2><p className="shB">Transparent monthly pricing. No hidden setup fees. Cancel any time during early access.</p></div></FI>
             <div className="prGrid">
-              {pricing.map((p, i) => (
-                <FI key={p.name} delay={i * 0.06}>
-                  <div className={`prCard ${p.featured ? "prCardFeat" : ""}`}>
-                    {p.featured ? <div className="prBadge"><span className="prBadgeDot"/>Most popular</div> : null}
-                    <div className="prName">{p.name}</div>
-                    <div className="prPrice"><span className="prPriceVal serif">{p.price}</span><span className="prPricePer">{p.per}</span></div>
-                    <p className="prDesc">{p.desc}</p>
-                    <ul className="prFeats">
-                      {p.features.map(f => <li key={f}><Check size={14}/><span>{f}</span></li>)}
-                    </ul>
-                    <a href="#waitlist" className={p.featured ? "btnP prBt" : "btnS prBt"}>{p.cta}{p.featured ? <ArrowRight size={14}/> : null}</a>
-                  </div>
-                </FI>
-              ))}
+              {pricing.map((p, i) => (<FI key={p.name} delay={i * 0.06}><div className={`prCard ${p.featured ? "prCardFeat" : ""}`}>{p.featured ? <div className="prBadge"><span className="prBadgeDot"/>Most popular</div> : null}<div className="prName">{p.name}</div><div className="prPrice"><span className="prPriceVal serif">{p.price}</span><span className="prPricePer">{p.per}</span></div><p className="prDesc">{p.desc}</p><ul className="prFeats">{p.features.map(f => <li key={f}><Check size={14}/><span>{f}</span></li>)}</ul><a href="#waitlist" className={p.featured ? "btnP prBt" : "btnS prBt"}>{p.cta}{p.featured ? <ArrowRight size={14}/> : null}</a></div></FI>))}
             </div>
-            <FI delay={0.2}>
-              <p className="prFoot">All plans include UK data residency, role-based access, and full audit history. Need something different? <a href="mailto:hello@omela.ai">Contact sales.</a></p>
-            </FI>
+            <FI delay={0.2}><p className="prFoot">All plans include role-based access and full audit history. Need something different? <a href="mailto:hello@omela.ai">Contact sales.</a></p></FI>
           </div>
         </section>
 
         <section id="trust" className="sec">
           <div className="container">
-            <FI>
-              <div className="shW">
-                <Overline>Trust and boundaries</Overline>
-                <h2 className="serif shT">We take the thin slice. You keep the rest.</h2>
-                <p className="shB">Omela is a coordination layer, not a system of record. We handle ownership, status, and next actions. Your clinical records, legal documents, and operational data stay exactly where they are.</p>
-              </div>
-            </FI>
+            <FI><div className="shW"><Overline>Trust and boundaries</Overline><h2 className="serif shT">We take the thin slice. You keep the rest.</h2><p className="shB">Omela is a coordination layer, not a system of record. We handle ownership, status, and next actions. Your clinical records, legal documents, and operational data stay exactly where they are.</p></div></FI>
             <div className="trustGrid">
-              {trustCards.map((t, i) => (
-                <FI key={t.title} delay={i * 0.05}>
-                  <div className="trustCard">
-                    <div className="trustCardTop"><div className="trustNo">{String(i+1).padStart(2,"0")}</div><div className="trustIc">{t.icon}</div></div>
-                    <h4 className="trustTi">{t.title}</h4>
-                    <p className="trustBd">{t.body}</p>
-                  </div>
-                </FI>
-              ))}
+              {trustCards.map((t, i) => (<FI key={t.title} delay={i * 0.05}><div className="trustCard"><div className="trustCardTop"><div className="trustNo">{String(i+1).padStart(2,"0")}</div><div className="trustIc">{t.icon}</div></div><h4 className="trustTi">{t.title}</h4><p className="trustBd">{t.body}</p></div></FI>))}
             </div>
           </div>
         </section>
 
         <section id="faq" className="sec">
           <div className="container">
-            <FI>
-              <div className="shW">
-                <Overline>Questions</Overline>
-                <h2 className="serif shT">Answers to what most people ask.</h2>
-                <p className="shB">If your question isn&apos;t here, send a note to <a href="mailto:hello@omela.ai" className="pvLk">hello@omela.ai</a> and a real person will reply.</p>
-              </div>
-            </FI>
-            <FI delay={0.1}>
-              <div className="faqWrap">
-                <Faq items={faq}/>
-              </div>
-            </FI>
+            <FI><div className="shW"><Overline>Questions</Overline><h2 className="serif shT">Answers to what most people ask.</h2><p className="shB">If your question isn&apos;t here, send a note to <a href="mailto:hello@omela.ai" className="pvLk">hello@omela.ai</a> and a real person will reply.</p></div></FI>
+            <FI delay={0.1}><div className="faqWrap"><Faq items={faq}/></div></FI>
           </div>
         </section>
 
@@ -626,30 +499,17 @@ export default function Page() {
               <div className="wlC">
                 <Overline>Early access</Overline>
                 <h2 className="serif wlTi">Join the first Omela pilots.</h2>
-                <p className="wlSub">We&apos;re running early-access pilots in the UK across healthcare, property compliance, and recurring legal work. Tell us a bit about your workflow.</p>
+                <p className="wlSub">We&apos;re running early-access pilots across healthcare, property compliance, and recurring legal work. Tell us a bit about your workflow.</p>
                 <form className="wlF" onSubmit={handleSubmit}>
                   <input className="inp" type="email" placeholder="Your email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email"/>
                   <select className="inp" value={role} onChange={e => setRole(e.target.value as Role)}>
-                    <optgroup label="Healthcare (live)">
-                      <option value="carer">I manage for a family member</option>
-                      <option value="household">I manage across my household</option>
-                      <option value="care_team">I work in a care team</option>
-                      <option value="pharmacy">I work in a pharmacy</option>
-                    </optgroup>
-                    <optgroup label="Other (coming soon)">
-                      <option value="vet">Veterinary practice</option>
-                      <option value="legal">Legal or compliance work</option>
-                      <option value="property">Property management</option>
-                      <option value="other">Something else</option>
-                    </optgroup>
+                    <optgroup label="Healthcare (live)"><option value="carer">I manage for a family member</option><option value="household">I manage across my household</option><option value="care_team">I work in a care team</option><option value="pharmacy">I work in a pharmacy</option></optgroup>
+                    <optgroup label="Other (coming soon)"><option value="vet">Veterinary practice</option><option value="legal">Legal or compliance work</option><option value="property">Property management</option><option value="other">Something else</option></optgroup>
                   </select>
                   <input type="text" name="website" value={website} onChange={e => setWebsite(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" style={{position:"absolute",left:"-9999px",opacity:0,pointerEvents:"none",height:0,width:0}}/>
                   <button type="submit" className="btnP wlBt" disabled={submitting || !agreed}>{submitting ? "Submitting..." : "Join early access"}</button>
                 </form>
-                <label className="pvL">
-                  <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} required className="pvC"/>
-                  <span>I agree to the <Link href="/privacy" className="pvLk">Privacy Notice</Link> and <Link href="/terms" className="pvLk">Terms</Link>.</span>
-                </label>
+                <label className="pvL"><input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} required className="pvC"/><span>I agree to the <Link href="/privacy" className="pvLk">Privacy Notice</Link> and <Link href="/terms" className="pvLk">Terms</Link>.</span></label>
                 {success ? <div className="fmOk">{success}</div> : null}
                 {error ? <div className="fmEr">{error}</div> : null}
               </div>
@@ -661,10 +521,7 @@ export default function Page() {
           <div className="container ftIn">
             <div className="ftTop">
               <div className="ftBrand">
-                <Link href="/" className="ftBr">
-                  <div className="navLo ftLoW"><Image src="/omela-logo-mark.png" alt="Omela" width={24} height={24} style={{width:"100%",height:"100%",objectFit:"contain"}}/></div>
-                  <span className="ftBrN serif">Omela</span>
-                </Link>
+                <Link href="/" className="ftBr"><div className="navLo ftLoW"><Image src="/omela-logo-mark.png" alt="Omela" width={24} height={24} style={{width:"100%",height:"100%",objectFit:"contain"}}/></div><span className="ftBrN serif">Omela</span></Link>
                 <p className="ftBrDesc">The coordination layer for recurring requests. Built for the people carrying the follow-through.</p>
               </div>
               <div className="ftCols">
@@ -673,8 +530,8 @@ export default function Page() {
                 <div className="ftCol"><div className="ftColT">Legal</div><Link href="/privacy" className="ftLk">Privacy</Link><Link href="/terms" className="ftLk">Terms</Link><a href="mailto:notice@omela.ai" className="ftLk">Notices</a></div>
               </div>
             </div>
-            <div className="ftDsc">Omela is a coordination layer for recurring admin, ownership, and next-step guidance. It is not a system of record and does not provide clinical, legal, or safety-critical decisions. In a healthcare emergency, call 999.</div>
-            <div className="ftBtm"><p>&copy; 2026 Omela Ltd.</p><p className="ftBtmRt">Made with care in the UK.</p></div>
+            <div className="ftDsc">Omela is a coordination layer for recurring admin, ownership, and next-step guidance. It is not a system of record and does not provide clinical, legal, or safety-critical decisions. In a healthcare emergency, contact local emergency services.</div>
+            <div className="ftBtm"><p>&copy; 2026 Omela Ltd.</p><p className="ftBtmRt">Built for teams, everywhere.</p></div>
           </div>
         </footer>
       </div>
@@ -695,22 +552,18 @@ button,input,select{font-family:inherit}
 .container{max-width:1200px;margin:0 auto;padding:0 20px}
 .sec{padding:72px 0}
 .secTinted{background:linear-gradient(180deg,#F5F1EA,${c.bg})}
-
 .overline{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${c.muted};line-height:1}
 .overline--warm{color:${c.warm}}
 .overline--blue{color:${c.accent}}
 .overline--green{color:${c.greenDk}}
-
 .btnP{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:${c.dark};color:#fff;border:none;border-radius:999px;padding:15px 26px;font-size:15px;font-weight:700;cursor:pointer;transition:all .25s;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.08)}
 .btnP:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,.13)}
 .btnP:disabled{opacity:.5;cursor:not-allowed}
 .btnS{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:#fff;color:${c.text};border:1.5px solid ${c.border};border-radius:999px;padding:15px 26px;font-size:15px;font-weight:700;cursor:pointer;transition:all .25s;white-space:nowrap}
 .btnS:hover{border-color:${c.text}}
-
 .shW{text-align:center;max-width:760px;margin:0 auto 40px}
 .shT{font-size:clamp(32px,5vw,54px);line-height:1.05;letter-spacing:-.045em;margin-top:14px}
 .shB{font-size:17px;line-height:1.65;margin-top:16px;max-width:640px;margin-left:auto;margin-right:auto;color:${c.sub}}
-
 .nav{position:sticky;top:0;z-index:100;background:rgba(248,246,241,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(227,221,210,.5)}
 .navR{display:flex;align-items:center;justify-content:space-between;gap:8px;height:68px}
 .navBr{display:flex;align-items:center;gap:10px;flex-shrink:0}
@@ -723,7 +576,6 @@ button,input,select{font-family:inherit}
 .navSignIn{display:inline-flex;font-size:14px;font-weight:700;color:${c.sub};transition:color .2s}
 .navSignIn:hover{color:${c.text}}
 .navCt{padding:11px 18px!important;font-size:13px!important}
-
 .heroSec{padding:56px 0 64px;position:relative;overflow:hidden}
 .heroGrid{display:grid;grid-template-columns:1fr;gap:40px;align-items:center;position:relative}
 .heroTxt{max-width:640px;margin:0 auto;text-align:center}
@@ -731,12 +583,10 @@ button,input,select{font-family:inherit}
 .heroSub{margin-top:22px;font-size:clamp(16px,2vw,19px);line-height:1.6;color:${c.sub};max-width:600px;margin-left:auto;margin-right:auto}
 .heroBt{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:28px}
 .heroBtP,.heroBtS{min-height:54px;padding:16px 28px;font-size:15.5px}
-.heroFoot{margin-top:22px;font-size:13px;color:${c.muted};font-weight:500}
 .heroBoardCol{display:flex;justify-content:center;width:100%}
-
 .wsWrap{width:100%;max-width:580px;position:relative}
 .wsGlow{position:absolute;inset:-36px;border-radius:52px;background:radial-gradient(circle,rgba(201,149,107,.08),transparent 68%);z-index:0;pointer-events:none}
-.wsShell{position:relative;z-index:1;background:#fff;border:1px solid rgba(227,221,210,.92);border-radius:24px;padding:18px;box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 24px 50px rgba(14,18,26,.09),0 4px 14px rgba(14,18,26,.04)}
+.wsShell{position:relative;z-index:1;background:#fff;border:1px solid rgba(227,221,210,.92);border-radius:24px;padding:18px;box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 24px 50px rgba(14,18,26,.09),0 4px 14px rgba(14,18,26,.04);overflow:hidden}
 .wsHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 6px 14px;border-bottom:1px solid rgba(227,221,210,.7)}
 .wsBrand{display:flex;align-items:center;gap:11px}
 .wsMark{width:36px;height:36px;border-radius:11px;background:${c.warmSoft};border:1px solid rgba(201,149,107,.16);display:flex;align-items:center;justify-content:center;padding:5px}
@@ -747,13 +597,6 @@ button,input,select{font-family:inherit}
 .wsLiveDot{width:6px;height:6px;border-radius:50%;background:${c.green};box-shadow:0 0 0 2px rgba(34,197,94,.2)}
 .wsBrandSep{color:${c.border}}
 .wsBrandDate{color:${c.sub}}
-.wsHeadAvatars{display:inline-flex;align-items:center}
-.wsHeadAv{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;border:2px solid #fff}
-.wsHeadAv+.wsHeadAv{margin-left:-8px}
-.wsHeadAv--warm{background:linear-gradient(135deg,#F7E7D2,#F0D5B6);color:${c.warmDk}}
-.wsHeadAv--blue{background:linear-gradient(135deg,#E3EDFB,#C9DBF6);color:#1E40AF}
-.wsHeadAv--green{background:linear-gradient(135deg,#DFF3E4,#C7E8CF);color:${c.greenDk}}
-
 .wsStats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
 .wsStat{padding:12px 14px;border-radius:14px;border:1px solid ${c.borderSoft}}
 .wsStat--warm{background:linear-gradient(180deg,#FFF8F0,#FDF3E6);border-color:rgba(201,149,107,.22)}
@@ -764,7 +607,6 @@ button,input,select{font-family:inherit}
 .wsStat--red .wsStatVal{color:${c.redDk}}
 .wsStat--green .wsStatVal{color:${c.greenDk}}
 .wsStatLbl{margin-top:5px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:${c.muted}}
-
 .wsBody{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
 .wsList{background:${c.cream};border:1px solid ${c.borderSoft};border-radius:18px;padding:8px}
 .wsListHd{display:flex;justify-content:space-between;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.11em;color:${c.muted};padding:8px 10px 10px}
@@ -790,7 +632,6 @@ button,input,select{font-family:inherit}
 .wsRowSt--blue .wsRowStDot{background:${c.accent}}
 .wsRowSt--green{color:${c.greenDk}}
 .wsRowSt--green .wsRowStDot{background:${c.green}}
-
 .wsDetail{background:${c.cream};border:1px solid ${c.borderSoft};border-radius:18px;padding:18px;min-height:380px;position:relative}
 .wsDtHd{display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid rgba(227,221,210,.7)}
 .wsDtHdTx{flex:1;min-width:0}
@@ -824,7 +665,6 @@ button,input,select{font-family:inherit}
 .wsDtNextLbl{font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:${c.muted}}
 .wsDtNextClock{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:700;color:${c.warmDk};letter-spacing:.04em;text-transform:uppercase}
 .wsDtNextTx{font-size:12.5px;line-height:1.55;color:${c.text};font-weight:600}
-
 .wsEval{position:absolute;top:72px;left:50%;transform:translateX(-50%);z-index:20;width:calc(100% - 48px);max-width:420px;pointer-events:none}
 .wsEvalInner{display:flex;align-items:center;gap:11px;padding:11px 14px;background:rgba(255,255,255,.98);border:1px solid rgba(201,149,107,.3);border-radius:14px;box-shadow:0 10px 32px rgba(14,18,26,.12),0 2px 8px rgba(14,18,26,.04);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .wsEvalIcon{width:26px;height:26px;border-radius:50%;background:#fff;border:1px solid rgba(201,149,107,.28);display:flex;align-items:center;justify-content:center;color:${c.warm};flex-shrink:0}
@@ -833,7 +673,6 @@ button,input,select{font-family:inherit}
 .wsEvalTask{margin-top:3px;font-size:12px;font-weight:700;color:${c.text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wsEvalBar{width:64px;height:4px;background:rgba(201,149,107,.15);border-radius:999px;overflow:hidden;flex-shrink:0}
 .wsEvalBarFill{height:100%;background:linear-gradient(90deg,${c.warm},${c.warmDk});border-radius:999px}
-
 .wsRowSupply{margin-top:7px;display:flex;align-items:center;gap:8px}
 .wsRowSupplyTrack{flex:1;height:3px;background:rgba(17,18,20,.06);border-radius:999px;overflow:hidden;min-width:60px}
 .wsRowSupplyFill{height:100%;border-radius:999px;transition:width .4s ease}
@@ -841,24 +680,19 @@ button,input,select{font-family:inherit}
 .wsRowSupplyFill--blue{background:linear-gradient(90deg,${c.warm},${c.accent})}
 .wsRowSupplyFill--green{background:${c.green}}
 .wsRowSupplyLbl{font-size:9.5px;font-weight:700;color:${c.muted};letter-spacing:.02em;font-variant-numeric:tabular-nums;flex-shrink:0}
-
 .wsFeedItemFresh .wsFeedWho{position:relative}
 .wsFeedItemFresh .wsFeedWho::before{content:"";position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:5px;height:5px;border-radius:50%;background:${c.accent};box-shadow:0 0 0 3px rgba(37,99,235,.18);animation:wsPulse 1.6s ease-in-out infinite}
 .wsFeedWhenFresh{color:${c.accent}!important;font-weight:800!important;text-transform:uppercase;letter-spacing:.04em;font-size:9.5px!important}
 @keyframes wsPulse{0%,100%{opacity:.5;transform:translateY(-50%) scale(.9)}50%{opacity:1;transform:translateY(-50%) scale(1.15)}}
-
 .wsFeed{margin-top:12px;padding:13px 15px;background:${c.cream};border:1px solid ${c.borderSoft};border-radius:18px;position:relative}
 .wsDomainTabs{display:flex;gap:4px;margin-bottom:11px;padding:3px;background:rgba(17,18,20,.04);border-radius:10px}
 .wsDomainTab{flex:1;padding:7px 10px;background:none;border:none;border-radius:7px;font-size:10.5px;font-weight:700;color:${c.muted};cursor:pointer;transition:all .25s;letter-spacing:-.005em;font-family:inherit}
 .wsDomainTab:hover{color:${c.text}}
 .wsDomainTabA{background:#fff;color:${c.text};box-shadow:0 1px 3px rgba(0,0,0,.06)}
-
 .wsDomainChip{display:flex;flex-direction:column;align-items:flex-end;line-height:1}
 .wsDomainChipLbl{font-size:8.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:${c.muted}}
 .wsDomainChipVal{margin-top:4px;font-size:11px;font-weight:800;color:${c.text};letter-spacing:-.01em}
-
 .prBadgeDot{width:6px;height:6px;border-radius:50%;background:${c.warm};box-shadow:0 0 0 3px rgba(201,149,107,.3)}
-
 .infraStrip{padding:40px 0;background:rgba(255,255,255,.5);border-bottom:1px solid rgba(227,221,210,.4);overflow:hidden}
 .infraHd{text-align:center;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${c.muted};margin-bottom:26px}
 .infraMarquee{position:relative;width:100%;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
@@ -867,8 +701,6 @@ button,input,select{font-family:inherit}
 .infraLogo{display:flex;align-items:center;justify-content:center;height:32px;min-width:110px;flex-shrink:0;opacity:.5;filter:grayscale(100%);transition:opacity .25s,filter .25s}
 .infraLogo:hover{opacity:.9;filter:grayscale(0%)}
 @keyframes infraSlide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-
-
 .wsFeedHd{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:${c.muted};margin-bottom:9px}
 .wsFeedList{display:flex;flex-direction:column;gap:7px}
 .wsFeedItem{display:flex;align-items:center;gap:8px;font-size:11px;line-height:1.4;color:${c.sub}}
@@ -879,17 +711,15 @@ button,input,select{font-family:inherit}
 .wsFeedWho{font-weight:800;color:${c.text};flex-shrink:0}
 .wsFeedWhat{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wsFeedWhen{flex-shrink:0;color:${c.muted};font-weight:600;font-variant-numeric:tabular-nums}
-
-.processStrip{padding:64px 0;border-top:1px solid rgba(227,221,210,.55);border-bottom:1px solid rgba(227,221,210,.55);background:rgba(255,255,255,.45)}
+.processStrip{padding:72px 0;border-top:1px solid rgba(227,221,210,.55);border-bottom:1px solid rgba(227,221,210,.55);background:rgba(255,255,255,.45)}
 .processHd{text-align:center;max-width:680px;margin:0 auto 44px}
 .processTi{margin-top:14px;font-size:clamp(28px,4.4vw,44px);line-height:1.08;letter-spacing:-.04em;color:${c.text}}
-.processGrid{display:grid;grid-template-columns:1fr;gap:28px;align-items:start;max-width:1100px;margin:0 auto}
-.processStep{text-align:center;padding:0 12px}
-.processNum{font-family:var(--font-instrument-serif),Georgia,serif;font-size:44px;line-height:1;color:${c.warm};letter-spacing:-.03em;margin-bottom:14px}
+.processGrid{display:grid;grid-template-columns:1fr;gap:18px;max-width:1080px;margin:0 auto}
+.processCard{padding:32px 28px;border-radius:20px;background:#fff;border:1px solid ${c.border};transition:transform .25s,box-shadow .25s,border-color .25s;display:flex;flex-direction:column;align-items:flex-start}
+.processCard:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.05);border-color:rgba(201,149,107,.3)}
+.processNum{font-family:var(--font-instrument-serif),Georgia,serif;font-size:46px;line-height:1;color:${c.warm};letter-spacing:-.03em;margin-bottom:16px}
 .processStepTi{font-size:19px;font-weight:800;letter-spacing:-.02em;color:${c.text}}
-.processStepBd{margin-top:10px;font-size:14.5px;line-height:1.68;color:${c.sub};max-width:300px;margin-left:auto;margin-right:auto}
-.processLine{display:none;height:1px;background:linear-gradient(90deg,transparent,rgba(201,149,107,.4),transparent);align-self:center;margin-top:28px}
-
+.processStepBd{margin-top:10px;font-size:14.5px;line-height:1.68;color:${c.sub}}
 .featGrid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:20px}
 .featCard{padding:28px;border-radius:22px;background:#fff;border:1px solid ${c.border};box-shadow:0 2px 14px rgba(0,0,0,.02);transition:transform .3s,box-shadow .3s}
 .featCard:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.06)}
@@ -899,7 +729,6 @@ button,input,select{font-family:inherit}
 .featIc--green{background:${c.greenSoft};color:${c.greenDk}}
 .featTi{font-size:19px;font-weight:800;letter-spacing:-.02em;color:${c.text}}
 .featBd{margin-top:8px;font-size:15px;line-height:1.68;color:${c.sub}}
-
 .indGrid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:20px}
 .indCard{padding:24px;border-radius:20px;background:#fff;border:1px solid ${c.border};position:relative;transition:all .3s;display:flex;flex-direction:column}
 .indCardLive:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.06);border-color:rgba(201,149,107,.4)}
@@ -917,7 +746,6 @@ button,input,select{font-family:inherit}
 .indTi{font-size:18px;font-weight:800;letter-spacing:-.02em;color:${c.text}}
 .indBd{margin-top:8px;font-size:14px;line-height:1.65;color:${c.sub};flex:1}
 .indPlayers{margin-top:14px;padding-top:12px;border-top:1px solid ${c.borderSoft};font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:${c.muted}}
-
 .prGrid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:24px;max-width:1080px;margin-left:auto;margin-right:auto}
 .prCard{padding:32px 28px;border-radius:24px;background:#fff;border:1px solid ${c.border};position:relative;display:flex;flex-direction:column;transition:transform .3s,box-shadow .3s}
 .prCard:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.06)}
@@ -934,7 +762,6 @@ button,input,select{font-family:inherit}
 .prBt{width:100%;justify-content:center}
 .prFoot{margin-top:30px;text-align:center;font-size:13px;color:${c.muted};line-height:1.65}
 .prFoot a{color:${c.text};font-weight:700;text-decoration:underline;text-underline-offset:2px}
-
 .statBand{background:${c.navy};padding:80px 0;color:#fff}
 .statHd{text-align:center;max-width:720px;margin:0 auto 44px}
 .statHd .overline{color:${c.warm}}
@@ -944,7 +771,19 @@ button,input,select{font-family:inherit}
 .statCard{padding:32px 24px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);text-align:left}
 .statVal{font-size:clamp(48px,7vw,76px);line-height:1;letter-spacing:-.035em;color:#fff}
 .statLbl{margin-top:14px;font-size:14px;line-height:1.55;color:rgba(255,255,255,.7);font-weight:500}
-
+.tstSec{padding:96px 0;background:linear-gradient(180deg,${c.bg},#F5F1EA);border-top:1px solid rgba(227,221,210,.5);border-bottom:1px solid rgba(227,221,210,.5)}
+.tstWrap{max-width:780px;margin:0 auto;text-align:center;padding:0 12px;position:relative;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.tstIc{width:44px;height:44px;border-radius:14px;background:${c.warmSoft};color:${c.warm};display:flex;align-items:center;justify-content:center;border:1px solid rgba(201,149,107,.2);margin:0 auto 24px}
+.tstQuote{width:100%}
+.tstTx{font-size:clamp(22px,3.2vw,30px);line-height:1.35;letter-spacing:-.022em;color:${c.text};font-style:italic;max-width:720px;margin:0 auto}
+.tstBy{margin-top:20px;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.tstByName{color:${c.warmDk}}
+.tstBySep{color:${c.muted};font-weight:600}
+.tstByDomain{color:${c.muted};font-weight:700}
+.tstDots{display:flex;gap:6px;margin-top:28px;justify-content:center}
+.tstDot{width:6px;height:6px;border-radius:50%;background:rgba(42,31,20,.18);border:none;cursor:pointer;padding:0;transition:all .3s}
+.tstDot:hover{background:rgba(42,31,20,.35)}
+.tstDotA{background:${c.warmDk};width:22px;border-radius:999px}
 .trustGrid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:20px}
 .trustCard{padding:24px;border-radius:20px;background:#fff;border:1px solid ${c.border};transition:transform .25s,box-shadow .25s,border-color .25s}
 .trustCard:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.05);border-color:rgba(201,149,107,.35)}
@@ -953,7 +792,6 @@ button,input,select{font-family:inherit}
 .trustIc{width:36px;height:36px;border-radius:11px;background:${c.warmSoft};color:${c.warmDk};display:flex;align-items:center;justify-content:center;border:1px solid rgba(201,149,107,.2)}
 .trustTi{font-size:17px;font-weight:800;letter-spacing:-.02em;color:${c.text}}
 .trustBd{margin-top:8px;font-size:14px;line-height:1.68;color:${c.sub}}
-
 .faqWrap{max-width:780px;margin:24px auto 0}
 .faqList{display:flex;flex-direction:column;gap:10px}
 .faqItem{background:#fff;border:1px solid ${c.border};border-radius:18px;overflow:hidden;transition:border-color .25s,box-shadow .25s}
@@ -965,7 +803,6 @@ button,input,select{font-family:inherit}
 .faqItemOpen .faqQIc{transform:rotate(180deg)}
 .faqA{overflow:hidden}
 .faqAInner{padding:0 24px 22px;font-size:14.5px;line-height:1.72;color:${c.sub}}
-
 .wlC{background:#fff;border:1px solid ${c.border};border-radius:28px;padding:40px 32px;max-width:760px;margin:0 auto;box-shadow:0 4px 24px rgba(0,0,0,.04);text-align:center}
 .wlTi{font-size:clamp(28px,4.5vw,44px);letter-spacing:-.045em;margin-top:14px}
 .wlSub{margin-top:14px;font-size:16px;line-height:1.68;color:${c.sub};max-width:540px;margin-left:auto;margin-right:auto}
@@ -978,7 +815,6 @@ button,input,select{font-family:inherit}
 .pvLk{color:${c.text};font-weight:700;text-decoration:underline;text-underline-offset:2px}
 .fmOk{margin-top:14px;background:${c.greenSoft};color:${c.greenDk};border-radius:12px;padding:13px;font-size:13.5px;font-weight:600}
 .fmEr{margin-top:14px;background:${c.redSoft};color:${c.redDk};border-radius:12px;padding:13px;font-size:13.5px;font-weight:600}
-
 .modO{position:fixed;inset:0;z-index:220;background:rgba(9,10,13,.55);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;padding:14px}
 .modB{width:100%;max-width:420px;background:#fff;border:1px solid ${c.border};border-radius:24px;padding:30px;box-shadow:0 20px 50px rgba(0,0,0,.18);text-align:center}
 .modSeal{width:54px;height:54px;border-radius:999px;background:linear-gradient(135deg,#FFF8F0,#ECFDF3);border:1px solid rgba(34,197,94,.14);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:${c.greenDk}}
@@ -992,7 +828,6 @@ button,input,select{font-family:inherit}
 .modRefBts{display:flex;gap:6px;margin-top:10px}
 .modShareBtn{flex:1;padding:9px 12px!important;font-size:12.5px!important}
 .modClose{margin-top:14px;background:none;border:none;color:${c.muted};font-size:12px;font-weight:600;cursor:pointer}
-
 .ft{background:${c.dark};padding:60px 0 28px;color:#fff}
 .ftTop{display:grid;grid-template-columns:1fr;gap:32px;padding-bottom:32px;border-bottom:1px solid rgba(255,255,255,.08)}
 .ftBrand{max-width:340px}
@@ -1008,7 +843,6 @@ button,input,select{font-family:inherit}
 .ftLkStatic{cursor:default}
 .ftDsc{margin-top:24px;padding:16px 0;font-size:11.5px;color:rgba(255,255,255,.35);line-height:1.7;text-align:center;max-width:680px;margin-left:auto;margin-right:auto}
 .ftBtm{border-top:1px solid rgba(255,255,255,.06);padding-top:18px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:11px;color:rgba(255,255,255,.35)}
-
 @media(max-width:639px){
   .sec{padding:56px 0}
   .heroSec{padding:36px 0 44px}
@@ -1023,26 +857,21 @@ button,input,select{font-family:inherit}
   .navCt{padding:9px 14px!important;font-size:12px!important}
   .navSignIn{font-size:13px}
   .processStrip{padding:48px 0}
-  .processGrid{gap:32px}
   .statBand{padding:60px 0}
   .statGrid{grid-template-columns:1fr;gap:12px}
   .statCard{padding:26px 22px}
+  .tstSec{padding:64px 0}
   .wlC{padding:30px 22px}
   .wsDetail{min-height:340px}
-  .wsEval{width:calc(100% - 32px);top:64px}
-  .wsEvalInner{padding:10px 12px;gap:9px}
-  .wsEvalTask{font-size:11px}
-  .wsEvalBar{width:48px}
+  .wsEval{display:none}
   .wsRowSupply{margin-top:6px}
   .wsRowSupplyTrack{min-width:50px}
 }
-
 @media(min-width:640px){
   .container{padding:0 28px}
   .navR{height:72px}
   .navLks{display:flex}
-  .processGrid{grid-template-columns:1fr 40px 1fr 40px 1fr;gap:12px}
-  .processLine{display:block}
+  .processGrid{grid-template-columns:repeat(3,1fr);gap:16px}
   .featGrid{grid-template-columns:repeat(3,1fr)}
   .indGrid{grid-template-columns:repeat(2,1fr)}
   .prGrid{grid-template-columns:repeat(3,1fr);gap:16px}
@@ -1053,7 +882,6 @@ button,input,select{font-family:inherit}
   .ftTop{grid-template-columns:1.1fr 2fr;gap:48px}
   .wsBody{grid-template-columns:.92fr 1.08fr}
 }
-
 @media(min-width:960px){
   .container{padding:0 36px}
   .sec{padding:96px 0}
@@ -1067,8 +895,5 @@ button,input,select{font-family:inherit}
   .trustGrid{grid-template-columns:repeat(4,1fr)}
   .statBand{padding:104px 0}
 }
-
-@media(min-width:1180px){
-  .heroTi{font-size:clamp(56px,5.6vw,78px)}
-}
+@media(min-width:1180px){.heroTi{font-size:clamp(56px,5.6vw,78px)}}
 `;
