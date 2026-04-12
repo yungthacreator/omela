@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useState, type ReactNode } from "react";
 import { DM_Sans, Instrument_Serif } from "next/font/google";
 import {
   Search,
@@ -8,146 +11,111 @@ import {
   Plus,
   ChevronRight,
   AlertCircle,
-  Clock,
   CheckCircle2,
-  Package,
   Filter,
+  Inbox,
+  X,
+  ArrowUpRight,
+  MoreHorizontal,
+  Settings,
+  HelpCircle,
 } from "lucide-react";
-import { auth, signOut } from "@/auth";
-import { redirect } from "next/navigation";
 
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-dm",
-  weight: ["400", "500", "600", "700", "800"],
-});
+const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm", weight: ["400","500","600","700","800"] });
+const instrumentSerif = Instrument_Serif({ subsets: ["latin"], weight: "400", variable: "--font-serif" });
 
-const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-serif",
-});
-
-// ── Single source of truth: 12 residents, rich realistic data ──
 type Urgency = "critical" | "warning" | "ok";
-type Stage = "draft" | "submitted" | "approved" | "dispensed" | "ready" | "delayed";
+type Stage = "draft" | "submitted" | "approved" | "ready" | "delayed";
+type Tone = "warm" | "blue" | "green";
 
-type Refill = {
+type Item = {
   id: string;
-  resident: string;
+  title: string;
   initials: string;
-  room: string;
-  medication: string;
-  strength: string;
-  dose: string;
+  subject: string;
+  detail: string;
+  task: string;
   daysLeft: number;
   stage: Stage;
-  pharmacy: string;
-  practice: string;
+  counterparty: string;
+  fulfiller: string;
   owner: string;
   updated: string;
-  tone: "warm" | "blue" | "green";
+  tone: Tone;
 };
 
-const refills: Refill[] = [
-  { id: "RX-20814", resident: "Margaret Littlewood", initials: "ML", room: "Room 04", medication: "Amlodipine", strength: "5mg", dose: "Once daily", daysLeft: 2, stage: "delayed", pharmacy: "Boots, High St", practice: "Greenfield Medical", owner: "Ada Kelly", updated: "3 days ago", tone: "warm" },
-  { id: "RX-20819", resident: "David Reyes", initials: "DR", room: "Room 11", medication: "Metformin", strength: "500mg", dose: "Twice daily", daysLeft: 6, stage: "submitted", pharmacy: "Well, Market Sq", practice: "Northgate Surgery", owner: "Dr. Reyes", updated: "Today 10:15", tone: "blue" },
-  { id: "RX-20806", resident: "Irene Kowalski", initials: "IK", room: "Room 07", medication: "Sertraline", strength: "50mg", dose: "Once daily", daysLeft: 14, stage: "ready", pharmacy: "Boots, High St", practice: "Hillside Practice", owner: "Jamie Marsh", updated: "Today 12:44", tone: "green" },
-  { id: "RX-20821", resident: "Thomas Callahan", initials: "TC", room: "Room 02", medication: "Ramipril", strength: "10mg", dose: "Once daily", daysLeft: 1, stage: "delayed", pharmacy: "Grove Pharmacy", practice: "Grove Lane Practice", owner: "Ada Kelly", updated: "5 days ago", tone: "warm" },
-  { id: "RX-20825", resident: "Sylvia Drummond", initials: "SD", room: "Room 09", medication: "Atorvastatin", strength: "40mg", dose: "Each evening", daysLeft: 7, stage: "approved", pharmacy: "Day Lewis, King St", practice: "Oakwood GP", owner: "Dr. Reyes", updated: "Today 09:20", tone: "blue" },
-  { id: "RX-20827", resident: "George Nkemdirim", initials: "GN", room: "Room 14", medication: "Bisoprolol", strength: "5mg", dose: "Once daily", daysLeft: 9, stage: "draft", pharmacy: "LloydsPharmacy", practice: "Northgate Surgery", owner: "Jamie Marsh", updated: "Yesterday", tone: "green" },
-  { id: "RX-20830", resident: "Beatrice Ofori", initials: "BO", room: "Room 05", medication: "Levothyroxine", strength: "75mcg", dose: "Before food", daysLeft: 4, stage: "submitted", pharmacy: "Boots, High St", practice: "Greenfield Medical", owner: "Ada Kelly", updated: "Yesterday", tone: "warm" },
-  { id: "RX-20833", resident: "Henry Whitmore", initials: "HW", room: "Room 12", medication: "Omeprazole", strength: "20mg", dose: "Once daily", daysLeft: 18, stage: "ready", pharmacy: "Well, Market Sq", practice: "Hillside Practice", owner: "Dr. Reyes", updated: "Today 08:55", tone: "green" },
+// Starter dataset for the demo workspace — user can clear via empty-state toggle
+const seed: Item[] = [
+  { id: "RQ-20814", title: "Margaret Littlewood", initials: "ML", subject: "Room 04", detail: "Amlodipine 5mg", task: "Once daily", daysLeft: 2, stage: "delayed", counterparty: "Greenfield Medical", fulfiller: "Boots, High St", owner: "Ada Kelly", updated: "3 days ago", tone: "warm" },
+  { id: "RQ-20819", title: "David Reyes", initials: "DR", subject: "Room 11", detail: "Metformin 500mg", task: "Twice daily", daysLeft: 6, stage: "submitted", counterparty: "Northgate Surgery", fulfiller: "Well, Market Sq", owner: "Dr. Reyes", updated: "Today 10:15", tone: "blue" },
+  { id: "RQ-20806", title: "Irene Kowalski", initials: "IK", subject: "Room 07", detail: "Sertraline 50mg", task: "Once daily", daysLeft: 14, stage: "ready", counterparty: "Hillside Practice", fulfiller: "Boots, High St", owner: "Jamie Marsh", updated: "Today 12:44", tone: "green" },
+  { id: "RQ-20821", title: "Thomas Callahan", initials: "TC", subject: "Room 02", detail: "Ramipril 10mg", task: "Once daily", daysLeft: 1, stage: "delayed", counterparty: "Grove Lane Practice", fulfiller: "Grove Pharmacy", owner: "Ada Kelly", updated: "5 days ago", tone: "warm" },
+  { id: "RQ-20825", title: "Sylvia Drummond", initials: "SD", subject: "Room 09", detail: "Atorvastatin 40mg", task: "Each evening", daysLeft: 7, stage: "approved", counterparty: "Oakwood GP", fulfiller: "Day Lewis", owner: "Dr. Reyes", updated: "Today 09:20", tone: "blue" },
+  { id: "RQ-20827", title: "George Nkemdirim", initials: "GN", subject: "Room 14", detail: "Bisoprolol 5mg", task: "Once daily", daysLeft: 9, stage: "draft", counterparty: "Northgate Surgery", fulfiller: "LloydsPharmacy", owner: "Jamie Marsh", updated: "Yesterday", tone: "green" },
 ];
 
-const stageLabels: Record<Stage, string> = {
-  draft: "Draft",
-  submitted: "Submitted",
-  approved: "Approved",
-  dispensed: "Dispensing",
-  ready: "Ready",
-  delayed: "Delayed",
-};
+const stageLabels: Record<Stage, string> = { draft: "Draft", submitted: "Submitted", approved: "Approved", ready: "Ready", delayed: "Delayed" };
 
-const stats = [
-  { label: "Due this week", value: "8", delta: "+2 from last week", tone: "warm" as const },
-  { label: "Awaiting GP", value: "3", delta: "avg 2.1 days", tone: "blue" as const },
-  { label: "Ready to collect", value: "2", delta: "in 4 pharmacies", tone: "green" as const },
-  { label: "Delayed", value: "2", delta: "needs attention", tone: "red" as const },
-];
-
-const alerts = [
-  { id: 1, priority: "critical" as const, resident: "Thomas Callahan", action: "Ramipril has 1 day of supply and no GP response in 5 days", meta: "Grove Lane Practice · Ada" },
-  { id: 2, priority: "critical" as const, resident: "Margaret Littlewood", action: "Amlodipine follow-up overdue, practice has not acknowledged request", meta: "Greenfield Medical · Ada" },
-  { id: 3, priority: "info" as const, resident: "George Nkemdirim", action: "Draft prepared and ready for review", meta: "Jamie Marsh · Northgate" },
-  { id: 4, priority: "info" as const, resident: "Irene Kowalski", action: "Ready at Boots, assign collection before 18:00", meta: "Jamie Marsh · High Street" },
-];
-
-function getInitial(v?: string | null) {
-  return v?.trim().charAt(0).toUpperCase() ?? "O";
-}
+function getInitial(v?: string | null) { return v?.trim().charAt(0).toUpperCase() ?? "O"; }
+function urgency(days: number): Urgency { if (days <= 2) return "critical"; if (days <= 7) return "warning"; return "ok"; }
+function urgencyLabel(days: number) { return days === 1 ? "1 day" : `${days} days`; }
 
 const CSS = `
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:#F8F6F1;color:#2A1F14;font-family:var(--font-dm),Arial,sans-serif;-webkit-font-smoothing:antialiased;font-size:14px}
 a{color:inherit;text-decoration:none}
 button,input,select{font-family:inherit}
-::selection{background:#2563EB;color:#fff}
+::selection{background:#C9956B;color:#fff}
 .serif{font-family:var(--font-serif),Georgia,serif}
 
-/* ============ Top bar ============ */
 .nav{position:sticky;top:0;z-index:100;background:rgba(248,246,241,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid #E3DDD2}
-.navR{max-width:1320px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:20px;height:60px}
+.navR{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:20px;height:60px}
 .brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
 .logoW{width:30px;height:30px;flex-shrink:0}
 .brandName{font-family:var(--font-serif),Georgia,serif;font-size:20px;letter-spacing:-.025em;color:#2A1F14}
 .navDiv{width:1px;height:24px;background:#E3DDD2;flex-shrink:0}
 .navTabs{display:none;align-items:center;gap:4px;flex:1}
-.navTab{padding:8px 14px;font-size:13px;font-weight:600;color:#4A4F5C;border-radius:8px;transition:all .2s;cursor:pointer}
+.navTab{padding:8px 14px;font-size:13px;font-weight:600;color:#4A4F5C;border-radius:8px;transition:all .2s;cursor:pointer;background:none;border:none}
 .navTab:hover{background:rgba(227,221,210,.5);color:#2A1F14}
 .navTabActive{background:#fff;color:#2A1F14;border:1px solid #E3DDD2;box-shadow:0 1px 3px rgba(0,0,0,.03)}
-.navRight{display:flex;align-items:center;gap:10px;margin-left:auto}
+.navRight{display:flex;align-items:center;gap:8px;margin-left:auto}
 .navIcBtn{width:34px;height:34px;border-radius:9px;border:1px solid #E3DDD2;background:#fff;display:flex;align-items:center;justify-content:center;color:#4A4F5C;cursor:pointer;transition:all .2s;position:relative}
 .navIcBtn:hover{border-color:#2A1F14;color:#2A1F14}
 .navIcBtnDot{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:#EF4444;border:2px solid #fff}
 .userChip{display:flex;align-items:center;gap:9px;padding:5px 12px 5px 5px;border:1px solid #E3DDD2;background:#fff;border-radius:999px;cursor:pointer;transition:all .2s}
 .userChip:hover{border-color:#2A1F14}
 .userAv{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#F7E7D2,#F0D5B6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#A07545;overflow:hidden;flex-shrink:0}
-.userAv img{width:100%;height:100%;object-fit:cover}
 .userChipName{display:none;font-size:12.5px;font-weight:700;color:#2A1F14;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .signOutBtn{background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;padding:8px 10px;font-size:12.5px;font-weight:600;color:#4A4F5C;border-radius:8px;transition:all .2s}
 .signOutBtn:hover{color:#2A1F14;background:rgba(227,221,210,.5)}
 
-/* ============ Shell ============ */
-.shell{max-width:1320px;margin:0 auto;padding:28px 24px 64px}
+.shell{max-width:1400px;margin:0 auto;padding:28px 24px 64px}
 
 .pageHead{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:24px;flex-wrap:wrap}
-.pageHeadL h1{font-family:var(--font-serif),Georgia,serif;font-size:clamp(28px,3.5vw,36px);letter-spacing:-.035em;color:#2A1F14;line-height:1.1}
-.pageHeadSub{margin-top:6px;font-size:13.5px;color:#4A4F5C;font-weight:500}
-.pageHeadR{display:flex;align-items:center;gap:10px}
-.searchBox{display:flex;align-items:center;gap:8px;padding:0 14px;height:38px;background:#fff;border:1px solid #E3DDD2;border-radius:10px;min-width:240px;transition:all .2s}
+.pageHeadL h1{font-family:var(--font-serif),Georgia,serif;font-size:clamp(30px,3.8vw,40px);letter-spacing:-.035em;color:#2A1F14;line-height:1.1}
+.pageHeadSub{margin-top:8px;font-size:14px;color:#4A4F5C;font-weight:500}
+.pageHeadR{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.searchBox{display:flex;align-items:center;gap:8px;padding:0 14px;height:40px;background:#fff;border:1px solid #E3DDD2;border-radius:10px;min-width:240px;transition:all .2s}
 .searchBox:focus-within{border-color:#2A1F14;box-shadow:0 0 0 3px rgba(42,31,20,.06)}
 .searchBox input{flex:1;border:none;outline:none;background:none;font-size:13px;color:#2A1F14}
 .searchBox input::placeholder{color:#888E9C}
-.primaryBtn{display:inline-flex;align-items:center;gap:6px;padding:0 16px;height:38px;background:#08090C;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap}
+.primaryBtn{display:inline-flex;align-items:center;gap:6px;padding:0 16px;height:40px;background:#08090C;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap}
 .primaryBtn:hover{background:#1a1a1e;transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.12)}
 
-/* ============ Stat row ============ */
 .statRow{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
-.statC{padding:18px 20px;background:#fff;border:1px solid #E3DDD2;border-radius:14px;position:relative;overflow:hidden}
+.statC{padding:18px 20px;background:#fff;border:1px solid #E3DDD2;border-radius:14px;position:relative;overflow:hidden;transition:transform .2s,border-color .2s}
+.statC:hover{transform:translateY(-1px);border-color:#D4CCBE}
 .statC::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0}
 .statC--warm::before{background:#C9956B}
 .statC--blue::before{background:#2563EB}
 .statC--green::before{background:#22C55E}
 .statC--red::before{background:#EF4444}
+.statC--muted::before{background:#D4CCBE}
 .statLbl{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#888E9C}
-.statVal{margin-top:8px;font-family:var(--font-serif),Georgia,serif;font-size:40px;line-height:1;letter-spacing:-.035em;color:#2A1F14}
-.statDelta{margin-top:6px;font-size:11.5px;color:#4A4F5C;font-weight:500}
+.statVal{margin-top:8px;font-family:var(--font-serif),Georgia,serif;font-size:42px;line-height:1;letter-spacing:-.035em;color:#2A1F14}
+.statDelta{margin-top:6px;font-size:11.5px;color:#888E9C;font-weight:500}
 
-/* ============ Grid ============ */
 .mainGrid{display:grid;grid-template-columns:1fr;gap:20px}
-
-/* ============ Card base ============ */
 .card{background:#fff;border:1px solid #E3DDD2;border-radius:16px;overflow:hidden}
 .cardHd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px;border-bottom:1px solid #EDE8DF}
 .cardTi{font-size:15px;font-weight:800;letter-spacing:-.015em;color:#2A1F14;display:flex;align-items:center;gap:8px}
@@ -156,16 +124,26 @@ button,input,select{font-family:inherit}
 .cardActBtn{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;background:none;border:1px solid #E3DDD2;border-radius:8px;font-size:11.5px;font-weight:600;color:#4A4F5C;cursor:pointer;transition:all .2s}
 .cardActBtn:hover{border-color:#2A1F14;color:#2A1F14}
 
-/* ============ Alerts ============ */
+/* Empty state */
+.emptyCard{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:72px 24px;text-align:center}
+.emptyIc{width:56px;height:56px;border-radius:16px;background:linear-gradient(180deg,#FFF8F0,#F7E7D2);border:1px solid rgba(201,149,107,.2);display:flex;align-items:center;justify-content:center;color:#A07545;margin-bottom:20px}
+.emptyTi{font-family:var(--font-serif),Georgia,serif;font-size:26px;line-height:1.1;letter-spacing:-.03em;color:#2A1F14}
+.emptyBd{margin-top:10px;font-size:14px;line-height:1.6;color:#4A4F5C;max-width:360px}
+.emptyActs{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap;justify-content:center}
+.emptySec{display:inline-flex;align-items:center;gap:6px;padding:0 16px;height:40px;background:#fff;color:#2A1F14;border:1px solid #E3DDD2;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
+.emptySec:hover{border-color:#2A1F14}
+
 .alertList{display:flex;flex-direction:column}
-.alertItem{display:flex;align-items:flex-start;gap:12px;padding:16px 22px;border-bottom:1px solid #EDE8DF;transition:background .15s}
+.alertItem{display:flex;align-items:flex-start;gap:12px;padding:16px 22px;border-bottom:1px solid #EDE8DF;transition:background .15s;cursor:pointer;border-left:3px solid transparent}
 .alertItem:last-child{border-bottom:none}
 .alertItem:hover{background:#FAF7F2}
+.alertItem--critical{border-left-color:#B91C1C}
+.alertItem--critical:hover{background:#FEF6F6}
 .alertIc{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .alertIc--critical{background:#FEF2F2;color:#B91C1C}
 .alertIc--info{background:#ECF2FF;color:#2563EB}
 .alertBody{flex:1;min-width:0}
-.alertTop{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+.alertTop{display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap}
 .alertName{font-size:13px;font-weight:800;color:#2A1F14;letter-spacing:-.01em}
 .alertTag{font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;padding:2px 7px;border-radius:4px}
 .alertTag--critical{background:#FEF2F2;color:#B91C1C}
@@ -173,30 +151,33 @@ button,input,select{font-family:inherit}
 .alertAction{font-size:12.5px;color:#4A4F5C;line-height:1.5}
 .alertMeta{margin-top:4px;font-size:11px;color:#888E9C;font-weight:500}
 .alertChev{color:#888E9C;flex-shrink:0;align-self:center}
+.alertEmpty{padding:36px 22px;text-align:center;font-size:13px;color:#888E9C;line-height:1.6}
 
-/* ============ Refill table ============ */
 .tableWrap{overflow-x:auto}
 .tbl{width:100%;border-collapse:collapse;min-width:760px}
-.tbl thead th{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#888E9C;padding:12px 18px;text-align:left;background:#FAF7F2;border-bottom:1px solid #EDE8DF}
+.tbl thead th{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#888E9C;padding:12px 18px;text-align:left;background:#FAF7F2;border-bottom:1px solid #EDE8DF;white-space:nowrap}
 .tbl thead th:last-child{text-align:right;padding-right:22px}
-.tbl tbody tr{border-bottom:1px solid #F2EDE4;transition:background .14s}
+.tbl tbody tr{border-bottom:1px solid #F2EDE4;transition:background .14s;cursor:pointer;border-left:3px solid transparent}
 .tbl tbody tr:last-child{border-bottom:none}
-.tbl tbody tr:hover{background:#FAF7F2;cursor:pointer}
+.tbl tbody tr:hover{background:#FAF7F2}
+.tbl tbody tr.rowCrit{border-left-color:#B91C1C;background:rgba(254,242,242,.35)}
+.tbl tbody tr.rowCrit:hover{background:#FEF6F6}
+.tbl tbody tr.rowActive{background:#FAF7F2;box-shadow:inset 3px 0 0 #A07545}
 .tbl td{padding:14px 18px;vertical-align:middle}
 .tbl td:last-child{text-align:right;padding-right:22px}
 
-.tblRes{display:flex;align-items:center;gap:11px}
+.tblRes{display:flex;align-items:center;gap:11px;min-width:0}
 .tblAv{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
 .tblAv--warm{background:linear-gradient(135deg,#F7E7D2,#F0D5B6);color:#A07545}
 .tblAv--blue{background:linear-gradient(135deg,#E3EDFB,#C9DBF6);color:#1E40AF}
 .tblAv--green{background:linear-gradient(135deg,#DFF3E4,#C7E8CF);color:#15803D}
 .tblResTx{min-width:0}
-.tblResNm{font-size:13px;font-weight:800;color:#2A1F14;letter-spacing:-.015em;white-space:nowrap}
-.tblResRoom{font-size:11px;color:#888E9C;font-weight:600;margin-top:1px}
+.tblResNm{font-size:13px;font-weight:800;color:#2A1F14;letter-spacing:-.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tblResSub{font-size:11px;color:#888E9C;font-weight:600;margin-top:1px}
 .tblMed{font-size:13px;font-weight:700;color:#2A1F14}
-.tblMedDose{font-size:11px;color:#888E9C;margin-top:2px;font-weight:500}
-.tblRxId{font-size:11px;color:#888E9C;font-family:var(--font-dm),monospace;font-variant-numeric:tabular-nums;font-weight:600}
-.tblDays{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:800;border:1px solid}
+.tblMedSub{font-size:11px;color:#888E9C;margin-top:2px;font-weight:500}
+.tblId{font-size:11px;color:#888E9C;font-variant-numeric:tabular-nums;font-weight:600}
+.tblDays{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:800;border:1px solid;white-space:nowrap}
 .tblDaysDot{width:5px;height:5px;border-radius:50%}
 .tblDays--critical{background:#FEF2F2;color:#B91C1C;border-color:rgba(185,28,28,.15)}
 .tblDays--critical .tblDaysDot{background:#B91C1C}
@@ -205,42 +186,89 @@ button,input,select{font-family:inherit}
 .tblDays--ok{background:#ECFDF3;color:#15803D;border-color:rgba(21,128,61,.15)}
 .tblDays--ok .tblDaysDot{background:#22C55E}
 
-.stagePill{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:6px;font-size:10.5px;font-weight:800;letter-spacing:.02em;border:1px solid}
+.stagePill{display:inline-flex;align-items:center;padding:4px 9px;border-radius:6px;font-size:10.5px;font-weight:800;letter-spacing:.02em;border:1px solid;white-space:nowrap}
 .stage--draft{background:#F2EDE4;color:#4A4F5C;border-color:#E3DDD2}
 .stage--submitted{background:#FFF8F0;color:#A07545;border-color:rgba(201,149,107,.2)}
 .stage--approved{background:#ECF2FF;color:#2563EB;border-color:rgba(37,99,235,.14)}
-.stage--dispensed{background:#EFF6FF;color:#1D4ED8;border-color:rgba(29,78,216,.14)}
 .stage--ready{background:#ECFDF3;color:#15803D;border-color:rgba(34,197,94,.2)}
 .stage--delayed{background:#FEF2F2;color:#B91C1C;border-color:rgba(185,28,28,.16)}
 
-/* ============ Responsive ============ */
+/* Drawer */
+.drawerBg{position:fixed;inset:0;background:rgba(8,9,12,.3);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:200;opacity:0;pointer-events:none;transition:opacity .25s}
+.drawerBgOpen{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:100%;max-width:480px;background:#FAF7F2;z-index:210;transform:translateX(100%);transition:transform .35s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;box-shadow:-24px 0 60px rgba(0,0,0,.1)}
+.drawerOpen{transform:translateX(0)}
+.drawerHd{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #EDE8DF;background:#fff}
+.drawerTi{font-family:var(--font-serif),Georgia,serif;font-size:22px;letter-spacing:-.025em;color:#2A1F14}
+.drawerX{width:32px;height:32px;border-radius:8px;border:1px solid #E3DDD2;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#4A4F5C;transition:all .2s}
+.drawerX:hover{border-color:#2A1F14;color:#2A1F14}
+.drawerBody{flex:1;overflow-y:auto;padding:24px}
+.drawerSec{margin-bottom:24px}
+.drawerSec:last-child{margin-bottom:0}
+.drawerSecTi{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#888E9C;margin-bottom:10px}
+.drawerField{display:grid;grid-template-columns:110px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid #EDE8DF;font-size:13px}
+.drawerField:last-child{border-bottom:none}
+.drawerFieldLbl{color:#888E9C;font-weight:700}
+.drawerFieldVal{color:#2A1F14;font-weight:700}
+.drawerActs{display:flex;gap:8px;flex-wrap:wrap;padding-top:8px}
+.drawerActs button{flex:1;min-width:120px}
+
 @media(min-width:720px){
   .statRow{grid-template-columns:repeat(4,1fr)}
   .userChipName{display:block}
   .navTabs{display:flex}
 }
-@media(min-width:1080px){
+@media(min-width:1100px){
   .mainGrid{grid-template-columns:1.65fr 1fr}
 }
 `;
 
-function urgency(days: number): Urgency {
-  if (days <= 2) return "critical";
-  if (days <= 7) return "warning";
-  return "ok";
-}
+export default function PortalPage({ userName, userImage }: { userName?: string; userImage?: string | null } = {}) {
+  const [items, setItems] = useState<Item[]>(seed);
+  const [selected, setSelected] = useState<Item | null>(null);
+  const [query, setQuery] = useState("");
 
-function urgencyLabel(days: number) {
-  if (days === 1) return "1 day";
-  return `${days} days`;
-}
+  const displayName = userName ?? "Your workspace";
+  const displayImage = userImage ?? null;
 
-export default async function PortalPage() {
-  const session = await auth();
-  if (!session?.user) redirect("/login");
+  const filtered = items.filter(
+    (i) =>
+      !query ||
+      i.title.toLowerCase().includes(query.toLowerCase()) ||
+      i.detail.toLowerCase().includes(query.toLowerCase()) ||
+      i.id.toLowerCase().includes(query.toLowerCase())
+  );
 
-  const displayName = session.user.name ?? "Care team";
-  const displayImage = session.user.image ?? null;
+  const counts = {
+    due: items.filter((i) => i.daysLeft <= 7 && i.stage !== "ready").length,
+    waiting: items.filter((i) => i.stage === "submitted" || i.stage === "approved").length,
+    ready: items.filter((i) => i.stage === "ready").length,
+    delayed: items.filter((i) => i.stage === "delayed").length,
+  };
+
+  const alerts = items
+    .filter((i) => i.stage === "delayed" || (i.stage === "draft" && i.daysLeft <= 7) || i.stage === "ready")
+    .slice(0, 4)
+    .map((i) => ({
+      id: i.id,
+      priority: (i.stage === "delayed" ? "critical" : "info") as "critical" | "info",
+      title: i.title,
+      action:
+        i.stage === "delayed"
+          ? `${i.detail} is overdue. Last update ${i.updated.toLowerCase()}.`
+          : i.stage === "ready"
+          ? `${i.detail} is ready at ${i.fulfiller}. Assign pickup.`
+          : `${i.detail} drafted and waiting review.`,
+      meta: `${i.counterparty} · ${i.owner}`,
+      tag: i.stage === "delayed" ? "Urgent" : i.stage === "ready" ? "Action" : "Review",
+    }));
+
+  const openItem = (it: Item) => setSelected(it);
+  const closeDrawer = () => setSelected(null);
+  const clearAll = () => { setItems([]); setSelected(null); };
+  const resetDemo = () => setItems(seed);
+
+  const hasItems = items.length > 0;
 
   return (
     <main className={`${dmSans.variable} ${instrumentSerif.variable}`}>
@@ -250,55 +278,31 @@ export default async function PortalPage() {
         <div className="navR">
           <Link href="/" className="brand">
             <div className="logoW">
-              <Image
-                src="/omela-logo-mark.png"
-                alt="Omela"
-                width={30}
-                height={30}
-                style={{ width: "100%", height: "100%", objectFit: "contain" }}
-                priority
-              />
+              <Image src="/omela-logo-mark.png" alt="Omela" width={30} height={30} style={{ width: "100%", height: "100%", objectFit: "contain" }} priority />
             </div>
             <span className="brandName">Omela</span>
           </Link>
-
           <div className="navDiv" />
-
           <div className="navTabs">
-            <span className="navTab navTabActive">Overview</span>
-            <span className="navTab">Residents</span>
-            <span className="navTab">Requests</span>
-            <span className="navTab">Pharmacies</span>
-            <span className="navTab">Activity</span>
+            <button className="navTab navTabActive">Overview</button>
+            <button className="navTab">Requests</button>
+            <button className="navTab">Contacts</button>
+            <button className="navTab">Activity</button>
           </div>
-
           <div className="navRight">
+            <button type="button" className="navIcBtn" aria-label="Help"><HelpCircle size={15} /></button>
+            <button type="button" className="navIcBtn" aria-label="Settings"><Settings size={15} /></button>
             <button type="button" className="navIcBtn" aria-label="Notifications">
               <Bell size={15} />
-              <span className="navIcBtnDot" />
+              {counts.delayed > 0 ? <span className="navIcBtnDot" /> : null}
             </button>
-
             <div className="userChip">
               <div className="userAv">
-                {displayImage ? (
-                  <Image src={displayImage} alt={displayName} width={26} height={26} />
-                ) : (
-                  getInitial(displayName)
-                )}
+                {displayImage ? <Image src={displayImage} alt={displayName} width={26} height={26} /> : getInitial(displayName)}
               </div>
               <span className="userChipName">{displayName}</span>
             </div>
-
-            <form
-              action={async () => {
-                "use server";
-                await signOut({ redirectTo: "/login" });
-              }}
-            >
-              <button type="submit" className="signOutBtn" aria-label="Sign out">
-                <LogOut size={14} />
-              </button>
-            </form>
+            <button type="button" className="signOutBtn" aria-label="Sign out"><LogOut size={14} /></button>
           </div>
         </div>
       </nav>
@@ -308,142 +312,200 @@ export default async function PortalPage() {
           <div className="pageHeadL">
             <h1 className="serif">Overview</h1>
             <p className="pageHeadSub">
-              {refills.length} active requests across 4 pharmacies and 3 practices
+              {hasItems
+                ? `${items.length} active ${items.length === 1 ? "request" : "requests"} in your workspace`
+                : "Your workspace is empty. Start by adding your first request."}
             </p>
           </div>
           <div className="pageHeadR">
             <div className="searchBox">
               <Search size={14} color="#888E9C" />
-              <input type="text" placeholder="Search residents, requests..." />
+              <input type="text" placeholder="Search requests..." value={query} onChange={(e) => setQuery(e.target.value)} />
             </div>
-            <button type="button" className="primaryBtn">
-              <Plus size={14} />
-              New request
-            </button>
+            <button type="button" className="primaryBtn"><Plus size={14} />New request</button>
           </div>
         </div>
 
         <div className="statRow">
-          {stats.map((s) => (
-            <div key={s.label} className={`statC statC--${s.tone}`}>
-              <div className="statLbl">{s.label}</div>
-              <div className="statVal">{s.value}</div>
-              <div className="statDelta">{s.delta}</div>
-            </div>
-          ))}
+          <StatCard label="Due this week" value={counts.due} tone={hasItems && counts.due > 0 ? "warm" : "muted"} delta={hasItems ? `${counts.due === 0 ? "Nothing pressing" : "Need prep"}` : "No data yet"} />
+          <StatCard label="Waiting on others" value={counts.waiting} tone={hasItems && counts.waiting > 0 ? "blue" : "muted"} delta={hasItems ? "Submitted or approved" : "No data yet"} />
+          <StatCard label="Ready to close" value={counts.ready} tone={hasItems && counts.ready > 0 ? "green" : "muted"} delta={hasItems ? "Awaiting pickup" : "No data yet"} />
+          <StatCard label="Delayed" value={counts.delayed} tone={hasItems && counts.delayed > 0 ? "red" : "muted"} delta={hasItems ? (counts.delayed > 0 ? "Needs action" : "All on track") : "No data yet"} />
         </div>
 
         <div className="mainGrid">
-          {/* Active requests table */}
           <div className="card">
             <div className="cardHd">
               <div className="cardTi">
                 Active requests
-                <span className="cardCount">{refills.length}</span>
+                <span className="cardCount">{filtered.length}</span>
               </div>
               <div className="cardAct">
-                <button type="button" className="cardActBtn">
-                  <Filter size={12} />
-                  Filter
+                <button type="button" className="cardActBtn" onClick={hasItems ? clearAll : resetDemo}>
+                  {hasItems ? <>Clear <X size={12} /></> : <>Load demo <ArrowUpRight size={12} /></>}
                 </button>
-                <button type="button" className="cardActBtn">
-                  Sort
-                  <ChevronRight size={12} />
-                </button>
+                <button type="button" className="cardActBtn"><Filter size={12} />Filter</button>
               </div>
             </div>
-            <div className="tableWrap">
-              <table className="tbl">
-                <thead>
-                  <tr>
-                    <th>Resident</th>
-                    <th>Medication</th>
-                    <th>Request</th>
-                    <th>Stage</th>
-                    <th>Supply</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {refills.map((r) => {
-                    const u = urgency(r.daysLeft);
-                    return (
-                      <tr key={r.id}>
-                        <td>
-                          <div className="tblRes">
-                            <div className={`tblAv tblAv--${r.tone}`}>{r.initials}</div>
-                            <div className="tblResTx">
-                              <div className="tblResNm">{r.resident}</div>
-                              <div className="tblResRoom">{r.room}</div>
+            {filtered.length === 0 ? (
+              <div className="emptyCard">
+                <div className="emptyIc"><Inbox size={24} /></div>
+                <h3 className="emptyTi">{hasItems ? "No matches found" : "No requests yet"}</h3>
+                <p className="emptyBd">
+                  {hasItems
+                    ? "Try adjusting your search, or clear the query to see everything."
+                    : "Your workspace is fresh. Add your first request, import from a spreadsheet, or load demo data to see how Omela works."}
+                </p>
+                <div className="emptyActs">
+                  <button type="button" className="primaryBtn"><Plus size={14} />New request</button>
+                  {!hasItems ? <button type="button" className="emptySec" onClick={resetDemo}>Load demo data</button> : null}
+                </div>
+              </div>
+            ) : (
+              <div className="tableWrap">
+                <table className="tbl">
+                  <thead>
+                    <tr>
+                      <th>Subject</th>
+                      <th>Item</th>
+                      <th>Reference</th>
+                      <th>Stage</th>
+                      <th>Due</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((r) => {
+                      const u = urgency(r.daysLeft);
+                      const isActive = selected?.id === r.id;
+                      const rowClass = isActive ? "rowActive" : u === "critical" ? "rowCrit" : "";
+                      return (
+                        <tr key={r.id} className={rowClass} onClick={() => openItem(r)}>
+                          <td>
+                            <div className="tblRes">
+                              <div className={`tblAv tblAv--${r.tone}`}>{r.initials}</div>
+                              <div className="tblResTx">
+                                <div className="tblResNm">{r.title}</div>
+                                <div className="tblResSub">{r.subject}</div>
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                        <td>
-                          <div className="tblMed">
-                            {r.medication} {r.strength}
-                          </div>
-                          <div className="tblMedDose">{r.dose}</div>
-                        </td>
-                        <td>
-                          <div className="tblRxId">{r.id}</div>
-                          <div className="tblMedDose">{r.updated}</div>
-                        </td>
-                        <td>
-                          <span className={`stagePill stage--${r.stage}`}>
-                            {stageLabels[r.stage]}
-                          </span>
-                        </td>
-                        <td>
-                          <span className={`tblDays tblDays--${u}`}>
-                            <span className="tblDaysDot" />
-                            {urgencyLabel(r.daysLeft)}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                          </td>
+                          <td>
+                            <div className="tblMed">{r.detail}</div>
+                            <div className="tblMedSub">{r.task}</div>
+                          </td>
+                          <td>
+                            <div className="tblId">{r.id}</div>
+                            <div className="tblMedSub">{r.updated}</div>
+                          </td>
+                          <td><span className={`stagePill stage--${r.stage}`}>{stageLabels[r.stage]}</span></td>
+                          <td><span className={`tblDays tblDays--${u}`}><span className="tblDaysDot" />{urgencyLabel(r.daysLeft)}</span></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
-          {/* Needs attention */}
           <div className="card">
             <div className="cardHd">
               <div className="cardTi">
                 Needs attention
                 <span className="cardCount">{alerts.length}</span>
               </div>
-              <button type="button" className="cardActBtn">
-                View all
-                <ChevronRight size={12} />
-              </button>
+              <button type="button" className="cardActBtn" aria-label="More"><MoreHorizontal size={13} /></button>
             </div>
-            <div className="alertList">
-              {alerts.map((a) => {
-                const Icon = a.priority === "critical" ? AlertCircle : CheckCircle2;
-                return (
-                  <div key={a.id} className="alertItem">
-                    <div className={`alertIc alertIc--${a.priority}`}>
-                      <Icon size={15} />
-                    </div>
-                    <div className="alertBody">
-                      <div className="alertTop">
-                        <span className="alertName">{a.resident}</span>
-                        <span className={`alertTag alertTag--${a.priority}`}>
-                          {a.priority === "critical" ? "Urgent" : "Review"}
-                        </span>
+            {alerts.length === 0 ? (
+              <div className="alertEmpty">Nothing needs attention right now. Quiet day.</div>
+            ) : (
+              <div className="alertList">
+                {alerts.map((a) => {
+                  const Icon = a.priority === "critical" ? AlertCircle : CheckCircle2;
+                  const item = items.find((i) => i.id === a.id);
+                  return (
+                    <div key={a.id} className={`alertItem alertItem--${a.priority}`} onClick={() => item && openItem(item)}>
+                      <div className={`alertIc alertIc--${a.priority}`}><Icon size={15} /></div>
+                      <div className="alertBody">
+                        <div className="alertTop">
+                          <span className="alertName">{a.title}</span>
+                          <span className={`alertTag alertTag--${a.priority}`}>{a.tag}</span>
+                        </div>
+                        <div className="alertAction">{a.action}</div>
+                        <div className="alertMeta">{a.meta}</div>
                       </div>
-                      <div className="alertAction">{a.action}</div>
-                      <div className="alertMeta">{a.meta}</div>
+                      <ChevronRight size={15} className="alertChev" />
                     </div>
-                    <ChevronRight size={15} className="alertChev" />
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Detail drawer */}
+      <div className={`drawerBg ${selected ? "drawerBgOpen" : ""}`} onClick={closeDrawer} />
+      <aside className={`drawer ${selected ? "drawerOpen" : ""}`} aria-hidden={!selected}>
+        {selected ? (
+          <>
+            <div className="drawerHd">
+              <h2 className="drawerTi serif">{selected.title}</h2>
+              <button className="drawerX" onClick={closeDrawer} aria-label="Close"><X size={16} /></button>
+            </div>
+            <div className="drawerBody">
+              <DrawerSection title="Request">
+                <DField label="Reference" value={selected.id} />
+                <DField label="Subject" value={selected.subject} />
+                <DField label="Item" value={selected.detail} />
+                <DField label="Instruction" value={selected.task} />
+              </DrawerSection>
+              <DrawerSection title="Coordination">
+                <DField label="Owner" value={selected.owner} />
+                <DField label="Counterparty" value={selected.counterparty} />
+                <DField label="Fulfiller" value={selected.fulfiller} />
+                <DField label="Last update" value={selected.updated} />
+              </DrawerSection>
+              <DrawerSection title="Status">
+                <DField label="Stage" value={<span className={`stagePill stage--${selected.stage}`}>{stageLabels[selected.stage]}</span>} />
+                <DField label="Supply" value={<span className={`tblDays tblDays--${urgency(selected.daysLeft)}`}><span className="tblDaysDot" />{urgencyLabel(selected.daysLeft)}</span>} />
+                <div className="drawerActs">
+                  <button className="primaryBtn">Mark complete</button>
+                  <button className="emptySec">Reassign</button>
+                </div>
+              </DrawerSection>
+            </div>
+          </>
+        ) : null}
+      </aside>
     </main>
+  );
+}
+
+function StatCard({ label, value, tone, delta }: { label: string; value: number; tone: "warm" | "blue" | "green" | "red" | "muted"; delta: string }) {
+  return (
+    <div className={`statC statC--${tone}`}>
+      <div className="statLbl">{label}</div>
+      <div className="statVal">{value}</div>
+      <div className="statDelta">{delta}</div>
+    </div>
+  );
+}
+
+function DrawerSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="drawerSec">
+      <div className="drawerSecTi">{title}</div>
+      {children}
+    </div>
+  );
+}
+
+function DField({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="drawerField">
+      <span className="drawerFieldLbl">{label}</span>
+      <span className="drawerFieldVal">{value}</span>
+    </div>
   );
 }

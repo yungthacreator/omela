@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { AnimatePresence, motion, useInView } from "framer-motion";
 import { DM_Sans, Instrument_Serif } from "next/font/google";
-import { Activity, ArrowRight, Bell, Building2, Check, CheckCircle2, ChevronDown, Clock, Copy, Database, Eye, GraduationCap, History, Home, Package, PawPrint, RefreshCw, Scale, Share2, Shield, Sparkles, Stethoscope, Users, Wrench } from "lucide-react";
+import { Activity, ArrowRight, Bell, Building2, Check, CheckCircle2, ChevronDown, Clock, Copy, Database, Eye, GraduationCap, History, Home, Package, PawPrint, RefreshCw, Scale, Share2, Shield, Stethoscope, Users, Wrench } from "lucide-react";
 
 const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400","500","600","700","800"], variable: "--font-dm-sans" });
 const instrumentSerif = Instrument_Serif({ subsets: ["latin"], weight: "400", variable: "--font-instrument-serif" });
@@ -36,42 +36,79 @@ function Overline({ children, tone="default", className="" }: { children: ReactN
 }
 
 function LauraWorkspace() {
-  type Person = { initials:string; name:string; age:number; med:string; dose:string; tone:"warm"|"blue"|"green"; owner:string; ownerRole:string; status:string; statusSub:string; practice:string; pharmacy:string; rxId:string; supply:number; supplyMax:number; timeline:{state:"done"|"active";label:string;meta:string}[]; next:string };
-  const people: Person[] = [
-    { initials:"ML", name:"Margaret Littlewood", age:78, med:"Amlodipine", dose:"5mg, once daily", tone:"warm", owner:"Ada Kelly", ownerRole:"daughter", status:"Needs follow-up", statusSub:"No update from practice in 3 days", practice:"Greenfield Medical", pharmacy:"Boots, High Street", rxId:"RX-20814", supply:2, supplyMax:30,
-      timeline:[{state:"done",label:"Draft prepared",meta:"Mon 09:14"},{state:"done",label:"Sent to practice",meta:"Tue 11:32"},{state:"done",label:"Practice acknowledged",meta:"Tue 16:05"},{state:"active",label:"Awaiting response",meta:"3 days"}], next:"Ada to call the practice before 4pm today." },
-    { initials:"DR", name:"David Reyes", age:64, med:"Metformin", dose:"500mg, twice daily", tone:"blue", owner:"Dr. Reyes", ownerRole:"prescriber", status:"Request sent", statusSub:"Pharmacy processing", practice:"Northgate Surgery", pharmacy:"Well, Market Square", rxId:"RX-20819", supply:6, supplyMax:30,
-      timeline:[{state:"done",label:"Draft prepared",meta:"Tue 08:02"},{state:"done",label:"Approved by Jamie",meta:"Tue 09:41"},{state:"done",label:"Sent to pharmacy",meta:"Wed 10:15"},{state:"active",label:"Awaiting confirmation",meta:"today"}], next:"No action needed. Omela will alert on any change." },
-    { initials:"IK", name:"Irene Kowalski", age:81, med:"Sertraline", dose:"50mg, once daily", tone:"green", owner:"Jamie Marsh", ownerRole:"support worker", status:"Ready to collect", statusSub:"Boots, 12 High Street", practice:"Hillside Practice", pharmacy:"Boots, High Street", rxId:"RX-20806", supply:14, supplyMax:30,
-      timeline:[{state:"done",label:"Draft prepared",meta:"Fri 14:20"},{state:"done",label:"Sent to practice",meta:"Mon 09:03"},{state:"done",label:"Dispensed",meta:"today 11:20"},{state:"done",label:"Ready at pharmacy",meta:"today 12:44"}], next:"Collection window open until 6pm." },
+  type Person = { initials:string; name:string; sub:string; med:string; dose:string; tone:"warm"|"blue"|"green"; owner:string; ownerRole:string; status:string; statusSub:string; practice:string; pharmacy:string; rxId:string; supply:number; supplyMax:number; timeline:{state:"done"|"active";label:string;meta:string}[]; next:string };
+  type Domain = { id:string; label:string; accent:string; headerLabel:string; statsLabels:[string,string,string]; rxLbl:string; practiceLbl:string; pharmacyLbl:string; listLbl:string; people:Person[]; activity:{who:string;what:string;when:string;tone:"warm"|"blue"|"green";fresh:boolean}[] };
+  const domains: Domain[] = [
+    { id:"health", label:"Healthcare", accent:"#C9956B", headerLabel:"Care team", statsLabels:["Due soon","Delayed","Ready"], rxLbl:"Rx", practiceLbl:"Practice", pharmacyLbl:"Pharmacy", listLbl:"Residents",
+      people:[
+        { initials:"ML", name:"Margaret Littlewood", sub:"Age 78", med:"Amlodipine", dose:"5mg, once daily", tone:"warm", owner:"Ada Kelly", ownerRole:"daughter", status:"Needs follow-up", statusSub:"No update from practice in 3 days", practice:"Greenfield Medical", pharmacy:"Boots, High Street", rxId:"RX-20814", supply:2, supplyMax:30,
+          timeline:[{state:"done",label:"Draft prepared",meta:"Mon 09:14"},{state:"done",label:"Sent to practice",meta:"Tue 11:32"},{state:"done",label:"Practice acknowledged",meta:"Tue 16:05"},{state:"active",label:"Awaiting response",meta:"3 days"}], next:"Ada to call the practice before 4pm today." },
+        { initials:"DR", name:"David Reyes", sub:"Age 64", med:"Metformin", dose:"500mg, twice daily", tone:"blue", owner:"Dr. Reyes", ownerRole:"prescriber", status:"Request sent", statusSub:"Pharmacy processing", practice:"Northgate Surgery", pharmacy:"Well, Market Square", rxId:"RX-20819", supply:6, supplyMax:30,
+          timeline:[{state:"done",label:"Draft prepared",meta:"Tue 08:02"},{state:"done",label:"Approved by Jamie",meta:"Tue 09:41"},{state:"done",label:"Sent to pharmacy",meta:"Wed 10:15"},{state:"active",label:"Awaiting confirmation",meta:"today"}], next:"No action needed. Omela will alert on any change." },
+        { initials:"IK", name:"Irene Kowalski", sub:"Age 81", med:"Sertraline", dose:"50mg, once daily", tone:"green", owner:"Jamie Marsh", ownerRole:"support worker", status:"Ready to collect", statusSub:"Boots, 12 High Street", practice:"Hillside Practice", pharmacy:"Boots, High Street", rxId:"RX-20806", supply:14, supplyMax:30,
+          timeline:[{state:"done",label:"Draft prepared",meta:"Fri 14:20"},{state:"done",label:"Sent to practice",meta:"Mon 09:03"},{state:"done",label:"Dispensed",meta:"today 11:20"},{state:"done",label:"Ready at pharmacy",meta:"today 12:44"}], next:"Collection window open until 6pm." },
+      ],
+      activity:[
+        { who:"Dr. Reyes", what:"drafted Metformin refill for David", when:"just now", tone:"blue", fresh:true },
+        { who:"Ada Kelly", what:"approved amlodipine request", when:"14m", tone:"warm", fresh:false },
+        { who:"Jamie M.", what:"marked Sertraline ready at Boots", when:"42m", tone:"green", fresh:false },
+      ] },
+    { id:"property", label:"Property compliance", accent:"#2563EB", headerLabel:"Portfolio team", statsLabels:["Expiring","Overdue","Certified"], rxLbl:"Cert", practiceLbl:"Contractor", pharmacyLbl:"Issuer", listLbl:"Properties",
+      people:[
+        { initials:"42", name:"42 Kingsmead Road", sub:"HMO, 6 beds", med:"Gas Safety (CP12)", dose:"Annual renewal", tone:"warm", owner:"Ben Ofori", ownerRole:"property manager", status:"Overdue by 4 days", statusSub:"Tenant access confirmed for Thursday", practice:"Arden Gas Services", pharmacy:"Gas Safe Register", rxId:"GS-44218", supply:0, supplyMax:30,
+          timeline:[{state:"done",label:"Reminder sent to tenant",meta:"Mon 08:00"},{state:"done",label:"Engineer booked",meta:"Mon 10:22"},{state:"done",label:"Access window confirmed",meta:"Tue 09:15"},{state:"active",label:"Awaiting inspection",meta:"Thu"}], next:"Engineer arrives Thursday 10am. Tenant notified." },
+        { initials:"17", name:"17 Linden Court", sub:"Flat, tenanted", med:"EICR (Electrical)", dose:"5-year renewal", tone:"blue", owner:"Maya Chen", ownerRole:"compliance lead", status:"Report awaiting sign-off", statusSub:"Minor remedials flagged", practice:"Northline Electrical", pharmacy:"NICEIC", rxId:"EIC-88104", supply:9, supplyMax:60,
+          timeline:[{state:"done",label:"Inspection completed",meta:"Mon 14:00"},{state:"done",label:"Report uploaded",meta:"Tue 09:05"},{state:"done",label:"Remedials quoted",meta:"Wed 11:20"},{state:"active",label:"Awaiting landlord sign-off",meta:"today"}], next:"Maya to chase Mr. Khan for remedial approval." },
+        { initials:"08", name:"8 Fairfax House", sub:"Block, 24 units", med:"Fire Alarm Service", dose:"6-month service", tone:"green", owner:"Richard Oyelaran", ownerRole:"contractor", status:"Certified", statusSub:"Next service booked for October", practice:"Safeguard Fire Ltd", pharmacy:"BAFE", rxId:"FA-33901", supply:26, supplyMax:30,
+          timeline:[{state:"done",label:"Service scheduled",meta:"last month"},{state:"done",label:"Engineer attended",meta:"Mon 09:30"},{state:"done",label:"All panels tested",meta:"Mon 12:14"},{state:"done",label:"Certificate issued",meta:"today 14:02"}], next:"Certificate filed. Next service in October." },
+      ],
+      activity:[
+        { who:"Ben Ofori", what:"booked Gas Safe engineer for 42 Kingsmead", when:"just now", tone:"warm", fresh:true },
+        { who:"Maya Chen", what:"received EICR report for 17 Linden", when:"22m", tone:"blue", fresh:false },
+        { who:"Safeguard", what:"issued fire alarm certificate for Fairfax", when:"1h", tone:"green", fresh:false },
+      ] },
+    { id:"legal", label:"Legal filings", accent:"#15803D", headerLabel:"Paralegal team", statsLabels:["Due soon","Delayed","Filed"], rxLbl:"Ref", practiceLbl:"Registry", pharmacyLbl:"Client", listLbl:"Matters",
+      people:[
+        { initials:"TM", name:"Thornton Mills Ltd", sub:"Annual return", med:"Confirmation Statement", dose:"Due 14 days", tone:"warm", owner:"Priya Shah", ownerRole:"paralegal", status:"Client signature pending", statusSub:"Chased twice this week", practice:"Companies House", pharmacy:"Thornton Mills Ltd", rxId:"CS-2026-0412", supply:3, supplyMax:30,
+          timeline:[{state:"done",label:"Draft prepared",meta:"Mon 10:00"},{state:"done",label:"Sent to client for review",meta:"Tue 09:15"},{state:"done",label:"Reminder sent",meta:"Thu 14:00"},{state:"active",label:"Awaiting signature",meta:"3 days"}], next:"Call Mr. Thornton before 5pm today." },
+        { initials:"KE", name:"Kemi Eze", sub:"Skilled Worker visa", med:"Visa renewal", dose:"Extension, 3 years", tone:"blue", owner:"Jonathan Wells", ownerRole:"immigration solicitor", status:"Submitted to UKVI", statusSub:"Biometrics scheduled", practice:"UKVI", pharmacy:"Kemi Eze", rxId:"VR-77812", supply:8, supplyMax:30,
+          timeline:[{state:"done",label:"Documents collected",meta:"last Fri"},{state:"done",label:"Application drafted",meta:"Mon 11:40"},{state:"done",label:"Submitted to UKVI",meta:"Wed 09:02"},{state:"active",label:"Biometrics booked",meta:"next Tue"}], next:"No action. UKVI decision expected within 8 weeks." },
+        { initials:"VL", name:"Vellum Labs", sub:"Trademark", med:"TM Renewal, Class 9", dose:"10-year renewal", tone:"green", owner:"Priya Shah", ownerRole:"paralegal", status:"Filed with IPO", statusSub:"Payment confirmed", practice:"UK IPO", pharmacy:"Vellum Labs", rxId:"TM-UK00003844102", supply:28, supplyMax:30,
+          timeline:[{state:"done",label:"Renewal notice received",meta:"last month"},{state:"done",label:"Client approved",meta:"Mon 14:20"},{state:"done",label:"Fee paid",meta:"Tue 10:05"},{state:"done",label:"Filed with IPO",meta:"today 11:30"}], next:"Confirmation expected within 5 working days." },
+      ],
+      activity:[
+        { who:"Priya Shah", what:"chased Thornton Mills for signature", when:"just now", tone:"warm", fresh:true },
+        { who:"Jonathan W.", what:"submitted Kemi's visa to UKVI", when:"31m", tone:"blue", fresh:false },
+        { who:"Priya Shah", what:"filed Vellum Labs TM renewal", when:"2h", tone:"green", fresh:false },
+      ] },
   ];
-  const stats = [{label:"Due soon",value:5,tone:"warm"as const},{label:"Delayed",value:1,tone:"red"as const},{label:"Ready",value:2,tone:"green"as const}];
-  const activity = [
-    { who:"Dr. Reyes", what:"drafted Metformin refill for David", when:"just now", tone:"blue" as const, fresh:true },
-    { who:"Ada Kelly", what:"approved amlodipine request", when:"14m", tone:"warm" as const, fresh:false },
-    { who:"Jamie M.", what:"marked Sertraline ready at Boots", when:"42m", tone:"green" as const, fresh:false },
-  ];
+  const [domainIdx, setDomainIdx] = useState(0);
+  const dom = domains[domainIdx];
+  const people = dom.people;
+  const activity = dom.activity;
+  useEffect(() => { const id = window.setInterval(() => setDomainIdx(i => (i + 1) % domains.length), 13200); return () => window.clearInterval(id); }, [domains.length]);
+  const stats = [{label:dom.statsLabels[0],value:5,tone:"warm"as const},{label:dom.statsLabels[1],value:1,tone:"red"as const},{label:dom.statsLabels[2],value:2,tone:"green"as const}];
   const [active, setActive] = useState(0);
   const [evaluating, setEvaluating] = useState(false);
   const [evalTask, setEvalTask] = useState(0);
-  const today = useTodayLabel();
+  useEffect(() => { setActive(0); }, [domainIdx]);
   useEffect(() => { const t = window.setInterval(() => setActive(p => (p+1) % people.length), 4400); return () => window.clearInterval(t); }, [people.length]);
+  const evalTasksByDomain: Record<string,string[]> = {
+    health:["Checking Margaret's amlodipine supply","Drafting Metformin refill for David","Confirming Sertraline collection at Boots"],
+    property:["Booking Gas Safe engineer for 42 Kingsmead","Reviewing EICR remedials for 17 Linden","Filing fire alarm certificate for Fairfax"],
+    legal:["Chasing Thornton Mills for signature","Tracking UKVI decision for Kemi Eze","Confirming IPO receipt for Vellum Labs"],
+  };
   useEffect(() => {
-    const tasks = ["Checking Margaret's amlodipine supply", "Drafting Metformin refill for David", "Confirming Sertraline collection at Boots"];
     const loop = () => {
       setEvaluating(true);
-      setEvalTask(t => (t + 1) % tasks.length);
+      setEvalTask(t => (t + 1) % 3);
       window.setTimeout(() => setEvaluating(false), 2600);
     };
     loop();
     const id = window.setInterval(loop, 7200);
     return () => window.clearInterval(id);
-  }, []);
-  const evalTasks = ["Checking Margaret's amlodipine supply", "Drafting Metformin refill for David", "Confirming Sertraline collection at Boots"];
-  const narrMessages = ["Drafting next refill", "Flagging vet Rx due", "Chasing trademark renewal", "Gas safety cert expiring"];
-  const [narrIdx, setNarrIdx] = useState(0);
-  useEffect(() => { const id = window.setInterval(() => setNarrIdx(i => (i + 1) % narrMessages.length), 3200); return () => window.clearInterval(id); }, [narrMessages.length]);
-  const narr = narrMessages[narrIdx];
+  }, [domainIdx]);
+  const evalTasks = evalTasksByDomain[dom.id] || evalTasksByDomain.health;
   const cur = people[active];
 
   return (
@@ -83,10 +120,10 @@ function LauraWorkspace() {
             <div className="wsMark"><Image src="/omela-logo-mark.png" alt="" width={22} height={22} style={{width:"100%",height:"100%",objectFit:"contain"}}/></div>
             <div className="wsBrandTx">
               <div className="wsName serif">Omela</div>
-              <div className="wsBrandSub"><span className="wsLive"><span className="wsLiveDot"/>Live</span><span className="wsBrandSep">·</span><span className="wsBrandDate">{today || "..."}</span></div>
+              <div className="wsBrandSub"><span className="wsLive"><span className="wsLiveDot"/>Live</span><span className="wsBrandSep">·</span><span className="wsBrandDate">{dom.label}</span></div>
             </div>
           </div>
-          <div className="wsHeadAvatars"><span className="wsHeadAv wsHeadAv--warm">AK</span><span className="wsHeadAv wsHeadAv--blue">DR</span><span className="wsHeadAv wsHeadAv--green">JM</span></div>
+          <div className="wsDomainChip" key={dom.id}><span className="wsDomainChipLbl">Workspace</span><span className="wsDomainChipVal">{dom.headerLabel}</span></div>
         </div>
 
         <AnimatePresence>
@@ -116,18 +153,19 @@ function LauraWorkspace() {
           ) : null}
         </AnimatePresence>
 
+        <motion.div key={dom.id} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{duration:0.45,ease:[0.22,1,0.36,1]}}>
         <div className="wsStats">
           {stats.map(s => <div key={s.label} className={`wsStat wsStat--${s.tone}`}><div className="wsStatVal">{s.value}</div><div className="wsStatLbl">{s.label}</div></div>)}
         </div>
 
         <div className="wsBody">
           <div className="wsList">
-            <div className="wsListHd"><span>Residents</span><span className="wsListCt">{people.length}</span></div>
+            <div className="wsListHd"><span>{dom.listLbl}</span><span className="wsListCt">{people.length}</span></div>
             {people.map((p, i) => (
-              <button key={p.initials} type="button" onClick={() => setActive(i)} className={`wsRow ${i===active ? "wsRowA" : ""}`}>
+              <button key={`${dom.id}-${p.initials}`} type="button" onClick={() => setActive(i)} className={`wsRow ${i===active ? "wsRowA" : ""}`}>
                 <div className={`wsAv wsAv--${p.tone}`}>{p.initials}</div>
                 <div className="wsRowTx">
-                  <div className="wsRowNm">{p.name}<span className="wsRowAge">, {p.age}</span></div>
+                  <div className="wsRowNm">{p.name}<span className="wsRowAge"> · {p.sub}</span></div>
                   <div className="wsRowMd">{p.med} <span className="wsRowDose">{p.dose}</span></div>
                   <div className={`wsRowSt wsRowSt--${p.tone}`}><span className="wsRowStDot"/>{p.status}</div>
                   <div className="wsRowSupply" aria-label={`${p.supply} days of supply remaining`}>
@@ -147,13 +185,13 @@ function LauraWorkspace() {
                 <div className="wsDtHd">
                   <div className={`wsAv wsAvLg wsAv--${cur.tone}`}>{cur.initials}</div>
                   <div className="wsDtHdTx"><div className="wsDtNm">{cur.name}</div><div className="wsDtMd">{cur.med} {cur.dose}</div></div>
-                  <div className="wsDtRx"><div className="wsDtRxLbl">Rx</div><div className="wsDtRxVal">{cur.rxId}</div></div>
+                  <div className="wsDtRx"><div className="wsDtRxLbl">{dom.rxLbl}</div><div className="wsDtRxVal">{cur.rxId}</div></div>
                 </div>
                 <div className="wsDtMeta">
                   <div className="wsDtMetaRow"><span className="wsDtMetaLbl">Status</span><span className={`wsDtMetaVal wsDtMetaVal--${cur.tone}`}>{cur.status}</span></div>
                   <div className="wsDtMetaRow"><span className="wsDtMetaLbl">Owner</span><span className="wsDtMetaVal">{cur.owner}<span className="wsDtMetaSub"> · {cur.ownerRole}</span></span></div>
-                  <div className="wsDtMetaRow"><span className="wsDtMetaLbl">Practice</span><span className="wsDtMetaVal wsDtMetaValSub">{cur.practice}</span></div>
-                  <div className="wsDtMetaRow"><span className="wsDtMetaLbl">Pharmacy</span><span className="wsDtMetaVal wsDtMetaValSub">{cur.pharmacy}</span></div>
+                  <div className="wsDtMetaRow"><span className="wsDtMetaLbl">{dom.practiceLbl}</span><span className="wsDtMetaVal wsDtMetaValSub">{cur.practice}</span></div>
+                  <div className="wsDtMetaRow"><span className="wsDtMetaLbl">{dom.pharmacyLbl}</span><span className="wsDtMetaVal wsDtMetaValSub">{cur.pharmacy}</span></div>
                 </div>
                 <div className="wsDtTl">
                   <div className="wsDtTlHd">Timeline</div>
@@ -175,10 +213,13 @@ function LauraWorkspace() {
           </div>
         </div>
 
+        </motion.div>
+
         <div className="wsFeed">
-          <div className="wsNarr" aria-hidden="true">
-            <Sparkles size={11}/>
-            <span className="wsNarrTx">{narr}</span>
+          <div className="wsDomainTabs" role="tablist" aria-label="Workspace domain">
+            {domains.map((d, i) => (
+              <button key={d.id} type="button" className={`wsDomainTab ${i===domainIdx ? "wsDomainTabA" : ""}`} onClick={() => setDomainIdx(i)} role="tab" aria-selected={i===domainIdx}>{d.label}</button>
+            ))}
           </div>
           <div className="wsFeedHd"><Activity size={11}/><span>Recent activity</span></div>
           <div className="wsFeedList">
@@ -209,7 +250,7 @@ function SuccessModal({ open, onClose, referralCode }: { open: boolean; onClose:
           <motion.div className="modB" initial={{opacity:0,y:18,scale:0.97}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:10}} transition={{type:"spring",damping:22,stiffness:300}} onClick={e => e.stopPropagation()}>
             <div className="modSeal"><CheckCircle2 size={22}/></div>
             <h3 className="serif modTi">You&apos;re on the list.</h3>
-            <p className="modBd">We&apos;ll be in touch as Omela opens up, starting with carers, households, and selected care teams in the UK.</p>
+            <p className="modBd">We&apos;ll be in touch as Omela opens up across healthcare, property, and legal pilots in the UK.</p>
             {referralCode ? (
               <div className="modRef">
                 <p className="modRefLbl">Share with a family member or care team</p>
@@ -305,7 +346,7 @@ export default function Page() {
   const pricing = [
     { name:"Family", price:"£9", per:"per month", desc:"For one carer managing repeat prescriptions for up to 3 people.", features:["Up to 3 people","Unlimited requests","SMS and email reminders","Activity history"], cta:"Start free trial", featured:false },
     { name:"Care team", price:"£49", per:"per month", desc:"For supported living, residential care, and small care teams.", features:["Up to 25 residents","Shared workspace","Role permissions","Audit log","Email support"], cta:"Book a demo", featured:true },
-    { name:"Organisation", price:"Custom", per:"annual contract", desc:"For care groups, NHS trusts, and multi-site providers.", features:["Unlimited residents","SSO and Microsoft Entra","Onboarding support","SLA and dedicated CSM","Data residency in UK"], cta:"Talk to sales", featured:false },
+    { name:"Organisation", price:"Custom", per:"annual contract", desc:"For care groups, NHS trusts, and multi-site providers.", features:["Unlimited residents","SSO and Microsoft Entra","Onboarding support","SLA and dedicated CSM","Data Processing Agreement"], cta:"Talk to sales", featured:false },
   ];
 
   const faq = [
@@ -314,7 +355,7 @@ export default function Page() {
     { q:"Do you need access to NHS records or patient data?", a:"No. Omela stores the metadata of a request, not clinical records. We track who ordered what, when, and what stage it is at. Clinical data stays where it belongs, in the practice's EHR and the pharmacy's PMR." },
     { q:"Is this a medical device or regulated software?", a:"Omela is a coordination and admin tool. It does not provide diagnosis, treatment recommendations, or clinical decisions. It is classified as general-purpose workflow software, similar to Notion or Linear, not a medical device." },
     { q:"What happens when I join early access?", a:"You'll get a personal onboarding call with us, your workspace is set up within 48 hours, and your first month is free. You can invite household members or teammates from day one. If it's not right, you can cancel before any charge." },
-    { q:"Where is my data stored?", a:"All data is stored in the UK on infrastructure compliant with UK GDPR. Organisation plans include a formal Data Processing Agreement and optional regional data residency commitments. We are aligned with NHS Data Security and Protection Toolkit principles." },
+    { q:"Where is my data stored?", a:"Omela runs on modern infrastructure aligned with UK GDPR. For pilot and early-access customers, data is stored in EU/UK regions of our hosting providers. We sign a Data Processing Agreement on request with Organisation-plan customers. We are working toward formal certifications (Cyber Essentials, ISO 27001) as we move out of pilots." },
     { q:"Can I use my work Microsoft or Google account to sign in?", a:"Yes. Omela supports Google sign-in for individuals and Microsoft Entra ID (formerly Azure AD) for organisations with work accounts. SSO is available on the Organisation plan." },
     { q:"Are you hiring or looking for pilot partners?", a:"Yes to both. We're running paid pilots with UK care teams and community pharmacies in 2026. If you work in one of the coming-soon domains and want to be an early partner, email us at hello@omela.ai with a short note about your workflow." },
   ];
@@ -327,10 +368,10 @@ export default function Page() {
   ];
 
   const trustCards = [
-    { icon:<Shield size={18}/>, title:"Protected access", body:"Secure sign-in and controlled access from day one, with clear role boundaries." },
-    { icon:<Eye size={18}/>, title:"Clear visibility", body:"The right people see the right information, across family and care teams." },
-    { icon:<History size={18}/>, title:"Audit history", body:"A clear record of updates, ownership changes, and follow-through over time." },
-    { icon:<Database size={18}/>, title:"Focused data", body:"Designed to collect only what is needed for the coordination workflow." },
+    { icon:<Shield size={18}/>, title:"Metadata, not content", body:"Omela tracks the state of a request (who owns it, what stage it's at, what happens next). Clinical records, legal documents, and contractor reports stay in the systems they belong in." },
+    { icon:<Eye size={18}/>, title:"Role-based visibility", body:"Every workspace has explicit roles. A family carer sees their relative. A care team sees their residents. A paralegal sees their matters. Nothing spills sideways." },
+    { icon:<History size={18}/>, title:"Full audit trail", body:"Every status change, ownership transfer, and request is timestamped and attributable. If something needs to be reconstructed months later, it can be." },
+    { icon:<Database size={18}/>, title:"Minimum data by design", body:"We only ask for the fields needed to move a request forward. No extra profiling, no behaviour tracking, no third-party advertising SDKs anywhere in the product." },
   ];
 
   return (
@@ -362,16 +403,45 @@ export default function Page() {
           <div className="container heroGrid">
             <div className="heroTxt">
               <FI delay={0.1}><h1 className="serif heroTi">The coordination platform for recurring requests.</h1></FI>
-              <FI delay={0.16}><p className="heroSub">Omela keeps recurring requests visible across the people who own them, starting with repeat prescriptions for carers, households, and care teams in the UK.</p></FI>
+              <FI delay={0.16}><p className="heroSub">Every team has a recurring request that rots between inboxes. Omela is the shared layer that keeps those requests visible across the people who own them, from first draft through final handoff.</p></FI>
               <FI delay={0.22}>
                 <div className="heroBt">
                   <a href="mailto:hello@omela.ai?subject=Omela%20pilot%20conversation" className="btnP heroBtP">Book a demo<ArrowRight size={14}/></a>
                   <a href="#waitlist" className="btnS heroBtS">Join early access</a>
                 </div>
               </FI>
-              <FI delay={0.28}><p className="heroFoot">Built with carers, households, and care teams across the UK.</p></FI>
             </div>
             <FI delay={0.18} className="heroBoardCol"><LauraWorkspace/></FI>
+          </div>
+        </section>
+
+        <section className="infraStrip">
+          <div className="container">
+            <FI>
+              <div className="infraHd">Built on infrastructure trusted by secure teams worldwide</div>
+            </FI>
+          </div>
+          <div className="infraMarquee" aria-hidden="true">
+            <div className="infraTrack">
+              {[
+                {src:"/logos/vercel.svg",alt:"Vercel"},
+                {src:"/logos/stripe.svg",alt:"Stripe"},
+                {src:"/logos/twilio.svg",alt:"Twilio"},
+                {src:"/logos/microsoft-logo.png",alt:"Microsoft"},
+                {src:"/logos/google-logo.png",alt:"Google"},
+                {src:"/logos/aws-logo.png",alt:"AWS"},
+                {src:"/logos/vercel.svg",alt:"Vercel"},
+                {src:"/logos/stripe.svg",alt:"Stripe"},
+                {src:"/logos/twilio.svg",alt:"Twilio"},
+                {src:"/logos/microsoft-logo.png",alt:"Microsoft"},
+                {src:"/logos/google-logo.png",alt:"Google"},
+                {src:"/logos/aws-logo.png",alt:"AWS"},
+              ].map((l, i) => (
+                <div key={`${l.alt}-${i}`} className="infraLogo">
+                  <Image src={l.src} alt={l.alt} width={140} height={40} style={{width:"auto",height:"28px",objectFit:"contain"}}/>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -492,7 +562,7 @@ export default function Page() {
               {pricing.map((p, i) => (
                 <FI key={p.name} delay={i * 0.06}>
                   <div className={`prCard ${p.featured ? "prCardFeat" : ""}`}>
-                    {p.featured ? <div className="prBadge"><Sparkles size={11}/>Most popular</div> : null}
+                    {p.featured ? <div className="prBadge"><span className="prBadgeDot"/>Most popular</div> : null}
                     <div className="prName">{p.name}</div>
                     <div className="prPrice"><span className="prPriceVal serif">{p.price}</span><span className="prPricePer">{p.per}</span></div>
                     <p className="prDesc">{p.desc}</p>
@@ -515,8 +585,8 @@ export default function Page() {
             <FI>
               <div className="shW">
                 <Overline>Trust and boundaries</Overline>
-                <h2 className="serif shT">Built to sit alongside your existing workflows.</h2>
-                <p className="shB">Omela is the coordination layer. It does not replace pharmacies, practices, lawyers, contractors, or the professional judgement of the people doing the work.</p>
+                <h2 className="serif shT">We take the thin slice. You keep the rest.</h2>
+                <p className="shB">Omela is a coordination layer, not a system of record. We handle ownership, status, and next actions. Your clinical records, legal documents, and operational data stay exactly where they are.</p>
               </div>
             </FI>
             <div className="trustGrid">
@@ -556,7 +626,7 @@ export default function Page() {
               <div className="wlC">
                 <Overline>Early access</Overline>
                 <h2 className="serif wlTi">Join the first Omela pilots.</h2>
-                <p className="wlSub">Starting in the UK with repeat prescription coordination for carers, households, and selected care teams.</p>
+                <p className="wlSub">We&apos;re running early-access pilots in the UK across healthcare, property compliance, and recurring legal work. Tell us a bit about your workflow.</p>
                 <form className="wlF" onSubmit={handleSubmit}>
                   <input className="inp" type="email" placeholder="Your email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email"/>
                   <select className="inp" value={role} onChange={e => setRole(e.target.value as Role)}>
@@ -595,7 +665,7 @@ export default function Page() {
                   <div className="navLo ftLoW"><Image src="/omela-logo-mark.png" alt="Omela" width={24} height={24} style={{width:"100%",height:"100%",objectFit:"contain"}}/></div>
                   <span className="ftBrN serif">Omela</span>
                 </Link>
-                <p className="ftBrDesc">The coordination platform for repeat-prescription admin. Built for the people doing the follow-through.</p>
+                <p className="ftBrDesc">The coordination layer for recurring requests. Built for the people carrying the follow-through.</p>
               </div>
               <div className="ftCols">
                 <div className="ftCol"><div className="ftColT">Product</div><a href="#product" className="ftLk">How it works</a><a href="#industries" className="ftLk">Industries</a><a href="#pricing" className="ftLk">Pricing</a><a href="#waitlist" className="ftLk">Early access</a></div>
@@ -603,7 +673,7 @@ export default function Page() {
                 <div className="ftCol"><div className="ftColT">Legal</div><Link href="/privacy" className="ftLk">Privacy</Link><Link href="/terms" className="ftLk">Terms</Link><a href="mailto:notice@omela.ai" className="ftLk">Notices</a></div>
               </div>
             </div>
-            <div className="ftDsc">Omela is a coordination layer for repeat-prescription admin, ownership, and next-step guidance. It does not provide diagnosis, treatment, or emergency care. In an emergency, call 999.</div>
+            <div className="ftDsc">Omela is a coordination layer for recurring admin, ownership, and next-step guidance. It is not a system of record and does not provide clinical, legal, or safety-critical decisions. In a healthcare emergency, call 999.</div>
             <div className="ftBtm"><p>&copy; 2026 Omela Ltd.</p><p className="ftBtmRt">Made with care in the UK.</p></div>
           </div>
         </footer>
@@ -778,9 +848,27 @@ button,input,select{font-family:inherit}
 @keyframes wsPulse{0%,100%{opacity:.5;transform:translateY(-50%) scale(.9)}50%{opacity:1;transform:translateY(-50%) scale(1.15)}}
 
 .wsFeed{margin-top:12px;padding:13px 15px;background:${c.cream};border:1px solid ${c.borderSoft};border-radius:18px;position:relative}
-.wsNarr{position:absolute;top:-14px;right:18px;display:inline-flex;align-items:center;gap:6px;padding:7px 13px;background:${c.dark};color:#fff;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:.02em;box-shadow:0 8px 22px rgba(14,18,26,.22);z-index:5;animation:wsNarrFloat 3.6s ease-in-out infinite}
-.wsNarr svg{color:${c.warm}}
-@keyframes wsNarrFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.wsDomainTabs{display:flex;gap:4px;margin-bottom:11px;padding:3px;background:rgba(17,18,20,.04);border-radius:10px}
+.wsDomainTab{flex:1;padding:7px 10px;background:none;border:none;border-radius:7px;font-size:10.5px;font-weight:700;color:${c.muted};cursor:pointer;transition:all .25s;letter-spacing:-.005em;font-family:inherit}
+.wsDomainTab:hover{color:${c.text}}
+.wsDomainTabA{background:#fff;color:${c.text};box-shadow:0 1px 3px rgba(0,0,0,.06)}
+
+.wsDomainChip{display:flex;flex-direction:column;align-items:flex-end;line-height:1}
+.wsDomainChipLbl{font-size:8.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:${c.muted}}
+.wsDomainChipVal{margin-top:4px;font-size:11px;font-weight:800;color:${c.text};letter-spacing:-.01em}
+
+.prBadgeDot{width:6px;height:6px;border-radius:50%;background:${c.warm};box-shadow:0 0 0 3px rgba(201,149,107,.3)}
+
+.infraStrip{padding:40px 0;background:rgba(255,255,255,.5);border-bottom:1px solid rgba(227,221,210,.4);overflow:hidden}
+.infraHd{text-align:center;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${c.muted};margin-bottom:26px}
+.infraMarquee{position:relative;width:100%;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
+.infraTrack{display:flex;align-items:center;gap:64px;width:max-content;animation:infraSlide 32s linear infinite}
+.infraMarquee:hover .infraTrack{animation-play-state:paused}
+.infraLogo{display:flex;align-items:center;justify-content:center;height:32px;min-width:110px;flex-shrink:0;opacity:.5;filter:grayscale(100%);transition:opacity .25s,filter .25s}
+.infraLogo:hover{opacity:.9;filter:grayscale(0%)}
+@keyframes infraSlide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+
 .wsFeedHd{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:${c.muted};margin-bottom:9px}
 .wsFeedList{display:flex;flex-direction:column;gap:7px}
 .wsFeedItem{display:flex;align-items:center;gap:8px;font-size:11px;line-height:1.4;color:${c.sub}}
