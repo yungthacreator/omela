@@ -5,55 +5,577 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { AnimatePresence, motion, useInView } from "framer-motion";
 import { DM_Sans, Instrument_Serif } from "next/font/google";
-import { Activity, ArrowRight, Bell, Building2, Check, CheckCircle2, ChevronDown, Clock, Copy, Database, Eye, GraduationCap, History, Home, Package, PawPrint, Quote, RefreshCw, Scale, Share2, Shield, Stethoscope, Users, Wrench } from "lucide-react";
+import {
+  Activity,
+  ArrowRight,
+  Bell,
+  Building2,
+  Check,
+  CheckCircle2,
+  ChevronDown,
+  Clock,
+  Copy,
+  Database,
+  Eye,
+  GraduationCap,
+  History,
+  Home,
+  Package,
+  PawPrint,
+  Quote,
+  RefreshCw,
+  Scale,
+  Share2,
+  Shield,
+  Stethoscope,
+  Users,
+  Wrench,
+} from "lucide-react";
 
-const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400","500","600","700","800"], variable: "--font-dm-sans" });
-const instrumentSerif = Instrument_Serif({ subsets: ["latin"], weight: "400", variable: "--font-instrument-serif" });
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-dm-sans",
+});
 
-const c = { bg:"#F8F6F1", card:"#FFFFFF", cream:"#FAF7F2", dark:"#0A0E1A", navy:"#0F1829", text:"#111214", sub:"#4A4F5C", muted:"#888E9C", accent:"#2563EB", accentSoft:"#ECF2FF", border:"#E3DDD2", borderSoft:"#EDE8DF", green:"#22C55E", greenSoft:"#ECFDF3", greenDk:"#15803D", warm:"#C9956B", warmDk:"#A07545", warmSoft:"#FFF8F0", red:"#EF4444", redSoft:"#FEF2F2", redDk:"#B91C1C" };
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-instrument-serif",
+});
 
-type Role = "carer" | "household" | "care_team" | "pharmacy" | "vet" | "legal" | "property" | "other";
+const c = {
+  bg: "#F8F6F1",
+  cream: "#FAF7F2",
+  dark: "#0A0E1A",
+  navy: "#0F1829",
+  text: "#111214",
+  sub: "#4A4F5C",
+  muted: "#888E9C",
+  accent: "#2563EB",
+  accentSoft: "#ECF2FF",
+  border: "#E3DDD2",
+  borderSoft: "#EDE8DF",
+  green: "#22C55E",
+  greenSoft: "#ECFDF3",
+  greenDk: "#15803D",
+  warm: "#C9956B",
+  warmDk: "#A07545",
+  warmSoft: "#FFF8F0",
+  red: "#EF4444",
+  redSoft: "#FEF2F2",
+  redDk: "#B91C1C",
+};
 
-function FI({ children, delay=0, className="" }: { children: ReactNode; delay?: number; className?: string }) {
+type Role =
+  | "carer"
+  | "household"
+  | "care_team"
+  | "pharmacy"
+  | "vet"
+  | "legal"
+  | "property"
+  | "other";
+
+type Person = {
+  initials: string;
+  name: string;
+  sub: string;
+  med: string;
+  dose: string;
+  tone: "warm" | "blue" | "green";
+  owner: string;
+  ownerRole: string;
+  status: string;
+  practice: string;
+  pharmacy: string;
+  rxId: string;
+  supply: number;
+  supplyMax: number;
+  timeline: { state: "done" | "active"; label: string; meta: string }[];
+  next: string;
+};
+
+type Domain = {
+  id: string;
+  label: string;
+  headerLabel: string;
+  statsLabels: [string, string, string];
+  rxLbl: string;
+  practiceLbl: string;
+  pharmacyLbl: string;
+  listLbl: string;
+  people: Person[];
+  activity: {
+    who: string;
+    what: string;
+    when: string;
+    tone: "warm" | "blue" | "green";
+    fresh: boolean;
+  }[];
+  evalTasks: string[];
+};
+
+const WORKSPACE_DOMAINS: Domain[] = [
+  {
+    id: "health",
+    label: "Healthcare",
+    headerLabel: "Care team",
+    statsLabels: ["Due soon", "Delayed", "Ready"],
+    rxLbl: "Rx",
+    practiceLbl: "Practice",
+    pharmacyLbl: "Pharmacy",
+    listLbl: "Residents",
+    people: [
+      {
+        initials: "ML",
+        name: "Margaret Littlewood",
+        sub: "Age 78",
+        med: "Amlodipine",
+        dose: "5mg, once daily",
+        tone: "warm",
+        owner: "Ada Kelly",
+        ownerRole: "daughter",
+        status: "Needs follow-up",
+        practice: "Greenfield Medical",
+        pharmacy: "Boots, High Street",
+        rxId: "RX-20814",
+        supply: 2,
+        supplyMax: 30,
+        timeline: [
+          { state: "done", label: "Draft prepared", meta: "Mon 09:14" },
+          { state: "done", label: "Sent to practice", meta: "Tue 11:32" },
+          { state: "done", label: "Practice acknowledged", meta: "Tue 16:05" },
+          { state: "active", label: "Awaiting response", meta: "3 days" },
+        ],
+        next: "Ada to call the practice before 4pm today.",
+      },
+      {
+        initials: "DR",
+        name: "David Reyes",
+        sub: "Age 64",
+        med: "Metformin",
+        dose: "500mg, twice daily",
+        tone: "blue",
+        owner: "Dr. Reyes",
+        ownerRole: "prescriber",
+        status: "Request sent",
+        practice: "Northgate Surgery",
+        pharmacy: "Well, Market Square",
+        rxId: "RX-20819",
+        supply: 6,
+        supplyMax: 30,
+        timeline: [
+          { state: "done", label: "Draft prepared", meta: "Tue 08:02" },
+          { state: "done", label: "Approved by Jamie", meta: "Tue 09:41" },
+          { state: "done", label: "Sent to pharmacy", meta: "Wed 10:15" },
+          { state: "active", label: "Awaiting confirmation", meta: "today" },
+        ],
+        next: "No action needed. Omela will alert on any change.",
+      },
+      {
+        initials: "IK",
+        name: "Irene Kowalski",
+        sub: "Age 81",
+        med: "Sertraline",
+        dose: "50mg, once daily",
+        tone: "green",
+        owner: "Jamie Marsh",
+        ownerRole: "support worker",
+        status: "Ready to collect",
+        practice: "Hillside Practice",
+        pharmacy: "Boots, High Street",
+        rxId: "RX-20806",
+        supply: 14,
+        supplyMax: 30,
+        timeline: [
+          { state: "done", label: "Draft prepared", meta: "Fri 14:20" },
+          { state: "done", label: "Sent to practice", meta: "Mon 09:03" },
+          { state: "done", label: "Dispensed", meta: "today 11:20" },
+          { state: "done", label: "Ready at pharmacy", meta: "today 12:44" },
+        ],
+        next: "Collection window open until 6pm.",
+      },
+    ],
+    activity: [
+      {
+        who: "Dr. Reyes",
+        what: "drafted Metformin refill for David",
+        when: "just now",
+        tone: "blue",
+        fresh: true,
+      },
+      {
+        who: "Ada Kelly",
+        what: "approved amlodipine request",
+        when: "14m",
+        tone: "warm",
+        fresh: false,
+      },
+      {
+        who: "Jamie M.",
+        what: "marked Sertraline ready at Boots",
+        when: "42m",
+        tone: "green",
+        fresh: false,
+      },
+    ],
+    evalTasks: [
+      "Checking Margaret's amlodipine supply",
+      "Drafting Metformin refill for David",
+      "Confirming Sertraline collection at Boots",
+    ],
+  },
+  {
+    id: "property",
+    label: "Property compliance",
+    headerLabel: "Portfolio team",
+    statsLabels: ["Expiring", "Overdue", "Certified"],
+    rxLbl: "Cert",
+    practiceLbl: "Contractor",
+    pharmacyLbl: "Issuer",
+    listLbl: "Properties",
+    people: [
+      {
+        initials: "42",
+        name: "42 Kingsmead Road",
+        sub: "HMO, 6 beds",
+        med: "Gas Safety (CP12)",
+        dose: "Annual renewal",
+        tone: "warm",
+        owner: "Ben Ofori",
+        ownerRole: "property manager",
+        status: "Overdue by 4 days",
+        practice: "Arden Gas Services",
+        pharmacy: "Gas Safe Register",
+        rxId: "GS-44218",
+        supply: 0,
+        supplyMax: 30,
+        timeline: [
+          { state: "done", label: "Reminder sent to tenant", meta: "Mon 08:00" },
+          { state: "done", label: "Engineer booked", meta: "Mon 10:22" },
+          { state: "done", label: "Access window confirmed", meta: "Tue 09:15" },
+          { state: "active", label: "Awaiting inspection", meta: "Thu" },
+        ],
+        next: "Engineer arrives Thursday 10am. Tenant notified.",
+      },
+      {
+        initials: "17",
+        name: "17 Linden Court",
+        sub: "Flat, tenanted",
+        med: "EICR (Electrical)",
+        dose: "5-year renewal",
+        tone: "blue",
+        owner: "Maya Chen",
+        ownerRole: "compliance lead",
+        status: "Report awaiting sign-off",
+        practice: "Northline Electrical",
+        pharmacy: "NICEIC",
+        rxId: "EIC-88104",
+        supply: 9,
+        supplyMax: 60,
+        timeline: [
+          { state: "done", label: "Inspection completed", meta: "Mon 14:00" },
+          { state: "done", label: "Report uploaded", meta: "Tue 09:05" },
+          { state: "done", label: "Remedials quoted", meta: "Wed 11:20" },
+          { state: "active", label: "Awaiting landlord sign-off", meta: "today" },
+        ],
+        next: "Maya to chase Mr. Khan for remedial approval.",
+      },
+      {
+        initials: "08",
+        name: "8 Fairfax House",
+        sub: "Block, 24 units",
+        med: "Fire Alarm Service",
+        dose: "6-month service",
+        tone: "green",
+        owner: "Richard Oyelaran",
+        ownerRole: "contractor",
+        status: "Certified",
+        practice: "Safeguard Fire Ltd",
+        pharmacy: "BAFE",
+        rxId: "FA-33901",
+        supply: 26,
+        supplyMax: 30,
+        timeline: [
+          { state: "done", label: "Service scheduled", meta: "last month" },
+          { state: "done", label: "Engineer attended", meta: "Mon 09:30" },
+          { state: "done", label: "All panels tested", meta: "Mon 12:14" },
+          { state: "done", label: "Certificate issued", meta: "today 14:02" },
+        ],
+        next: "Certificate filed. Next service in October.",
+      },
+    ],
+    activity: [
+      {
+        who: "Ben Ofori",
+        what: "booked Gas Safe engineer for 42 Kingsmead",
+        when: "just now",
+        tone: "warm",
+        fresh: true,
+      },
+      {
+        who: "Maya Chen",
+        what: "received EICR report for 17 Linden",
+        when: "22m",
+        tone: "blue",
+        fresh: false,
+      },
+      {
+        who: "Safeguard",
+        what: "issued fire alarm certificate for Fairfax",
+        when: "1h",
+        tone: "green",
+        fresh: false,
+      },
+    ],
+    evalTasks: [
+      "Booking Gas Safe engineer for 42 Kingsmead",
+      "Reviewing EICR remedials for 17 Linden",
+      "Filing fire alarm certificate for Fairfax",
+    ],
+  },
+  {
+    id: "legal",
+    label: "Legal filings",
+    headerLabel: "Paralegal team",
+    statsLabels: ["Due soon", "Delayed", "Filed"],
+    rxLbl: "Ref",
+    practiceLbl: "Registry",
+    pharmacyLbl: "Client",
+    listLbl: "Matters",
+    people: [
+      {
+        initials: "TM",
+        name: "Thornton Mills Ltd",
+        sub: "Annual return",
+        med: "Confirmation Statement",
+        dose: "Due 14 days",
+        tone: "warm",
+        owner: "Priya Shah",
+        ownerRole: "paralegal",
+        status: "Client signature pending",
+        practice: "Companies House",
+        pharmacy: "Thornton Mills Ltd",
+        rxId: "CS-2026-0412",
+        supply: 3,
+        supplyMax: 30,
+        timeline: [
+          { state: "done", label: "Draft prepared", meta: "Mon 10:00" },
+          { state: "done", label: "Sent to client for review", meta: "Tue 09:15" },
+          { state: "done", label: "Reminder sent", meta: "Thu 14:00" },
+          { state: "active", label: "Awaiting signature", meta: "3 days" },
+        ],
+        next: "Call Mr. Thornton before 5pm today.",
+      },
+      {
+        initials: "KE",
+        name: "Kemi Eze",
+        sub: "Skilled Worker visa",
+        med: "Visa renewal",
+        dose: "Extension, 3 years",
+        tone: "blue",
+        owner: "Jonathan Wells",
+        ownerRole: "immigration solicitor",
+        status: "Submitted to UKVI",
+        practice: "UKVI",
+        pharmacy: "Kemi Eze",
+        rxId: "VR-77812",
+        supply: 8,
+        supplyMax: 30,
+        timeline: [
+          { state: "done", label: "Documents collected", meta: "last Fri" },
+          { state: "done", label: "Application drafted", meta: "Mon 11:40" },
+          { state: "done", label: "Submitted to UKVI", meta: "Wed 09:02" },
+          { state: "active", label: "Biometrics booked", meta: "next Tue" },
+        ],
+        next: "No action. UKVI decision expected within 8 weeks.",
+      },
+      {
+        initials: "VL",
+        name: "Vellum Labs",
+        sub: "Trademark",
+        med: "TM Renewal, Class 9",
+        dose: "10-year renewal",
+        tone: "green",
+        owner: "Priya Shah",
+        ownerRole: "paralegal",
+        status: "Filed with IPO",
+        practice: "UK IPO",
+        pharmacy: "Vellum Labs",
+        rxId: "TM-UK00003844102",
+        supply: 28,
+        supplyMax: 30,
+        timeline: [
+          { state: "done", label: "Renewal notice received", meta: "last month" },
+          { state: "done", label: "Client approved", meta: "Mon 14:20" },
+          { state: "done", label: "Fee paid", meta: "Tue 10:05" },
+          { state: "done", label: "Filed with IPO", meta: "today 11:30" },
+        ],
+        next: "Confirmation expected within 5 working days.",
+      },
+    ],
+    activity: [
+      {
+        who: "Priya Shah",
+        what: "chased Thornton Mills for signature",
+        when: "just now",
+        tone: "warm",
+        fresh: true,
+      },
+      {
+        who: "Jonathan W.",
+        what: "submitted Kemi's visa to UKVI",
+        when: "31m",
+        tone: "blue",
+        fresh: false,
+      },
+      {
+        who: "Priya Shah",
+        what: "filed Vellum Labs TM renewal",
+        when: "2h",
+        tone: "green",
+        fresh: false,
+      },
+    ],
+    evalTasks: [
+      "Chasing Thornton Mills for signature",
+      "Tracking UKVI decision for Kemi Eze",
+      "Confirming IPO receipt for Vellum Labs",
+    ],
+  },
+];
+
+const TESTIMONIALS = [
+  {
+    quote:
+      "Omela is the first thing I open on a Monday morning. I can see what needs attention across every resident in one place.",
+    author: "Care team lead",
+    domain: "Residential care",
+  },
+  {
+    quote:
+      "We used to miss gas safety deadlines across a 40-property portfolio. Now every cert, every renewal, every remedial sits in one view.",
+    author: "Property manager",
+    domain: "Lettings, Manchester",
+  },
+  {
+    quote:
+      "I stopped chasing clients for signatures over email. They get a reminder, I see the status, and the deadline stops being my problem.",
+    author: "Paralegal",
+    domain: "Corporate filings, London",
+  },
+  {
+    quote:
+      "Three of us manage prescriptions for my mum. Before Omela we were triple-calling the GP. Now we just see who did what.",
+    author: "Family carer",
+    domain: "Supporting a parent",
+  },
+  {
+    quote:
+      "Every trademark renewal used to need a spreadsheet and two reminders. One dashboard replaced both, and the nudges go out automatically.",
+    author: "IP paralegal",
+    domain: "Trademark firm",
+  },
+];
+
+function FI({
+  children,
+  delay = 0,
+  className = "",
+}: {
+  children: ReactNode;
+  delay?: number;
+  className?: string;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const visible = useInView(ref, { once: true, amount: 0.08 });
-  return <motion.div ref={ref} initial={{ opacity:0, y:16 }} animate={visible ? { opacity:1, y:0 } : {}} transition={{ duration:0.55, delay, ease:[0.22,1,0.36,1] }} className={className}>{children}</motion.div>;
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 16 }}
+      animate={visible ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
-function Overline({ children, tone="default", className="" }: { children: ReactNode; tone?: "default"|"warm"|"blue"|"green"; className?: string }) {
+function Overline({
+  children,
+  tone = "default",
+  className = "",
+}: {
+  children: ReactNode;
+  tone?: "default" | "warm" | "blue" | "green";
+  className?: string;
+}) {
   return <span className={`overline overline--${tone} ${className}`.trim()}>{children}</span>;
 }
-
-const testimonials = [
-  { quote: "Omela is the first thing I open on a Monday morning. I can see what needs attention across every resident in one place.", author: "Care team lead", domain: "Residential care" },
-  { quote: "We used to miss gas safety deadlines across a 40-property portfolio. Now every cert, every renewal, every remedial sits in one view.", author: "Property manager", domain: "Lettings, Manchester" },
-  { quote: "I stopped chasing clients for signatures over email. They get a reminder, I see the status, and the deadline stops being my problem.", author: "Paralegal", domain: "Corporate filings, London" },
-  { quote: "Three of us manage prescriptions for my mum. Before Omela we were triple-calling the GP. Now we just see who did what.", author: "Family carer", domain: "Supporting a parent" },
-  { quote: "Every trademark renewal used to need a spreadsheet and two reminders. One dashboard replaced both, and the nudges go out automatically.", author: "IP paralegal", domain: "Trademark firm" },
-];
 
 function Testimonials() {
   const [idx, setIdx] = useState(0);
   const [fading, setFading] = useState(false);
+
   useEffect(() => {
     const id = window.setInterval(() => {
       setFading(true);
-      window.setTimeout(() => { setIdx(i => (i + 1) % testimonials.length); setFading(false); }, 250);
+      window.setTimeout(() => {
+        setIdx((i) => (i + 1) % TESTIMONIALS.length);
+        setFading(false);
+      }, 220);
     }, 5600);
+
     return () => window.clearInterval(id);
   }, []);
-  const pick = (n: number) => { if (n === idx) return; setFading(true); window.setTimeout(() => { setIdx(n); setFading(false); }, 250); };
-  const cur = testimonials[idx];
+
+  const pick = (n: number) => {
+    if (n === idx) return;
+    setFading(true);
+    window.setTimeout(() => {
+      setIdx(n);
+      setFading(false);
+    }, 220);
+  };
+
+  const cur = TESTIMONIALS[idx];
+
   return (
     <div className="tstWrap">
-      <div className="tstIc"><Quote size={22}/></div>
-      <div className="tstQuote" style={{opacity: fading ? 0 : 1, transform: fading ? "translateY(-6px)" : "translateY(0)", transition: "opacity .25s ease, transform .25s ease"}}>
-        <p className="tstTx serif">{cur.quote}</p>
-        <div className="tstBy"><span className="tstByName">{cur.author}</span><span className="tstBySep">·</span><span className="tstByDomain">{cur.domain}</span></div>
+      <div className="tstIc">
+        <Quote size={22} />
       </div>
-      <div className="tstDots" role="tablist" aria-label="Testimonial">
-        {testimonials.map((_, i) => (
-          <button key={i} type="button" className={`tstDot ${i===idx ? "tstDotA" : ""}`} onClick={() => pick(i)} aria-label={`Testimonial ${i+1}`} aria-selected={i===idx} role="tab"/>
+
+      <div
+        className="tstQuote"
+        style={{
+          opacity: fading ? 0 : 1,
+          transform: fading ? "translateY(-6px)" : "translateY(0)",
+          transition: "opacity .22s ease, transform .22s ease",
+        }}
+      >
+        <p className="tstTx serif">{cur.quote}</p>
+        <div className="tstBy">
+          <span className="tstByName">{cur.author}</span>
+          <span className="tstBySep">·</span>
+          <span className="tstByDomain">{cur.domain}</span>
+        </div>
+      </div>
+
+      <div className="tstDots" role="tablist" aria-label="Testimonials">
+        {TESTIMONIALS.map((_, i) => (
+          <button
+            key={i}
+            type="button"
+            className={`tstDot ${i === idx ? "tstDotA" : ""}`}
+            onClick={() => pick(i)}
+            aria-label={`Testimonial ${i + 1}`}
+            aria-selected={i === idx}
+            role="tab"
+          />
         ))}
       </div>
     </div>
@@ -61,202 +583,421 @@ function Testimonials() {
 }
 
 function LauraWorkspace() {
-  type Person = { initials:string; name:string; sub:string; med:string; dose:string; tone:"warm"|"blue"|"green"; owner:string; ownerRole:string; status:string; statusSub:string; practice:string; pharmacy:string; rxId:string; supply:number; supplyMax:number; timeline:{state:"done"|"active";label:string;meta:string}[]; next:string };
-  type Domain = { id:string; label:string; accent:string; headerLabel:string; statsLabels:[string,string,string]; rxLbl:string; practiceLbl:string; pharmacyLbl:string; listLbl:string; people:Person[]; activity:{who:string;what:string;when:string;tone:"warm"|"blue"|"green";fresh:boolean}[] };
-  const domains: Domain[] = [
-    { id:"health", label:"Healthcare", accent:"#C9956B", headerLabel:"Care team", statsLabels:["Due soon","Delayed","Ready"], rxLbl:"Rx", practiceLbl:"Practice", pharmacyLbl:"Pharmacy", listLbl:"Residents",
-      people:[
-        { initials:"ML", name:"Margaret Littlewood", sub:"Age 78", med:"Amlodipine", dose:"5mg, once daily", tone:"warm", owner:"Ada Kelly", ownerRole:"daughter", status:"Needs follow-up", statusSub:"No update from practice in 3 days", practice:"Greenfield Medical", pharmacy:"Boots, High Street", rxId:"RX-20814", supply:2, supplyMax:30,
-          timeline:[{state:"done",label:"Draft prepared",meta:"Mon 09:14"},{state:"done",label:"Sent to practice",meta:"Tue 11:32"},{state:"done",label:"Practice acknowledged",meta:"Tue 16:05"},{state:"active",label:"Awaiting response",meta:"3 days"}], next:"Ada to call the practice before 4pm today." },
-        { initials:"DR", name:"David Reyes", sub:"Age 64", med:"Metformin", dose:"500mg, twice daily", tone:"blue", owner:"Dr. Reyes", ownerRole:"prescriber", status:"Request sent", statusSub:"Pharmacy processing", practice:"Northgate Surgery", pharmacy:"Well, Market Square", rxId:"RX-20819", supply:6, supplyMax:30,
-          timeline:[{state:"done",label:"Draft prepared",meta:"Tue 08:02"},{state:"done",label:"Approved by Jamie",meta:"Tue 09:41"},{state:"done",label:"Sent to pharmacy",meta:"Wed 10:15"},{state:"active",label:"Awaiting confirmation",meta:"today"}], next:"No action needed. Omela will alert on any change." },
-        { initials:"IK", name:"Irene Kowalski", sub:"Age 81", med:"Sertraline", dose:"50mg, once daily", tone:"green", owner:"Jamie Marsh", ownerRole:"support worker", status:"Ready to collect", statusSub:"Boots, 12 High Street", practice:"Hillside Practice", pharmacy:"Boots, High Street", rxId:"RX-20806", supply:14, supplyMax:30,
-          timeline:[{state:"done",label:"Draft prepared",meta:"Fri 14:20"},{state:"done",label:"Sent to practice",meta:"Mon 09:03"},{state:"done",label:"Dispensed",meta:"today 11:20"},{state:"done",label:"Ready at pharmacy",meta:"today 12:44"}], next:"Collection window open until 6pm." },
-      ],
-      activity:[
-        { who:"Dr. Reyes", what:"drafted Metformin refill for David", when:"just now", tone:"blue", fresh:true },
-        { who:"Ada Kelly", what:"approved amlodipine request", when:"14m", tone:"warm", fresh:false },
-        { who:"Jamie M.", what:"marked Sertraline ready at Boots", when:"42m", tone:"green", fresh:false },
-      ] },
-    { id:"property", label:"Property compliance", accent:"#2563EB", headerLabel:"Portfolio team", statsLabels:["Expiring","Overdue","Certified"], rxLbl:"Cert", practiceLbl:"Contractor", pharmacyLbl:"Issuer", listLbl:"Properties",
-      people:[
-        { initials:"42", name:"42 Kingsmead Road", sub:"HMO, 6 beds", med:"Gas Safety (CP12)", dose:"Annual renewal", tone:"warm", owner:"Ben Ofori", ownerRole:"property manager", status:"Overdue by 4 days", statusSub:"Tenant access confirmed for Thursday", practice:"Arden Gas Services", pharmacy:"Gas Safe Register", rxId:"GS-44218", supply:0, supplyMax:30,
-          timeline:[{state:"done",label:"Reminder sent to tenant",meta:"Mon 08:00"},{state:"done",label:"Engineer booked",meta:"Mon 10:22"},{state:"done",label:"Access window confirmed",meta:"Tue 09:15"},{state:"active",label:"Awaiting inspection",meta:"Thu"}], next:"Engineer arrives Thursday 10am. Tenant notified." },
-        { initials:"17", name:"17 Linden Court", sub:"Flat, tenanted", med:"EICR (Electrical)", dose:"5-year renewal", tone:"blue", owner:"Maya Chen", ownerRole:"compliance lead", status:"Report awaiting sign-off", statusSub:"Minor remedials flagged", practice:"Northline Electrical", pharmacy:"NICEIC", rxId:"EIC-88104", supply:9, supplyMax:60,
-          timeline:[{state:"done",label:"Inspection completed",meta:"Mon 14:00"},{state:"done",label:"Report uploaded",meta:"Tue 09:05"},{state:"done",label:"Remedials quoted",meta:"Wed 11:20"},{state:"active",label:"Awaiting landlord sign-off",meta:"today"}], next:"Maya to chase Mr. Khan for remedial approval." },
-        { initials:"08", name:"8 Fairfax House", sub:"Block, 24 units", med:"Fire Alarm Service", dose:"6-month service", tone:"green", owner:"Richard Oyelaran", ownerRole:"contractor", status:"Certified", statusSub:"Next service booked for October", practice:"Safeguard Fire Ltd", pharmacy:"BAFE", rxId:"FA-33901", supply:26, supplyMax:30,
-          timeline:[{state:"done",label:"Service scheduled",meta:"last month"},{state:"done",label:"Engineer attended",meta:"Mon 09:30"},{state:"done",label:"All panels tested",meta:"Mon 12:14"},{state:"done",label:"Certificate issued",meta:"today 14:02"}], next:"Certificate filed. Next service in October." },
-      ],
-      activity:[
-        { who:"Ben Ofori", what:"booked Gas Safe engineer for 42 Kingsmead", when:"just now", tone:"warm", fresh:true },
-        { who:"Maya Chen", what:"received EICR report for 17 Linden", when:"22m", tone:"blue", fresh:false },
-        { who:"Safeguard", what:"issued fire alarm certificate for Fairfax", when:"1h", tone:"green", fresh:false },
-      ] },
-    { id:"legal", label:"Legal filings", accent:"#15803D", headerLabel:"Paralegal team", statsLabels:["Due soon","Delayed","Filed"], rxLbl:"Ref", practiceLbl:"Registry", pharmacyLbl:"Client", listLbl:"Matters",
-      people:[
-        { initials:"TM", name:"Thornton Mills Ltd", sub:"Annual return", med:"Confirmation Statement", dose:"Due 14 days", tone:"warm", owner:"Priya Shah", ownerRole:"paralegal", status:"Client signature pending", statusSub:"Chased twice this week", practice:"Companies House", pharmacy:"Thornton Mills Ltd", rxId:"CS-2026-0412", supply:3, supplyMax:30,
-          timeline:[{state:"done",label:"Draft prepared",meta:"Mon 10:00"},{state:"done",label:"Sent to client for review",meta:"Tue 09:15"},{state:"done",label:"Reminder sent",meta:"Thu 14:00"},{state:"active",label:"Awaiting signature",meta:"3 days"}], next:"Call Mr. Thornton before 5pm today." },
-        { initials:"KE", name:"Kemi Eze", sub:"Skilled Worker visa", med:"Visa renewal", dose:"Extension, 3 years", tone:"blue", owner:"Jonathan Wells", ownerRole:"immigration solicitor", status:"Submitted to UKVI", statusSub:"Biometrics scheduled", practice:"UKVI", pharmacy:"Kemi Eze", rxId:"VR-77812", supply:8, supplyMax:30,
-          timeline:[{state:"done",label:"Documents collected",meta:"last Fri"},{state:"done",label:"Application drafted",meta:"Mon 11:40"},{state:"done",label:"Submitted to UKVI",meta:"Wed 09:02"},{state:"active",label:"Biometrics booked",meta:"next Tue"}], next:"No action. UKVI decision expected within 8 weeks." },
-        { initials:"VL", name:"Vellum Labs", sub:"Trademark", med:"TM Renewal, Class 9", dose:"10-year renewal", tone:"green", owner:"Priya Shah", ownerRole:"paralegal", status:"Filed with IPO", statusSub:"Payment confirmed", practice:"UK IPO", pharmacy:"Vellum Labs", rxId:"TM-UK00003844102", supply:28, supplyMax:30,
-          timeline:[{state:"done",label:"Renewal notice received",meta:"last month"},{state:"done",label:"Client approved",meta:"Mon 14:20"},{state:"done",label:"Fee paid",meta:"Tue 10:05"},{state:"done",label:"Filed with IPO",meta:"today 11:30"}], next:"Confirmation expected within 5 working days." },
-      ],
-      activity:[
-        { who:"Priya Shah", what:"chased Thornton Mills for signature", when:"just now", tone:"warm", fresh:true },
-        { who:"Jonathan W.", what:"submitted Kemi's visa to UKVI", when:"31m", tone:"blue", fresh:false },
-        { who:"Priya Shah", what:"filed Vellum Labs TM renewal", when:"2h", tone:"green", fresh:false },
-      ] },
-  ];
   const [domainIdx, setDomainIdx] = useState(0);
-  const dom = domains[domainIdx];
-  const people = dom.people;
-  const activity = dom.activity;
-  useEffect(() => { const id = window.setInterval(() => setDomainIdx(i => (i + 1) % domains.length), 13200); return () => window.clearInterval(id); }, [domains.length]);
-  const stats = [{label:dom.statsLabels[0],value:5,tone:"warm"as const},{label:dom.statsLabels[1],value:1,tone:"red"as const},{label:dom.statsLabels[2],value:2,tone:"green"as const}];
   const [active, setActive] = useState(0);
   const [evaluating, setEvaluating] = useState(false);
   const [evalTask, setEvalTask] = useState(0);
-  useEffect(() => { setActive(0); }, [domainIdx]);
-  useEffect(() => { const t = window.setInterval(() => setActive(p => (p+1) % people.length), 4400); return () => window.clearInterval(t); }, [people.length]);
-  const evalTasksByDomain: Record<string,string[]> = {
-    health:["Checking Margaret's amlodipine supply","Drafting Metformin refill for David","Confirming Sertraline collection at Boots"],
-    property:["Booking Gas Safe engineer for 42 Kingsmead","Reviewing EICR remedials for 17 Linden","Filing fire alarm certificate for Fairfax"],
-    legal:["Chasing Thornton Mills for signature","Tracking UKVI decision for Kemi Eze","Confirming IPO receipt for Vellum Labs"],
-  };
-  useEffect(() => {
-    const loop = () => { setEvaluating(true); setEvalTask(t => (t + 1) % 3); window.setTimeout(() => setEvaluating(false), 2600); };
-    loop();
-    const id = window.setInterval(loop, 7200);
-    return () => window.clearInterval(id);
-  }, [domainIdx]);
-  const evalTasks = evalTasksByDomain[dom.id] || evalTasksByDomain.health;
+
+  const dom = WORKSPACE_DOMAINS[domainIdx];
+  const people = dom.people;
   const cur = people[active];
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setDomainIdx((i) => (i + 1) % WORKSPACE_DOMAINS.length);
+    }, 13200);
+
+    return () => window.clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    setActive(0);
+    setEvalTask(0);
+  }, [domainIdx]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setActive((p) => (p + 1) % people.length);
+    }, 4400);
+
+    return () => window.clearInterval(id);
+  }, [people.length]);
+
+  useEffect(() => {
+    const taskCount = WORKSPACE_DOMAINS[domainIdx].evalTasks.length;
+    let timeoutId: number | undefined;
+
+    const run = () => {
+      setEvaluating(true);
+      setEvalTask((t) => (t + 1) % taskCount);
+
+      timeoutId = window.setTimeout(() => {
+        setEvaluating(false);
+      }, 2600);
+    };
+
+    run();
+    const intervalId = window.setInterval(run, 7200);
+
+    return () => {
+      window.clearInterval(intervalId);
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, [domainIdx]);
+
+  const stats = [
+    { label: dom.statsLabels[0], value: 5, tone: "warm" as const },
+    { label: dom.statsLabels[1], value: 1, tone: "red" as const },
+    { label: dom.statsLabels[2], value: 2, tone: "green" as const },
+  ];
 
   return (
     <div className="wsWrap">
       <div className="wsGlow" />
+
       <div className="wsShell">
         <div className="wsHead">
           <div className="wsBrand">
-            <div className="wsMark"><Image src="/omela-logo-mark.png" alt="" width={22} height={22} style={{width:"100%",height:"100%",objectFit:"contain"}}/></div>
+            <div className="wsMark">
+              <Image
+                src="/omela-logo-mark.png"
+                alt=""
+                width={22}
+                height={22}
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+              />
+            </div>
+
             <div className="wsBrandTx">
               <div className="wsName serif">Omela</div>
-              <div className="wsBrandSub"><span className="wsLive"><span className="wsLiveDot"/>Live</span><span className="wsBrandSep">·</span><span className="wsBrandDate">{dom.label}</span></div>
+              <div className="wsBrandSub">
+                <span className="wsLive">
+                  <span className="wsLiveDot" />
+                  Live
+                </span>
+                <span className="wsBrandSep">·</span>
+                <span className="wsBrandDate">{dom.label}</span>
+              </div>
             </div>
           </div>
-          <div className="wsDomainChip" key={dom.id}><span className="wsDomainChipLbl">Workspace</span><span className="wsDomainChipVal">{dom.headerLabel}</span></div>
-        </div>
-        <AnimatePresence>
-          {evaluating ? (
-            <motion.div className="wsEval" initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.32, ease: [0.22,1,0.36,1] }}>
-              <div className="wsEvalInner">
-                <div className="wsEvalIcon"><motion.div animate={{ rotate: 360 }} transition={{ duration: 1.6, repeat: Infinity, ease: "linear" }}><RefreshCw size={11}/></motion.div></div>
-                <div className="wsEvalText"><div className="wsEvalLbl">Omela is evaluating</div><div className="wsEvalTask">{evalTasks[evalTask]}</div></div>
-                <div className="wsEvalBar"><motion.div className="wsEvalBarFill" initial={{ width: "0%" }} animate={{ width: "100%" }} transition={{ duration: 2.4, ease: "easeInOut" }}/></div>
-              </div>
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
-        <motion.div key={dom.id} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{duration:0.45,ease:[0.22,1,0.36,1]}}>
-        <div className="wsStats">
-          {stats.map(s => <div key={s.label} className={`wsStat wsStat--${s.tone}`}><div className="wsStatVal">{s.value}</div><div className="wsStatLbl">{s.label}</div></div>)}
-        </div>
-        <div className="wsBody">
-          <div className="wsList">
-            <div className="wsListHd"><span>{dom.listLbl}</span><span className="wsListCt">{people.length}</span></div>
-            {people.map((p, i) => (
-              <button key={`${dom.id}-${p.initials}`} type="button" onClick={() => setActive(i)} className={`wsRow ${i===active ? "wsRowA" : ""}`}>
-                <div className={`wsAv wsAv--${p.tone}`}>{p.initials}</div>
-                <div className="wsRowTx">
-                  <div className="wsRowNm">{p.name}<span className="wsRowAge"> · {p.sub}</span></div>
-                  <div className="wsRowMd">{p.med} <span className="wsRowDose">{p.dose}</span></div>
-                  <div className={`wsRowSt wsRowSt--${p.tone}`}><span className="wsRowStDot"/>{p.status}</div>
-                  <div className="wsRowSupply" aria-label={`${p.supply} days of supply remaining`}>
-                    <div className="wsRowSupplyTrack"><div className={`wsRowSupplyFill wsRowSupplyFill--${p.tone}`} style={{ width: `${Math.min(100, (p.supply / p.supplyMax) * 100)}%` }}/></div>
-                    <span className="wsRowSupplyLbl">{p.supply}d left</span>
-                  </div>
-                </div>
-              </button>
-            ))}
+
+          <div className="wsDomainChip">
+            <span className="wsDomainChipLbl">Workspace</span>
+            <span className="wsDomainChipVal">{dom.headerLabel}</span>
           </div>
-          <div className="wsDetail">
-            <AnimatePresence mode="wait">
-              <motion.div key={cur.initials} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}} transition={{duration:0.36,ease:[0.22,1,0.36,1]}}>
-                <div className="wsDtHd">
-                  <div className={`wsAv wsAvLg wsAv--${cur.tone}`}>{cur.initials}</div>
-                  <div className="wsDtHdTx"><div className="wsDtNm">{cur.name}</div><div className="wsDtMd">{cur.med} {cur.dose}</div></div>
-                  <div className="wsDtRx"><div className="wsDtRxLbl">{dom.rxLbl}</div><div className="wsDtRxVal">{cur.rxId}</div></div>
-                </div>
-                <div className="wsDtMeta">
-                  <div className="wsDtMetaRow"><span className="wsDtMetaLbl">Status</span><span className={`wsDtMetaVal wsDtMetaVal--${cur.tone}`}>{cur.status}</span></div>
-                  <div className="wsDtMetaRow"><span className="wsDtMetaLbl">Owner</span><span className="wsDtMetaVal">{cur.owner}<span className="wsDtMetaSub"> · {cur.ownerRole}</span></span></div>
-                  <div className="wsDtMetaRow"><span className="wsDtMetaLbl">{dom.practiceLbl}</span><span className="wsDtMetaVal wsDtMetaValSub">{cur.practice}</span></div>
-                  <div className="wsDtMetaRow"><span className="wsDtMetaLbl">{dom.pharmacyLbl}</span><span className="wsDtMetaVal wsDtMetaValSub">{cur.pharmacy}</span></div>
-                </div>
-                <div className="wsDtTl">
-                  <div className="wsDtTlHd">Timeline</div>
-                  <div className="wsDtTlList">
-                    {cur.timeline.map((s, i) => (
-                      <div key={i} className={`wsTlStep wsTlStep--${s.state}`}>
-                        <div className="wsTlMark">{s.state === "done" ? <Check size={11} strokeWidth={3}/> : <span className="wsTlPulse"/>}</div>
-                        <span className="wsTlLbl">{s.label}</span><span className="wsTlMeta">{s.meta}</span>
-                      </div>
-                    ))}
+        </div>
+
+        <div className="wsEvalSlot" aria-live="polite">
+          <AnimatePresence mode="wait">
+            {evaluating ? (
+              <motion.div
+                key={`${dom.id}-${evalTask}`}
+                className="wsEval"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <div className="wsEvalInner">
+                  <div className="wsEvalIcon">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1.6, repeat: Infinity, ease: "linear" }}
+                    >
+                      <RefreshCw size={11} />
+                    </motion.div>
                   </div>
-                </div>
-                <div className="wsDtNext">
-                  <div className="wsDtNextHd"><span className="wsDtNextLbl">Next action</span><span className="wsDtNextClock"><Clock size={10}/> today</span></div>
-                  <div className="wsDtNextTx">{cur.next}</div>
+
+                  <div className="wsEvalText">
+                    <div className="wsEvalLbl">Omela is evaluating</div>
+                    <div className="wsEvalTask">{dom.evalTasks[evalTask]}</div>
+                  </div>
+
+                  <div className="wsEvalBar">
+                    <motion.div
+                      className="wsEvalBarFill"
+                      initial={{ width: "0%" }}
+                      animate={{ width: "100%" }}
+                      transition={{ duration: 2.4, ease: "easeInOut" }}
+                    />
+                  </div>
                 </div>
               </motion.div>
-            </AnimatePresence>
-          </div>
+            ) : (
+              <div className="wsEvalGhost" />
+            )}
+          </AnimatePresence>
         </div>
-        </motion.div>
-        <div className="wsFeed">
-          <div className="wsDomainTabs" role="tablist" aria-label="Workspace domain">
-            {domains.map((d, i) => (
-              <button key={d.id} type="button" className={`wsDomainTab ${i===domainIdx ? "wsDomainTabA" : ""}`} onClick={() => setDomainIdx(i)} role="tab" aria-selected={i===domainIdx}>{d.label}</button>
-            ))}
-          </div>
-          <div className="wsFeedHd"><Activity size={11}/><span>Recent activity</span></div>
-          <div className="wsFeedList">
-            {activity.map((a, i) => (
-              <div key={i} className={`wsFeedItem ${a.fresh ? "wsFeedItemFresh" : ""}`}>
-                <span className={`wsFeedDot wsFeedDot--${a.tone}`}/>
-                <span className="wsFeedWho">{a.who}</span>
-                <span className="wsFeedWhat">{a.what}</span>
-                <span className={`wsFeedWhen ${a.fresh ? "wsFeedWhenFresh" : ""}`}>{a.when}</span>
+
+        <div className="wsStage">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={dom.id}
+              className="wsStageInner"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <div className="wsStats">
+                {stats.map((s) => (
+                  <div key={s.label} className={`wsStat wsStat--${s.tone}`}>
+                    <div className="wsStatVal">{s.value}</div>
+                    <div className="wsStatLbl">{s.label}</div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+
+              <div className="wsBody">
+                <div className="wsList">
+                  <div className="wsListHd">
+                    <span>{dom.listLbl}</span>
+                    <span className="wsListCt">{people.length}</span>
+                  </div>
+
+                  {people.map((p, i) => (
+                    <button
+                      key={`${dom.id}-${p.initials}`}
+                      type="button"
+                      onClick={() => setActive(i)}
+                      className={`wsRow ${i === active ? "wsRowA" : ""}`}
+                    >
+                      <div className={`wsAv wsAv--${p.tone}`}>{p.initials}</div>
+
+                      <div className="wsRowTx">
+                        <div className="wsRowNm">
+                          {p.name}
+                          <span className="wsRowAge"> · {p.sub}</span>
+                        </div>
+
+                        <div className="wsRowMd">
+                          {p.med} <span className="wsRowDose">{p.dose}</span>
+                        </div>
+
+                        <div className={`wsRowSt wsRowSt--${p.tone}`}>
+                          <span className="wsRowStDot" />
+                          {p.status}
+                        </div>
+
+                        <div className="wsRowSupply" aria-label={`${p.supply} days left`}>
+                          <div className="wsRowSupplyTrack">
+                            <div
+                              className={`wsRowSupplyFill wsRowSupplyFill--${p.tone}`}
+                              style={{ width: `${Math.min(100, (p.supply / p.supplyMax) * 100)}%` }}
+                            />
+                          </div>
+                          <span className="wsRowSupplyLbl">{p.supply}d left</span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="wsDetail">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={`${dom.id}-${cur.initials}`}
+                      className="wsDetailPane"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                      <div className="wsDtHd">
+                        <div className={`wsAv wsAvLg wsAv--${cur.tone}`}>{cur.initials}</div>
+
+                        <div className="wsDtHdTx">
+                          <div className="wsDtNm">{cur.name}</div>
+                          <div className="wsDtMd">
+                            {cur.med} {cur.dose}
+                          </div>
+                        </div>
+
+                        <div className="wsDtRx">
+                          <div className="wsDtRxLbl">{dom.rxLbl}</div>
+                          <div className="wsDtRxVal">{cur.rxId}</div>
+                        </div>
+                      </div>
+
+                      <div className="wsDtMeta">
+                        <div className="wsDtMetaRow">
+                          <span className="wsDtMetaLbl">Status</span>
+                          <span className={`wsDtMetaVal wsDtMetaVal--${cur.tone}`}>{cur.status}</span>
+                        </div>
+
+                        <div className="wsDtMetaRow">
+                          <span className="wsDtMetaLbl">Owner</span>
+                          <span className="wsDtMetaVal">
+                            {cur.owner}
+                            <span className="wsDtMetaSub"> · {cur.ownerRole}</span>
+                          </span>
+                        </div>
+
+                        <div className="wsDtMetaRow">
+                          <span className="wsDtMetaLbl">{dom.practiceLbl}</span>
+                          <span className="wsDtMetaVal wsDtMetaValSub">{cur.practice}</span>
+                        </div>
+
+                        <div className="wsDtMetaRow">
+                          <span className="wsDtMetaLbl">{dom.pharmacyLbl}</span>
+                          <span className="wsDtMetaVal wsDtMetaValSub">{cur.pharmacy}</span>
+                        </div>
+                      </div>
+
+                      <div className="wsDtTl">
+                        <div className="wsDtTlHd">Timeline</div>
+
+                        <div className="wsDtTlList">
+                          {cur.timeline.map((s, i) => (
+                            <div key={i} className={`wsTlStep wsTlStep--${s.state}`}>
+                              <div className="wsTlMark">
+                                {s.state === "done" ? <Check size={11} strokeWidth={3} /> : <span className="wsTlPulse" />}
+                              </div>
+                              <span className="wsTlLbl">{s.label}</span>
+                              <span className="wsTlMeta">{s.meta}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="wsDtNext">
+                        <div className="wsDtNextHd">
+                          <span className="wsDtNextLbl">Next action</span>
+                          <span className="wsDtNextClock">
+                            <Clock size={10} />
+                            today
+                          </span>
+                        </div>
+                        <div className="wsDtNextTx">{cur.next}</div>
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+              </div>
+
+              <div className="wsFeed">
+                <div className="wsDomainTabs" role="tablist" aria-label="Workspace domains">
+                  {WORKSPACE_DOMAINS.map((d, i) => (
+                    <button
+                      key={d.id}
+                      type="button"
+                      className={`wsDomainTab ${i === domainIdx ? "wsDomainTabA" : ""}`}
+                      onClick={() => setDomainIdx(i)}
+                      role="tab"
+                      aria-selected={i === domainIdx}
+                    >
+                      {d.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="wsFeedHd">
+                  <Activity size={11} />
+                  <span>Recent activity</span>
+                </div>
+
+                <div className="wsFeedList">
+                  {dom.activity.map((a, i) => (
+                    <div key={i} className={`wsFeedItem ${a.fresh ? "wsFeedItemFresh" : ""}`}>
+                      <span className={`wsFeedDot wsFeedDot--${a.tone}`} />
+                      <span className="wsFeedWho">{a.who}</span>
+                      <span className="wsFeedWhat">{a.what}</span>
+                      <span className={`wsFeedWhen ${a.fresh ? "wsFeedWhenFresh" : ""}`}>{a.when}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     </div>
   );
 }
 
-function SuccessModal({ open, onClose, referralCode }: { open: boolean; onClose: () => void; referralCode: string }) {
+function SuccessModal({
+  open,
+  onClose,
+  referralCode,
+}: {
+  open: boolean;
+  onClose: () => void;
+  referralCode: string;
+}) {
   const [copied, setCopied] = useState(false);
-  const link = typeof window !== "undefined" && referralCode ? `${window.location.origin}?ref=${referralCode}` : "";
-  async function copyLink() { if (!link) return; await navigator.clipboard.writeText(link); setCopied(true); window.setTimeout(() => setCopied(false), 2000); }
-  async function shareLink() { if (!link) return; if (navigator.share) { try { await navigator.share({ title:"Omela early access", text:"Join Omela early access", url:link }); } catch { return; } } else { await copyLink(); } }
+  const [shareUrl, setShareUrl] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && referralCode) {
+      setShareUrl(`${window.location.origin}?ref=${referralCode}`);
+    } else {
+      setShareUrl("");
+    }
+  }, [referralCode]);
+
+  async function copyLink() {
+    if (!shareUrl) return;
+    await navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+  }
+
+  async function shareLink() {
+    if (!shareUrl) return;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Omela early access",
+          text: "Join Omela early access",
+          url: shareUrl,
+        });
+      } catch {
+        return;
+      }
+    } else {
+      await copyLink();
+    }
+  }
+
   return (
     <AnimatePresence>
       {open ? (
-        <motion.div className="modO" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={onClose}>
-          <motion.div className="modB" initial={{opacity:0,y:18,scale:0.97}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:10}} transition={{type:"spring",damping:22,stiffness:300}} onClick={e => e.stopPropagation()}>
-            <div className="modSeal"><CheckCircle2 size={22}/></div>
+        <motion.div
+          className="modO"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+        >
+          <motion.div
+            className="modB"
+            initial={{ opacity: 0, y: 18, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ type: "spring", damping: 22, stiffness: 300 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modSeal">
+              <CheckCircle2 size={22} />
+            </div>
+
             <h3 className="serif modTi">You&apos;re on the list.</h3>
             <p className="modBd">We&apos;ll be in touch as Omela opens up across healthcare, property, and legal pilots.</p>
-            {referralCode ? (
+
+            {referralCode && shareUrl ? (
               <div className="modRef">
                 <p className="modRefLbl">Share with a family member or team</p>
-                <div className="modRefBox"><span className="modRefUrl">{link.replace("https://","").replace("http://","")}</span><button onClick={copyLink} className="modRefCp" type="button">{copied ? <Check size={13}/> : <Copy size={13}/>}</button></div>
-                <div className="modRefBts"><button onClick={shareLink} className="btnP modShareBtn" type="button"><Share2 size={13}/>Share</button></div>
+
+                <div className="modRefBox">
+                  <span className="modRefUrl">{shareUrl.replace("https://", "").replace("http://", "")}</span>
+                  <button onClick={copyLink} className="modRefCp" type="button">
+                    {copied ? <Check size={13} /> : <Copy size={13} />}
+                  </button>
+                </div>
+
+                <div className="modRefBts">
+                  <button onClick={shareLink} className="btnP modShareBtn" type="button">
+                    <Share2 size={13} />
+                    Share
+                  </button>
+                </div>
               </div>
             ) : null}
-            <button type="button" className="modClose" onClick={onClose}>Close</button>
+
+            <button type="button" className="modClose" onClick={onClose}>
+              Close
+            </button>
           </motion.div>
         </motion.div>
       ) : null}
@@ -266,19 +1007,35 @@ function SuccessModal({ open, onClose, referralCode }: { open: boolean; onClose:
 
 function Faq({ items }: { items: { q: string; a: string }[] }) {
   const [open, setOpen] = useState<number | null>(0);
+
   return (
     <div className="faqList">
       {items.map((it, i) => {
         const isOpen = open === i;
+
         return (
           <div key={i} className={`faqItem ${isOpen ? "faqItemOpen" : ""}`}>
-            <button type="button" className="faqQ" onClick={() => setOpen(isOpen ? null : i)} aria-expanded={isOpen}>
+            <button
+              type="button"
+              className="faqQ"
+              onClick={() => setOpen(isOpen ? null : i)}
+              aria-expanded={isOpen}
+            >
               <span className="faqQTx">{it.q}</span>
-              <span className="faqQIc"><ChevronDown size={16}/></span>
+              <span className="faqQIc">
+                <ChevronDown size={16} />
+              </span>
             </button>
+
             <AnimatePresence initial={false}>
               {isOpen ? (
-                <motion.div className="faqA" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}>
+                <motion.div
+                  className="faqA"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                >
                   <div className="faqAInner">{it.a}</div>
                 </motion.div>
               ) : null}
@@ -291,6 +1048,7 @@ function Faq({ items }: { items: { q: string; a: string }[] }) {
 }
 
 export default function Page() {
+  const [mounted, setMounted] = useState(false);
   const [role, setRole] = useState<Role>("carer");
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
@@ -302,90 +1060,296 @@ export default function Page() {
   const [referralCode, setReferralCode] = useState("");
   const [refParam, setRefParam] = useState("");
 
-  useEffect(() => { if (typeof window !== "undefined") { const p = new URLSearchParams(window.location.search); const r = p.get("ref"); if (r) setRefParam(r); } }, []);
+  const trialHref = "/login";
+  const demoHref = "mailto:hello@omela.ai?subject=Omela%20demo";
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search);
+      const r = p.get("ref");
+      if (r) setRefParam(r);
+    }
+  }, []);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!agreed) return;
-    setSubmitting(true); setSuccess(""); setError("");
+
+    setSubmitting(true);
+    setSuccess("");
+    setError("");
+
     try {
-      const res = await fetch("/api/waitlist", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ email, role, website, source:"landing-page", marketingOptIn:false, ref: refParam || undefined }) });
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          role,
+          website,
+          source: "landing-page",
+          marketingOptIn: false,
+          ref: refParam || undefined,
+        }),
+      });
+
       const data = await res.json();
-      if (!res.ok) { if (data.referralCode) setReferralCode(data.referralCode); setError(data.error || "Something went wrong."); return; }
+
+      if (!res.ok) {
+        if (data.referralCode) setReferralCode(data.referralCode);
+        setError(data.error || "Something went wrong.");
+        return;
+      }
+
       setSuccess(data.message || "You are in.");
       if (data.referralCode) setReferralCode(data.referralCode);
-      setEmail(""); setRole("carer"); setWebsite(""); setAgreed(false); setModalOpen(true);
-    } catch { setError("Something went wrong."); } finally { setSubmitting(false); }
+      setEmail("");
+      setRole("carer");
+      setWebsite("");
+      setAgreed(false);
+      setModalOpen(true);
+    } catch {
+      setError("Something went wrong.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const features = [
-    { icon:<Bell size={22}/>, title:"See what needs attention", body:"Know what is due soon, what is delayed, and what needs follow-up right now. Works for prescriptions, renewals, certifications, or any recurring request.", tone:"warm" as const },
-    { icon:<RefreshCw size={22}/>, title:"Keep ownership clear", body:"See who handled the request last, who owns the next step, and what should happen next. No more CC chains or ambiguous handoffs.", tone:"blue" as const },
-    { icon:<Package size={22}/>, title:"Follow every update", body:"Track progress from draft, through approval, to completion without losing the thread. One shared timeline for every stakeholder.", tone:"green" as const },
+    {
+      icon: <Bell size={22} />,
+      title: "See what needs attention",
+      body: "Know what is due soon, what is delayed, and what needs follow-up right now. Works for prescriptions, renewals, certifications, or any recurring request.",
+      tone: "warm" as const,
+    },
+    {
+      icon: <RefreshCw size={22} />,
+      title: "Keep ownership clear",
+      body: "See who handled the request last, who owns the next step, and what should happen next. No more CC chains or ambiguous handoffs.",
+      tone: "blue" as const,
+    },
+    {
+      icon: <Package size={22} />,
+      title: "Follow every update",
+      body: "Track progress from draft, through approval, to completion without losing the thread. One shared timeline for every stakeholder.",
+      tone: "green" as const,
+    },
   ];
 
   const industries = [
-    { icon:<Users size={22}/>, title:"Family carers", body:"Helping a parent, partner, or relative stay on top of repeat prescriptions without carrying every detail alone.", live:true, players:"Family · GP · Pharmacy" },
-    { icon:<Building2 size={22}/>, title:"Residential care", body:"Coordinating repeat-prescription workflows across many residents, practices, and pharmacies in one place.", live:true, players:"Care team · GP · Pharmacy" },
-    { icon:<Home size={22}/>, title:"Supported living", body:"Giving staff and families a shared view of medication admin across residents and shift handovers.", live:true, players:"Staff · Family · GP" },
-    { icon:<Stethoscope size={22}/>, title:"Community pharmacies", body:"A clearer incoming queue with context on who ordered what, for whom, and the collection window.", live:true, players:"Pharmacy · Patients · GPs" },
-    { icon:<PawPrint size={22}/>, title:"Veterinary repeat meds", body:"Pet owners, vets, and pharmacies coordinating chronic care prescriptions on the same cycle pattern.", live:false, players:"Owner · Vet · Pharmacy" },
-    { icon:<Scale size={22}/>, title:"Recurring legal filings", body:"Visa renewals, trademark renewals, and annual returns where paralegals chase clients, lawyers, and registries.", live:false, players:"Paralegal · Lawyer · Client" },
-    { icon:<Wrench size={22}/>, title:"Compliance and maintenance", body:"Gas safety, EICR, PAT testing, lift servicing. Recurring certifications coordinated across managers, contractors, and tenants.", live:false, players:"Manager · Vendor · Tenant" },
-    { icon:<GraduationCap size={22}/>, title:"Childcare medication plans", body:"Nurseries, parents, and GPs keeping allergy plans and recurring medications visible across handovers.", live:false, players:"Nursery · Parent · GP" },
+    {
+      icon: <Users size={22} />,
+      title: "Family carers",
+      body: "Helping a parent, partner, or relative stay on top of repeat prescriptions without carrying every detail alone.",
+      live: true,
+      players: "Family · GP · Pharmacy",
+    },
+    {
+      icon: <Building2 size={22} />,
+      title: "Residential care",
+      body: "Coordinating repeat-prescription workflows across many residents, practices, and pharmacies in one place.",
+      live: true,
+      players: "Care team · GP · Pharmacy",
+    },
+    {
+      icon: <Home size={22} />,
+      title: "Supported living",
+      body: "Giving staff and families a shared view of medication admin across residents and shift handovers.",
+      live: true,
+      players: "Staff · Family · GP",
+    },
+    {
+      icon: <Stethoscope size={22} />,
+      title: "Community pharmacies",
+      body: "A clearer incoming queue with context on who ordered what, for whom, and the collection window.",
+      live: true,
+      players: "Pharmacy · Patients · GPs",
+    },
+    {
+      icon: <PawPrint size={22} />,
+      title: "Veterinary repeat meds",
+      body: "Pet owners, vets, and pharmacies coordinating chronic care prescriptions on the same cycle pattern.",
+      live: false,
+      players: "Owner · Vet · Pharmacy",
+    },
+    {
+      icon: <Scale size={22} />,
+      title: "Recurring legal filings",
+      body: "Visa renewals, trademark renewals, and annual returns where paralegals chase clients, lawyers, and registries.",
+      live: false,
+      players: "Paralegal · Lawyer · Client",
+    },
+    {
+      icon: <Wrench size={22} />,
+      title: "Compliance and maintenance",
+      body: "Gas safety, EICR, PAT testing, lift servicing. Recurring certifications coordinated across managers, contractors, and tenants.",
+      live: false,
+      players: "Manager · Vendor · Tenant",
+    },
+    {
+      icon: <GraduationCap size={22} />,
+      title: "Childcare medication plans",
+      body: "Nurseries, parents, and GPs keeping allergy plans and recurring medications visible across handovers.",
+      live: false,
+      players: "Nursery · Parent · GP",
+    },
   ];
 
   const pricing = [
-    { name:"Family", price:"£9", per:"per month", desc:"For one carer managing recurring requests for up to 3 people.", features:["Up to 3 people","Unlimited requests","Email reminders","Activity history"], cta:"Start free trial", featured:false },
-    { name:"Team", price:"£49", per:"per month", desc:"For care teams, property managers, paralegals, and small operators.", features:["Up to 25 items","Shared workspace","Role permissions","Email support"], cta:"Book a demo", featured:true },
-    { name:"Organisation", price:"Custom", per:"annual contract", desc:"For multi-site providers and larger teams with compliance needs.", features:["Unlimited items","SSO and Microsoft Entra","Onboarding support","Data Processing Agreement"], cta:"Talk to sales", featured:false },
+    {
+      name: "Family",
+      price: "£9",
+      per: "per month",
+      desc: "For one person managing recurring responsibilities across family, property, or admin.",
+      features: [
+        "Up to 3 people",
+        "Unlimited requests",
+        "Email reminders",
+        "Activity history",
+        "Shared household access",
+        "Due date reminders",
+      ],
+      cta: "Start free trial",
+      featured: false,
+    },
+    {
+      name: "Team",
+      price: "£49",
+      per: "per month",
+      desc: "For care teams, property managers, paralegals, and small operators.",
+      features: [
+        "Up to 25 items",
+        "Shared workspace",
+        "Role permissions",
+        "Email support",
+        "Audit trail",
+        "Assigned ownership",
+      ],
+      cta: "Book a demo",
+      featured: true,
+    },
+    {
+      name: "Organisation",
+      price: "Custom",
+      per: "annual contract",
+      desc: "For multi-site providers and larger teams with compliance needs.",
+      features: [
+        "Unlimited items",
+        "SSO and Microsoft Entra",
+        "Onboarding support",
+        "Data Processing Agreement",
+        "Custom roles",
+        "Priority support",
+      ],
+      cta: "Talk to sales",
+      featured: false,
+    },
   ];
 
   const faq = [
-    { q:"Is Omela only for healthcare?", a:"No. Healthcare is our first focus because the cost of a missed handoff is highest there. The underlying pattern, coordinating recurring requests across multiple people, applies to veterinary prescriptions, legal filings, property compliance, equipment maintenance, and more. If you have a recurring workflow that crosses households, professionals, and fulfillers, Omela is built for you." },
-    { q:"How is this different from a task manager like Asana or Trello?", a:"Task managers assume everyone on the thread is on the same team. Omela is built for the opposite case, where the people doing the work are not all inside one organisation. A family carer, a GP practice, and a pharmacy are three separate systems. Omela is the shared layer between them." },
-    { q:"Do you need access to clinical records or patient data?", a:"No. Omela stores the metadata of a request, not clinical records. We track who ordered what, when, and what stage it is at. Clinical data stays where it belongs, in the practice's EHR and the pharmacy's PMR." },
-    { q:"Is this a medical device or regulated software?", a:"Omela is a coordination and admin tool. It does not provide diagnosis, treatment recommendations, or clinical decisions. It is classified as general-purpose workflow software, similar to Notion or Linear, not a medical device." },
-    { q:"What happens when I join early access?", a:"You'll get a personal onboarding call with us, your workspace is set up within 48 hours, and your first month is free. You can invite household members or teammates from day one. If it's not right, you can cancel before any charge." },
-    { q:"Where is my data stored?", a:"Omela runs on modern infrastructure aligned with GDPR. For pilot and early-access customers, data is stored in EU/UK regions of our hosting providers. We sign a Data Processing Agreement on request with Organisation-plan customers. We are working toward formal certifications (Cyber Essentials, ISO 27001) as we move out of pilots." },
-    { q:"Can I use my work Microsoft or Google account to sign in?", a:"Yes. Omela supports Google sign-in for individuals and Microsoft Entra ID (formerly Azure AD) for organisations with work accounts. SSO is available on the Organisation plan." },
-    { q:"Are you hiring or looking for pilot partners?", a:"Yes to both. We're running paid pilots with care teams, property operators, and legal firms in 2026. If you work in one of the coming-soon domains and want to be an early partner, email us at hello@omela.ai with a short note about your workflow." },
-  ];
-
-  const stats = [
-    { value:"1.1B", label:"prescription items issued each year in England (NHSBSA)" },
-    { value:"~77%", label:"of prescription items are repeats (NHS England)" },
-    { value:"£300M", label:"estimated medicines waste each year (NHS England)" },
-    { value:"Multi-party", label:"workflow across patient, practice, and pharmacy" },
+    {
+      q: "Is Omela only for healthcare?",
+      a: "No. Healthcare is our first focus because the cost of a missed handoff is highest there. The underlying pattern, coordinating recurring requests across multiple people, applies to veterinary prescriptions, legal filings, property compliance, equipment maintenance, and more. If you have a recurring workflow that crosses households, professionals, and fulfillers, Omela is built for you.",
+    },
+    {
+      q: "How is this different from a task manager like Asana or Trello?",
+      a: "Task managers assume everyone on the thread is on the same team. Omela is built for the opposite case, where the people doing the work are not all inside one organisation. A family carer, a GP practice, and a pharmacy are three separate systems. Omela is the shared layer between them.",
+    },
+    {
+      q: "Do you need access to clinical records or patient data?",
+      a: "No. Omela stores the metadata of a request, not clinical records. We track who ordered what, when, and what stage it is at. Clinical data stays where it belongs, in the practice's EHR and the pharmacy's PMR.",
+    },
+    {
+      q: "Is this a medical device or regulated software?",
+      a: "Omela is a coordination and admin tool. It does not provide diagnosis, treatment recommendations, or clinical decisions. It is classified as general-purpose workflow software, not a medical device.",
+    },
+    {
+      q: "What happens when I start a free trial?",
+      a: "You can create your workspace, start with your first recurring workflow, and invite household members or teammates from day one. If you need help, we also offer guided onboarding during early access.",
+    },
+    {
+      q: "Where is my data stored?",
+      a: "Omela runs on modern infrastructure aligned with GDPR. For pilot and early-access customers, data is stored in EU or UK regions of our hosting providers. We sign a Data Processing Agreement on request with Organisation-plan customers.",
+    },
+    {
+      q: "Can I use my work Microsoft or Google account to sign in?",
+      a: "Yes. Omela supports Google sign-in for individuals and Microsoft Entra ID for organisations with work accounts. SSO is available on the Organisation plan.",
+    },
+    {
+      q: "Are you hiring or looking for pilot partners?",
+      a: "Yes to both. We're running pilots with care teams, property operators, and legal firms in 2026. If you work in one of the coming-soon domains and want to be an early partner, email us at hello@omela.ai with a short note about your workflow.",
+    },
   ];
 
   const trustCards = [
-    { icon:<Shield size={18}/>, title:"Metadata, not content", body:"Omela tracks the state of a request (who owns it, what stage it's at, what happens next). Clinical records, legal documents, and contractor reports stay in the systems they belong in." },
-    { icon:<Eye size={18}/>, title:"Role-based visibility", body:"Every workspace has explicit roles. A family carer sees their relative. A care team sees their residents. A paralegal sees their matters. Nothing spills sideways." },
-    { icon:<History size={18}/>, title:"Full audit trail", body:"Every status change, ownership transfer, and request is timestamped and attributable. If something needs to be reconstructed months later, it can be." },
-    { icon:<Database size={18}/>, title:"Minimum data by design", body:"We only ask for the fields needed to move a request forward. No extra profiling, no behaviour tracking, no third-party advertising SDKs anywhere in the product." },
+    {
+      icon: <Shield size={18} />,
+      title: "Metadata, not content",
+      body: "Omela tracks the state of a request: who owns it, what stage it is at, and what happens next. Clinical records, legal documents, and contractor reports stay in the systems they belong in.",
+    },
+    {
+      icon: <Eye size={18} />,
+      title: "Role-based visibility",
+      body: "Every workspace has explicit roles. A family carer sees their relative. A care team sees their residents. A paralegal sees their matters. Nothing spills sideways.",
+    },
+    {
+      icon: <History size={18} />,
+      title: "Full audit trail",
+      body: "Every status change, ownership transfer, and request is timestamped and attributable. If something needs to be reconstructed months later, it can be.",
+    },
+    {
+      icon: <Database size={18} />,
+      title: "Minimum data by design",
+      body: "We only ask for the fields needed to move a request forward. No extra profiling, no behaviour tracking, and no third-party advertising SDKs anywhere in the product.",
+    },
+  ];
+
+  const stats = [
+    { value: "1.1B", label: "prescription items issued each year in England (NHSBSA)" },
+    { value: "~77%", label: "of prescription items are repeats (NHS England)" },
+    { value: "£300M", label: "estimated medicines waste each year (NHS England)" },
+    { value: "Multi-party", label: "workflow across patient, practice, and pharmacy" },
   ];
 
   return (
     <>
       <style>{CSS}</style>
-      <SuccessModal open={modalOpen} onClose={() => setModalOpen(false)} referralCode={referralCode}/>
+
+      <SuccessModal open={modalOpen} onClose={() => setModalOpen(false)} referralCode={referralCode} />
+
       <div className={`${dmSans.variable} ${instrumentSerif.variable} wrap`}>
         <nav className="nav">
           <div className="container navR">
             <Link href="/" className="navBr">
-              <div className="navLo"><Image src="/omela-logo-mark.png" alt="Omela" width={34} height={34} style={{width:"100%",height:"100%",objectFit:"contain"}}/></div>
+              <div className="navLo">
+                <Image
+                  src="/omela-logo-mark.png"
+                  alt="Omela"
+                  width={34}
+                  height={34}
+                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                />
+              </div>
               <span className="navNm serif">Omela</span>
             </Link>
+
             <div className="navLks">
               <a href="#product" className="navLk">Product</a>
               <a href="#industries" className="navLk">Industries</a>
               <a href="#pricing" className="navLk">Pricing</a>
               <a href="#faq" className="navLk">FAQ</a>
             </div>
+
             <div className="navRight">
               <Link href="/login" className="navSignIn">Sign in</Link>
-              <a href="mailto:hello@omela.ai?subject=Omela%20pilot%20conversation" className="btnP navCt">Book a demo<ArrowRight size={13}/></a>
+              <a href={demoHref} className="btnP navCt">
+                Book a demo
+                <ArrowRight size={13} />
+              </a>
             </div>
           </div>
         </nav>
@@ -393,25 +1357,78 @@ export default function Page() {
         <section className="heroSec">
           <div className="container heroGrid">
             <div className="heroTxt">
-              <FI delay={0.1}><h1 className="serif heroTi">The coordination platform for recurring requests.</h1></FI>
-              <FI delay={0.16}><p className="heroSub">Every team has a recurring request that rots between inboxes. Omela is the shared layer that keeps those requests visible across the people who own them, from first draft through final handoff.</p></FI>
-              <FI delay={0.22}>
+              <FI delay={0.08}>
+                <h1 className="serif heroTi">Never lose track of recurring requests again.</h1>
+              </FI>
+
+              <FI delay={0.14}>
+                <p className="heroSub">
+                  Omela keeps ownership, status, and next steps visible across the people involved,
+                  from prescriptions to compliance to filings.
+                </p>
+              </FI>
+
+              <FI delay={0.18}>
+                <p className="heroSub heroSubTight">
+                  No more chasing updates across calls, emails, and memory.
+                </p>
+              </FI>
+
+              <FI delay={0.24}>
                 <div className="heroBt">
-                  <a href="mailto:hello@omela.ai?subject=Omela%20pilot%20conversation" className="btnP heroBtP">Book a demo<ArrowRight size={14}/></a>
-                  <a href="#waitlist" className="btnS heroBtS">Join early access</a>
+                  <Link href={trialHref} className="btnP heroBtP">
+                    Start free trial
+                    <ArrowRight size={14} />
+                  </Link>
+                  <a href={demoHref} className="btnS heroBtS">Book a demo</a>
                 </div>
               </FI>
+
+              <FI delay={0.3}>
+                <p className="heroMini">
+                  Starting with repeat prescriptions, then expanding across the same coordination pattern.
+                </p>
+              </FI>
             </div>
-            <FI delay={0.18} className="heroBoardCol"><LauraWorkspace/></FI>
+
+            <FI delay={0.16} className="heroBoardCol">
+              <LauraWorkspace />
+            </FI>
           </div>
         </section>
 
         <section className="infraStrip">
-          <div className="container"><FI><div className="infraHd">Built on infrastructure trusted by secure teams worldwide</div></FI></div>
+          <div className="container">
+            <FI>
+              <div className="infraHd">Built on infrastructure trusted by secure teams worldwide</div>
+            </FI>
+          </div>
+
           <div className="infraMarquee" aria-hidden="true">
             <div className="infraTrack">
-              {[{src:"/logos/vercel.svg",alt:"Vercel"},{src:"/logos/stripe.svg",alt:"Stripe"},{src:"/logos/twilio.svg",alt:"Twilio"},{src:"/logos/microsoft-logo.png",alt:"Microsoft"},{src:"/logos/google-logo.png",alt:"Google"},{src:"/logos/aws-logo.png",alt:"AWS"},{src:"/logos/vercel.svg",alt:"Vercel"},{src:"/logos/stripe.svg",alt:"Stripe"},{src:"/logos/twilio.svg",alt:"Twilio"},{src:"/logos/microsoft-logo.png",alt:"Microsoft"},{src:"/logos/google-logo.png",alt:"Google"},{src:"/logos/aws-logo.png",alt:"AWS"}].map((l, i) => (
-                <div key={`${l.alt}-${i}`} className="infraLogo"><Image src={l.src} alt={l.alt} width={140} height={40} style={{width:"auto",height:"28px",objectFit:"contain"}}/></div>
+              {[
+                { src: "/logos/vercel.svg", alt: "Vercel" },
+                { src: "/logos/stripe.svg", alt: "Stripe" },
+                { src: "/logos/twilio.svg", alt: "Twilio" },
+                { src: "/logos/microsoft-logo.png", alt: "Microsoft" },
+                { src: "/logos/google-logo.png", alt: "Google" },
+                { src: "/logos/aws-logo.png", alt: "AWS" },
+                { src: "/logos/vercel.svg", alt: "Vercel" },
+                { src: "/logos/stripe.svg", alt: "Stripe" },
+                { src: "/logos/twilio.svg", alt: "Twilio" },
+                { src: "/logos/microsoft-logo.png", alt: "Microsoft" },
+                { src: "/logos/google-logo.png", alt: "Google" },
+                { src: "/logos/aws-logo.png", alt: "AWS" },
+              ].map((l, i) => (
+                <div key={`${l.alt}-${i}`} className="infraLogo">
+                  <Image
+                    src={l.src}
+                    alt={l.alt}
+                    width={140}
+                    height={40}
+                    style={{ width: "auto", height: "28px", objectFit: "contain" }}
+                  />
+                </div>
               ))}
             </div>
           </div>
@@ -424,10 +1441,34 @@ export default function Page() {
                 <Overline>How Omela works</Overline>
                 <h2 className="serif processTi">Three steps from due soon to resolved.</h2>
               </div>
+
               <div className="processGrid">
-                <div className="processCard"><div className="processNum">01</div><h3 className="processStepTi">Omela spots what is due</h3><p className="processStepBd">Supply, timing, and repeat cycles are tracked in one place, so nothing drifts into a last-minute scramble.</p></div>
-                <div className="processCard"><div className="processNum">02</div><h3 className="processStepTi">A request is prepared</h3><p className="processStepBd">Drafts are ready for review with clear context on who it is for, what is needed, and who owns the next step.</p></div>
-                <div className="processCard"><div className="processNum">03</div><h3 className="processStepTi">Status stays visible</h3><p className="processStepBd">From sent, to approved, to ready for completion, everyone with access sees the same truth at the same time.</p></div>
+                <div className="processCard">
+                  <div className="processNum">01</div>
+                  <h3 className="processStepTi">Omela spots what is due</h3>
+                  <p className="processStepBd">
+                    Supply, timing, and repeat cycles are tracked in one place, so nothing drifts
+                    into a last-minute scramble.
+                  </p>
+                </div>
+
+                <div className="processCard">
+                  <div className="processNum">02</div>
+                  <h3 className="processStepTi">A request is prepared</h3>
+                  <p className="processStepBd">
+                    Drafts are ready for review with clear context on who it is for, what is needed,
+                    and who owns the next step.
+                  </p>
+                </div>
+
+                <div className="processCard">
+                  <div className="processNum">03</div>
+                  <h3 className="processStepTi">Status stays visible</h3>
+                  <p className="processStepBd">
+                    From sent, to approved, to ready for completion, everyone with access sees the
+                    same truth at the same time.
+                  </p>
+                </div>
               </div>
             </FI>
           </div>
@@ -435,61 +1476,238 @@ export default function Page() {
 
         <section id="product" className="sec">
           <div className="container">
-            <FI><div className="shW"><Overline>Product</Overline><h2 className="serif shT">One workflow from due soon to done.</h2><p className="shB">Omela is the coordination layer around recurring requests. Not a pharmacy, not a law firm, not a contractor. Just the shared workspace that keeps everyone on the same page.</p></div></FI>
+            <FI>
+              <div className="shW">
+                <Overline>Product</Overline>
+                <h2 className="serif shT">One place to track what is due, delayed, and done.</h2>
+                <p className="shB">
+                  Omela is the shared workspace for recurring requests. It keeps ownership, status,
+                  and next steps visible without turning into the system of record.
+                </p>
+              </div>
+            </FI>
+
             <div className="featGrid">
-              {features.map((f, i) => (<FI key={f.title} delay={i * 0.06}><div className="featCard"><div className={`featIc featIc--${f.tone}`}>{f.icon}</div><h3 className="featTi">{f.title}</h3><p className="featBd">{f.body}</p></div></FI>))}
+              {features.map((f, i) => (
+                <FI key={f.title} delay={i * 0.06}>
+                  <div className="featCard">
+                    <div className={`featIc featIc--${f.tone}`}>{f.icon}</div>
+                    <h3 className="featTi">{f.title}</h3>
+                    <p className="featBd">{f.body}</p>
+                  </div>
+                </FI>
+              ))}
             </div>
           </div>
         </section>
 
         <section id="industries" className="sec secTinted">
           <div className="container">
-            <FI><div className="shW"><Overline tone="warm">Built on a pattern, not a niche</Overline><h2 className="serif shT">One coordination layer. Many recurring requests.</h2><p className="shB">Omela starts with repeat prescriptions because the cost of a missed handoff is highest there. The same shape applies anywhere a recurring request crosses households, professionals, and fulfillers.</p></div></FI>
+            <FI>
+              <div className="shW">
+                <Overline tone="warm" className="ovPlain">Healthcare, property, legal</Overline>
+                <h2 className="serif shT">One coordination system. Used across different workflows.</h2>
+                <p className="shB">
+                  Omela starts with repeat prescriptions because missed handoffs are costly and constant
+                  there. The same coordination shape applies anywhere a recurring request crosses
+                  households, professionals, and fulfillers.
+                </p>
+              </div>
+            </FI>
+
             <div className="indGrid">
-              {industries.map((ind, i) => (<FI key={ind.title} delay={i * 0.04}><div className={`indCard ${ind.live ? "indCardLive" : "indCardSoon"}`}><div className="indCardTop"><div className="indIc">{ind.icon}</div><span className={`indTag ${ind.live ? "indTagLive" : "indTagSoon"}`}>{ind.live ? <><span className="indTagDot"/>Live</> : "Coming soon"}</span></div><h3 className="indTi">{ind.title}</h3><p className="indBd">{ind.body}</p><div className="indPlayers">{ind.players}</div></div></FI>))}
+              {industries.map((ind, i) => (
+                <FI key={ind.title} delay={i * 0.04}>
+                  <div className={`indCard ${ind.live ? "indCardLive" : "indCardSoon"}`}>
+                    <div className="indCardTop">
+                      <div className="indIc">{ind.icon}</div>
+                      <span className={`indTag ${ind.live ? "indTagLive" : "indTagSoon"}`}>
+                        {ind.live ? (
+                          <>
+                            <span className="indTagDot" />
+                            Live
+                          </>
+                        ) : (
+                          "Coming soon"
+                        )}
+                      </span>
+                    </div>
+
+                    <h3 className="indTi">{ind.title}</h3>
+                    <p className="indBd">{ind.body}</p>
+                    <div className="indPlayers">{ind.players}</div>
+                  </div>
+                </FI>
+              ))}
             </div>
+          </div>
+        </section>
+
+        <section className="painBand">
+          <div className="container">
+            <FI>
+              <div className="painWrap">
+                <Overline tone="warm">Why this matters</Overline>
+                <h2 className="serif painTi">Things fall through the cracks.</h2>
+                <p className="painBd">
+                  Requests get delayed. Ownership gets unclear. Updates are scattered across calls,
+                  emails, and memory. Someone always ends up chasing everything.
+                </p>
+                <p className="painStrong">Omela removes the chasing with one shared system.</p>
+              </div>
+            </FI>
           </div>
         </section>
 
         <section id="results" className="statBand">
           <div className="container">
-            <FI><div className="statHd"><Overline tone="warm">The market we&apos;re in</Overline><h2 className="serif statTi">Starting with the largest unfixed admin workflow in healthcare.</h2><p className="statSub">England sees around 1.1 billion prescription items a year, and about 77% are repeat prescriptions. Medicines waste has been estimated at around £300 million annually. The repeat prescription workflow often spans multiple people across patient, practice, and pharmacy. The same coordination shape applies to any recurring request.</p></div></FI>
+            <FI>
+              <div className="statHd">
+                <Overline tone="warm">The market we&apos;re entering through</Overline>
+                <h2 className="serif statTi">Starting with one of the largest unfixed admin workflows in healthcare.</h2>
+                <p className="statSub">
+                  England sees around 1.1 billion prescription items a year, and about 77% are repeat
+                  prescriptions. Medicines waste has been estimated at around £300 million annually.
+                  The repeat prescription workflow often spans multiple people across patient, practice,
+                  and pharmacy. The same coordination shape appears across other recurring workflows too.
+                </p>
+              </div>
+            </FI>
+
             <div className="statGrid">
-              {stats.map((s, i) => (<FI key={s.label} delay={i * 0.06}><div className="statCard"><div className="statVal serif">{s.value}</div><div className="statLbl">{s.label}</div></div></FI>))}
+              {stats.map((s, i) => (
+                <FI key={s.label} delay={i * 0.06}>
+                  <div className="statCard">
+                    <div className="statVal serif">{s.value}</div>
+                    <div className="statLbl">{s.label}</div>
+                  </div>
+                </FI>
+              ))}
             </div>
           </div>
         </section>
 
         <section className="tstSec">
           <div className="container">
-            <FI><div className="shW"><Overline>What teams say</Overline><h2 className="serif shT">Teams using Omela, in their own words.</h2></div></FI>
-            <FI delay={0.1}><Testimonials/></FI>
+            <FI>
+              <div className="shW">
+                <Overline>What teams say</Overline>
+                <h2 className="serif shT">Teams using Omela, in their own words.</h2>
+              </div>
+            </FI>
+
+            <FI delay={0.08}>
+              <Testimonials />
+            </FI>
           </div>
         </section>
 
         <section id="pricing" className="sec">
           <div className="container">
-            <FI><div className="shW"><Overline tone="warm">Simple pricing</Overline><h2 className="serif shT">Pay for the people you coordinate, not the seats.</h2><p className="shB">Transparent monthly pricing. No hidden setup fees. Cancel any time during early access.</p></div></FI>
+            <FI>
+              <div className="shW">
+                <Overline tone="warm">Simple pricing</Overline>
+                <h2 className="serif shT">Pay for the people you coordinate, not the seats.</h2>
+                <p className="shB">
+                  Built for individuals and teams managing ongoing work. Transparent monthly pricing.
+                  No hidden setup fees.
+                </p>
+              </div>
+            </FI>
+
             <div className="prGrid">
-              {pricing.map((p, i) => (<FI key={p.name} delay={i * 0.06}><div className={`prCard ${p.featured ? "prCardFeat" : ""}`}>{p.featured ? <div className="prBadge"><span className="prBadgeDot"/>Most popular</div> : null}<div className="prName">{p.name}</div><div className="prPrice"><span className="prPriceVal serif">{p.price}</span><span className="prPricePer">{p.per}</span></div><p className="prDesc">{p.desc}</p><ul className="prFeats">{p.features.map(f => <li key={f}><Check size={14}/><span>{f}</span></li>)}</ul><a href="#waitlist" className={p.featured ? "btnP prBt" : "btnS prBt"}>{p.cta}{p.featured ? <ArrowRight size={14}/> : null}</a></div></FI>))}
+              {pricing.map((p, i) => {
+                const href =
+                  p.name === "Family"
+                    ? trialHref
+                    : p.name === "Team"
+                    ? "mailto:hello@omela.ai?subject=Omela%20team%20demo"
+                    : "mailto:hello@omela.ai?subject=Omela%20organisation%20sales";
+
+                const isInternal = href.startsWith("/");
+
+                return (
+                  <FI key={p.name} delay={i * 0.06}>
+                    <div className={`prCard ${p.featured ? "prCardFeat" : ""}`}>
+                      {p.featured ? (
+                        <div className="prBadge">
+                          <span className="prBadgeDot" />
+                          Most popular
+                        </div>
+                      ) : null}
+
+                      <div className="prName">{p.name}</div>
+
+                      <div className="prPrice">
+                        <span className="prPriceVal serif">{p.price}</span>
+                        <span className="prPricePer">{p.per}</span>
+                      </div>
+
+                      <p className="prDesc">{p.desc}</p>
+
+                      <ul className="prFeats">
+                        {p.features.map((f) => (
+                          <li key={f}>
+                            <Check size={14} />
+                            <span>{f}</span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      {isInternal ? (
+                        <Link href={href} className={p.featured ? "btnP prBt" : "btnS prBt"}>
+                          {p.cta}
+                          {p.featured ? <ArrowRight size={14} /> : null}
+                        </Link>
+                      ) : (
+                        <a href={href} className={p.featured ? "btnP prBt" : "btnS prBt"}>
+                          {p.cta}
+                          {p.featured ? <ArrowRight size={14} /> : null}
+                        </a>
+                      )}
+                    </div>
+                  </FI>
+                );
+              })}
             </div>
-            <FI delay={0.2}><p className="prFoot">All plans include role-based access and full audit history. Need something different? <a href="mailto:hello@omela.ai">Contact sales.</a></p></FI>
+
+            <FI delay={0.18}>
+              <p className="prFoot">
+                All plans include role-based access and full audit history. Need something different?{" "}
+                <a href="mailto:hello@omela.ai">Contact sales.</a>
+              </p>
+            </FI>
           </div>
         </section>
 
         <section id="trust" className="sec">
           <div className="container">
-            <FI><div className="shW"><Overline>Trust and boundaries</Overline><h2 className="serif shT">We take the thin slice. You keep the rest.</h2><p className="shB">Omela is a coordination layer, not a system of record. We handle ownership, status, and next actions. Your clinical records, legal documents, and operational data stay exactly where they are.</p></div></FI>
-            <div className="trustGrid">
-              {trustCards.map((t, i) => (<FI key={t.title} delay={i * 0.05}><div className="trustCard"><div className="trustCardTop"><div className="trustNo">{String(i+1).padStart(2,"0")}</div><div className="trustIc">{t.icon}</div></div><h4 className="trustTi">{t.title}</h4><p className="trustBd">{t.body}</p></div></FI>))}
-            </div>
-          </div>
-        </section>
+            <FI>
+              <div className="shW">
+                <Overline>Trust and boundaries</Overline>
+                <h2 className="serif shT">We take the thin slice. You keep the rest.</h2>
+                <p className="shB">
+                  Omela is a coordination layer, not a system of record. We handle ownership, status,
+                  and next actions. Your clinical records, legal documents, and operational data stay
+                  exactly where they are.
+                </p>
+              </div>
+            </FI>
 
-        <section id="faq" className="sec">
-          <div className="container">
-            <FI><div className="shW"><Overline>Questions</Overline><h2 className="serif shT">Answers to what most people ask.</h2><p className="shB">If your question isn&apos;t here, send a note to <a href="mailto:hello@omela.ai" className="pvLk">hello@omela.ai</a> and a real person will reply.</p></div></FI>
-            <FI delay={0.1}><div className="faqWrap"><Faq items={faq}/></div></FI>
+            <div className="trustGrid">
+              {trustCards.map((t, i) => (
+                <FI key={t.title} delay={i * 0.05}>
+                  <div className="trustCard">
+                    <div className="trustCardTop">
+                      <div className="trustNo">{String(i + 1).padStart(2, "0")}</div>
+                      <div className="trustIc">{t.icon}</div>
+                    </div>
+                    <h4 className="trustTi">{t.title}</h4>
+                    <p className="trustBd">{t.body}</p>
+                  </div>
+                </FI>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -498,20 +1716,103 @@ export default function Page() {
             <FI>
               <div className="wlC">
                 <Overline>Early access</Overline>
-                <h2 className="serif wlTi">Join the first Omela pilots.</h2>
-                <p className="wlSub">We&apos;re running early-access pilots across healthcare, property compliance, and recurring legal work. Tell us a bit about your workflow.</p>
+                <h2 className="serif wlTi">Need guided onboarding?</h2>
+                <p className="wlSub">
+                  If your workflow is more complex, tell us a bit about it and we&apos;ll help you get
+                  set up faster across healthcare, property, or legal work.
+                </p>
+
                 <form className="wlF" onSubmit={handleSubmit}>
-                  <input className="inp" type="email" placeholder="Your email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email"/>
-                  <select className="inp" value={role} onChange={e => setRole(e.target.value as Role)}>
-                    <optgroup label="Healthcare (live)"><option value="carer">I manage for a family member</option><option value="household">I manage across my household</option><option value="care_team">I work in a care team</option><option value="pharmacy">I work in a pharmacy</option></optgroup>
-                    <optgroup label="Other (coming soon)"><option value="vet">Veterinary practice</option><option value="legal">Legal or compliance work</option><option value="property">Property management</option><option value="other">Something else</option></optgroup>
+                  <input
+                    className="inp"
+                    type="email"
+                    placeholder="Your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                  />
+
+                  <select className="inp" value={role} onChange={(e) => setRole(e.target.value as Role)}>
+                    <optgroup label="Healthcare (live)">
+                      <option value="carer">I manage for a family member</option>
+                      <option value="household">I manage across my household</option>
+                      <option value="care_team">I work in a care team</option>
+                      <option value="pharmacy">I work in a pharmacy</option>
+                    </optgroup>
+                    <optgroup label="Other (coming soon)">
+                      <option value="vet">Veterinary practice</option>
+                      <option value="legal">Legal or compliance work</option>
+                      <option value="property">Property management</option>
+                      <option value="other">Something else</option>
+                    </optgroup>
                   </select>
-                  <input type="text" name="website" value={website} onChange={e => setWebsite(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" style={{position:"absolute",left:"-9999px",opacity:0,pointerEvents:"none",height:0,width:0}}/>
-                  <button type="submit" className="btnP wlBt" disabled={submitting || !agreed}>{submitting ? "Submitting..." : "Join early access"}</button>
+
+                  <input
+                    type="text"
+                    name="website"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                    style={{
+                      position: "absolute",
+                      left: "-9999px",
+                      opacity: 0,
+                      pointerEvents: "none",
+                      height: 0,
+                      width: 0,
+                    }}
+                  />
+
+                  <button
+                    type="submit"
+                    className="btnP wlBt"
+                    disabled={!mounted || submitting || !agreed}
+                  >
+                    {submitting ? "Submitting..." : "Request onboarding help"}
+                  </button>
                 </form>
-                <label className="pvL"><input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} required className="pvC"/><span>I agree to the <Link href="/privacy" className="pvLk">Privacy Notice</Link> and <Link href="/terms" className="pvLk">Terms</Link>.</span></label>
+
+                <label className="pvL">
+                  <input
+                    type="checkbox"
+                    checked={agreed}
+                    onChange={(e) => setAgreed(e.target.checked)}
+                    required
+                    className="pvC"
+                  />
+                  <span>
+                    I agree to the{" "}
+                    <Link href="/privacy" className="pvLk">Privacy Notice</Link> and{" "}
+                    <Link href="/terms" className="pvLk">Terms</Link>.
+                  </span>
+                </label>
+
                 {success ? <div className="fmOk">{success}</div> : null}
                 {error ? <div className="fmEr">{error}</div> : null}
+              </div>
+            </FI>
+          </div>
+        </section>
+
+        <section id="faq" className="sec">
+          <div className="container">
+            <FI>
+              <div className="shW">
+                <Overline>Questions</Overline>
+                <h2 className="serif shT">Answers to what most people ask.</h2>
+                <p className="shB">
+                  If your question isn&apos;t here, send a note to{" "}
+                  <a href="mailto:hello@omela.ai" className="pvLk">hello@omela.ai</a> and a real person will reply.
+                </p>
+              </div>
+            </FI>
+
+            <FI delay={0.08}>
+              <div className="faqWrap">
+                <Faq items={faq} />
               </div>
             </FI>
           </div>
@@ -521,17 +1822,59 @@ export default function Page() {
           <div className="container ftIn">
             <div className="ftTop">
               <div className="ftBrand">
-                <Link href="/" className="ftBr"><div className="navLo ftLoW"><Image src="/omela-logo-mark.png" alt="Omela" width={24} height={24} style={{width:"100%",height:"100%",objectFit:"contain"}}/></div><span className="ftBrN serif">Omela</span></Link>
-                <p className="ftBrDesc">The coordination layer for recurring requests. Built for the people carrying the follow-through.</p>
+                <Link href="/" className="ftBr">
+                  <div className="navLo ftLoW">
+                    <Image
+                      src="/omela-logo-mark.png"
+                      alt="Omela"
+                      width={24}
+                      height={24}
+                      style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                    />
+                  </div>
+                  <span className="ftBrN serif">Omela</span>
+                </Link>
+
+                <p className="ftBrDesc">
+                  The coordination layer for recurring requests. Built for the people carrying the follow-through.
+                </p>
               </div>
+
               <div className="ftCols">
-                <div className="ftCol"><div className="ftColT">Product</div><a href="#product" className="ftLk">How it works</a><a href="#industries" className="ftLk">Industries</a><a href="#pricing" className="ftLk">Pricing</a><a href="#waitlist" className="ftLk">Early access</a></div>
-                <div className="ftCol"><div className="ftColT">Company</div><span className="ftLk ftLkStatic">Omela Ltd.</span><a href="mailto:hello@omela.ai" className="ftLk">Contact</a><a href="mailto:hello@omela.ai?subject=Omela%20pilot%20conversation" className="ftLk">Book a demo</a></div>
-                <div className="ftCol"><div className="ftColT">Legal</div><Link href="/privacy" className="ftLk">Privacy</Link><Link href="/terms" className="ftLk">Terms</Link><a href="mailto:notice@omela.ai" className="ftLk">Notices</a></div>
+                <div className="ftCol">
+                  <div className="ftColT">Product</div>
+                  <a href="#product" className="ftLk">How it works</a>
+                  <a href="#industries" className="ftLk">Industries</a>
+                  <a href="#pricing" className="ftLk">Pricing</a>
+                  <Link href={trialHref} className="ftLk">Start free trial</Link>
+                </div>
+
+                <div className="ftCol">
+                  <div className="ftColT">Company</div>
+                  <span className="ftLk ftLkStatic">Omela Ltd.</span>
+                  <a href="mailto:hello@omela.ai" className="ftLk">Contact</a>
+                  <a href={demoHref} className="ftLk">Book a demo</a>
+                </div>
+
+                <div className="ftCol">
+                  <div className="ftColT">Legal</div>
+                  <Link href="/privacy" className="ftLk">Privacy</Link>
+                  <Link href="/terms" className="ftLk">Terms</Link>
+                  <a href="mailto:notice@omela.ai" className="ftLk">Notices</a>
+                </div>
               </div>
             </div>
-            <div className="ftDsc">Omela is a coordination layer for recurring admin, ownership, and next-step guidance. It is not a system of record and does not provide clinical, legal, or safety-critical decisions. In a healthcare emergency, contact local emergency services.</div>
-            <div className="ftBtm"><p>&copy; 2026 Omela Ltd.</p><p className="ftBtmRt">Built for teams, everywhere.</p></div>
+
+            <div className="ftDsc">
+              Omela is a coordination layer for recurring admin, ownership, and next-step guidance.
+              It is not a system of record and does not provide clinical, legal, or safety-critical decisions.
+              In a healthcare emergency, contact local emergency services.
+            </div>
+
+            <div className="ftBtm">
+              <p>&copy; 2026 Omela Ltd.</p>
+              <p className="ftBtmRt">Built for individuals and teams.</p>
+            </div>
           </div>
         </footer>
       </div>
@@ -552,19 +1895,71 @@ button,input,select{font-family:inherit}
 .container{max-width:1200px;margin:0 auto;padding:0 20px}
 .sec{padding:72px 0}
 .secTinted{background:linear-gradient(180deg,#F5F1EA,${c.bg})}
-.overline{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${c.muted};line-height:1}
+
+.overline{
+  display:inline-block;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:${c.muted};
+  line-height:1;
+}
 .overline--warm{color:${c.warm}}
 .overline--blue{color:${c.accent}}
 .overline--green{color:${c.greenDk}}
-.btnP{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:${c.dark};color:#fff;border:none;border-radius:999px;padding:15px 26px;font-size:15px;font-weight:700;cursor:pointer;transition:all .25s;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.08)}
+.ovPlain{border:none!important;padding:0!important;margin:0 0 10px 0!important}
+
+.btnP{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  background:${c.dark};
+  color:#fff;
+  border:none;
+  border-radius:999px;
+  padding:15px 26px;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all .25s;
+  white-space:nowrap;
+  box-shadow:0 3px 10px rgba(0,0,0,.08)
+}
 .btnP:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,.13)}
 .btnP:disabled{opacity:.5;cursor:not-allowed}
-.btnS{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:#fff;color:${c.text};border:1.5px solid ${c.border};border-radius:999px;padding:15px 26px;font-size:15px;font-weight:700;cursor:pointer;transition:all .25s;white-space:nowrap}
+.btnS{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  background:#fff;
+  color:${c.text};
+  border:1.5px solid ${c.border};
+  border-radius:999px;
+  padding:15px 26px;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all .25s;
+  white-space:nowrap
+}
 .btnS:hover{border-color:${c.text}}
+
 .shW{text-align:center;max-width:760px;margin:0 auto 40px}
 .shT{font-size:clamp(32px,5vw,54px);line-height:1.05;letter-spacing:-.045em;margin-top:14px}
-.shB{font-size:17px;line-height:1.65;margin-top:16px;max-width:640px;margin-left:auto;margin-right:auto;color:${c.sub}}
-.nav{position:sticky;top:0;z-index:100;background:rgba(248,246,241,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(227,221,210,.5)}
+.shB{font-size:17px;line-height:1.65;margin-top:16px;max-width:680px;margin-left:auto;margin-right:auto;color:${c.sub}}
+
+.nav{
+  position:sticky;
+  top:0;
+  z-index:100;
+  background:rgba(248,246,241,.92);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(227,221,210,.5)
+}
 .navR{display:flex;align-items:center;justify-content:space-between;gap:8px;height:68px}
 .navBr{display:flex;align-items:center;gap:10px;flex-shrink:0}
 .navLo{width:34px;height:34px;border-radius:9px;overflow:hidden;flex-shrink:0}
@@ -576,20 +1971,51 @@ button,input,select{font-family:inherit}
 .navSignIn{display:inline-flex;font-size:14px;font-weight:700;color:${c.sub};transition:color .2s}
 .navSignIn:hover{color:${c.text}}
 .navCt{padding:11px 18px!important;font-size:13px!important}
+
 .heroSec{padding:56px 0 64px;position:relative;overflow:hidden}
-.heroGrid{display:grid;grid-template-columns:1fr;gap:40px;align-items:center;position:relative}
+.heroGrid{display:grid;grid-template-columns:1fr;gap:34px;align-items:center;position:relative}
 .heroTxt{max-width:640px;margin:0 auto;text-align:center}
-.heroTi{margin-top:22px;font-size:clamp(40px,7.5vw,72px);line-height:1;letter-spacing:-.04em;color:#3A2817}
-.heroSub{margin-top:22px;font-size:clamp(16px,2vw,19px);line-height:1.6;color:${c.sub};max-width:600px;margin-left:auto;margin-right:auto}
-.heroBt{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:28px}
+.heroTi{font-size:clamp(40px,7.5vw,72px);line-height:1;letter-spacing:-.04em;color:#3A2817}
+.heroSub{margin-top:18px;font-size:clamp(16px,2vw,19px);line-height:1.6;color:${c.sub};max-width:620px;margin-left:auto;margin-right:auto}
+.heroSubTight{margin-top:10px;font-size:15px;line-height:1.55;color:${c.text};font-weight:700;max-width:560px}
+.heroBt{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:26px}
 .heroBtP,.heroBtS{min-height:54px;padding:16px 28px;font-size:15.5px}
+.heroMini{margin-top:15px;font-size:13px;line-height:1.6;color:${c.muted};font-weight:600}
 .heroBoardCol{display:flex;justify-content:center;width:100%}
+
 .wsWrap{width:100%;max-width:580px;position:relative}
-.wsGlow{position:absolute;inset:-36px;border-radius:52px;background:radial-gradient(circle,rgba(201,149,107,.08),transparent 68%);z-index:0;pointer-events:none}
-.wsShell{position:relative;z-index:1;background:#fff;border:1px solid rgba(227,221,210,.92);border-radius:24px;padding:18px;box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 24px 50px rgba(14,18,26,.09),0 4px 14px rgba(14,18,26,.04);overflow:hidden}
+.wsGlow{
+  position:absolute;
+  inset:-36px;
+  border-radius:52px;
+  background:radial-gradient(circle,rgba(201,149,107,.08),transparent 68%);
+  z-index:0;
+  pointer-events:none
+}
+.wsShell{
+  position:relative;
+  z-index:1;
+  background:#fff;
+  border:1px solid rgba(227,221,210,.92);
+  border-radius:24px;
+  padding:18px;
+  box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 24px 50px rgba(14,18,26,.09),0 4px 14px rgba(14,18,26,.04);
+  overflow:hidden;
+  min-height:760px
+}
 .wsHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 6px 14px;border-bottom:1px solid rgba(227,221,210,.7)}
 .wsBrand{display:flex;align-items:center;gap:11px}
-.wsMark{width:36px;height:36px;border-radius:11px;background:${c.warmSoft};border:1px solid rgba(201,149,107,.16);display:flex;align-items:center;justify-content:center;padding:5px}
+.wsMark{
+  width:36px;
+  height:36px;
+  border-radius:11px;
+  background:${c.warmSoft};
+  border:1px solid rgba(201,149,107,.16);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:5px
+}
 .wsBrandTx{display:flex;flex-direction:column;line-height:1}
 .wsName{font-size:19px;letter-spacing:-.03em;color:${c.text}}
 .wsBrandSub{display:flex;align-items:center;gap:6px;margin-top:5px;font-size:10.5px;color:${c.muted};font-weight:700}
@@ -597,7 +2023,46 @@ button,input,select{font-family:inherit}
 .wsLiveDot{width:6px;height:6px;border-radius:50%;background:${c.green};box-shadow:0 0 0 2px rgba(34,197,94,.2)}
 .wsBrandSep{color:${c.border}}
 .wsBrandDate{color:${c.sub}}
-.wsStats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.wsDomainChip{display:flex;flex-direction:column;align-items:flex-end;line-height:1}
+.wsDomainChipLbl{font-size:8.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:${c.muted}}
+.wsDomainChipVal{margin-top:4px;font-size:11px;font-weight:800;color:${c.text};letter-spacing:-.01em}
+
+.wsEvalSlot{position:relative;min-height:60px;margin-top:12px}
+.wsEval{position:absolute;left:0;right:0;top:0}
+.wsEvalGhost{height:52px;opacity:0}
+.wsEvalInner{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:11px 14px;
+  background:rgba(255,255,255,.98);
+  border:1px solid rgba(201,149,107,.3);
+  border-radius:14px;
+  box-shadow:0 10px 32px rgba(14,18,26,.12),0 2px 8px rgba(14,18,26,.04);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px)
+}
+.wsEvalIcon{
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  background:#fff;
+  border:1px solid rgba(201,149,107,.28);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:${c.warm};
+  flex-shrink:0
+}
+.wsEvalText{flex:1;min-width:0;line-height:1.2}
+.wsEvalLbl{font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:${c.warmDk}}
+.wsEvalTask{margin-top:3px;font-size:12px;font-weight:700;color:${c.text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wsEvalBar{width:64px;height:4px;background:rgba(201,149,107,.15);border-radius:999px;overflow:hidden;flex-shrink:0}
+.wsEvalBarFill{height:100%;background:linear-gradient(90deg,${c.warm},${c.warmDk});border-radius:999px}
+
+.wsStage{min-height:620px}
+.wsStageInner{min-height:620px}
+.wsStats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
 .wsStat{padding:12px 14px;border-radius:14px;border:1px solid ${c.borderSoft}}
 .wsStat--warm{background:linear-gradient(180deg,#FFF8F0,#FDF3E6);border-color:rgba(201,149,107,.22)}
 .wsStat--red{background:linear-gradient(180deg,#FEF6F6,#FCECEC);border-color:rgba(239,68,68,.2)}
@@ -607,13 +2072,36 @@ button,input,select{font-family:inherit}
 .wsStat--red .wsStatVal{color:${c.redDk}}
 .wsStat--green .wsStatVal{color:${c.greenDk}}
 .wsStatLbl{margin-top:5px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:${c.muted}}
+
 .wsBody{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
 .wsList{background:${c.cream};border:1px solid ${c.borderSoft};border-radius:18px;padding:8px}
 .wsListHd{display:flex;justify-content:space-between;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.11em;color:${c.muted};padding:8px 10px 10px}
-.wsRow{display:flex;align-items:flex-start;gap:11px;width:100%;padding:11px;border:none;background:transparent;border-radius:12px;cursor:pointer;text-align:left;transition:background .25s,box-shadow .25s}
+.wsRow{
+  display:flex;
+  align-items:flex-start;
+  gap:11px;
+  width:100%;
+  padding:11px;
+  border:none;
+  background:transparent;
+  border-radius:12px;
+  cursor:pointer;
+  text-align:left;
+  transition:background .25s,box-shadow .25s
+}
 .wsRow+.wsRow{margin-top:3px}
 .wsRowA{background:#fff;box-shadow:0 4px 14px rgba(14,18,26,.05),0 0 0 1px rgba(201,149,107,.1);position:relative}
-.wsRowA::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;background:linear-gradient(180deg,${c.warm},${c.warmDk});opacity:.7}
+.wsRowA::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:10px;
+  bottom:10px;
+  width:3px;
+  border-radius:0 3px 3px 0;
+  background:linear-gradient(180deg,${c.warm},${c.warmDk});
+  opacity:.7
+}
 .wsAv{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;letter-spacing:.03em}
 .wsAv--warm{background:linear-gradient(135deg,#F7E7D2,#F0D5B6);color:${c.warmDk}}
 .wsAv--blue{background:linear-gradient(135deg,#E3EDFB,#C9DBF6);color:#1E40AF}
@@ -632,7 +2120,16 @@ button,input,select{font-family:inherit}
 .wsRowSt--blue .wsRowStDot{background:${c.accent}}
 .wsRowSt--green{color:${c.greenDk}}
 .wsRowSt--green .wsRowStDot{background:${c.green}}
-.wsDetail{background:${c.cream};border:1px solid ${c.borderSoft};border-radius:18px;padding:18px;min-height:380px;position:relative}
+.wsRowSupply{margin-top:7px;display:flex;align-items:center;gap:8px}
+.wsRowSupplyTrack{flex:1;height:3px;background:rgba(17,18,20,.06);border-radius:999px;overflow:hidden;min-width:60px}
+.wsRowSupplyFill{height:100%;border-radius:999px;transition:width .4s ease}
+.wsRowSupplyFill--warm{background:linear-gradient(90deg,${c.red},${c.warm})}
+.wsRowSupplyFill--blue{background:linear-gradient(90deg,${c.warm},${c.accent})}
+.wsRowSupplyFill--green{background:${c.green}}
+.wsRowSupplyLbl{font-size:9.5px;font-weight:700;color:${c.muted};letter-spacing:.02em;font-variant-numeric:tabular-nums;flex-shrink:0}
+
+.wsDetail{background:${c.cream};border:1px solid ${c.borderSoft};border-radius:18px;padding:18px;min-height:400px;position:relative}
+.wsDetailPane{min-height:364px}
 .wsDtHd{display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid rgba(227,221,210,.7)}
 .wsDtHdTx{flex:1;min-width:0}
 .wsDtNm{font-size:14.5px;font-weight:800;letter-spacing:-.02em;color:${c.text}}
@@ -665,34 +2162,55 @@ button,input,select{font-family:inherit}
 .wsDtNextLbl{font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:${c.muted}}
 .wsDtNextClock{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:700;color:${c.warmDk};letter-spacing:.04em;text-transform:uppercase}
 .wsDtNextTx{font-size:12.5px;line-height:1.55;color:${c.text};font-weight:600}
-.wsEval{position:absolute;top:72px;left:50%;transform:translateX(-50%);z-index:20;width:calc(100% - 48px);max-width:420px;pointer-events:none}
-.wsEvalInner{display:flex;align-items:center;gap:11px;padding:11px 14px;background:rgba(255,255,255,.98);border:1px solid rgba(201,149,107,.3);border-radius:14px;box-shadow:0 10px 32px rgba(14,18,26,.12),0 2px 8px rgba(14,18,26,.04);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-.wsEvalIcon{width:26px;height:26px;border-radius:50%;background:#fff;border:1px solid rgba(201,149,107,.28);display:flex;align-items:center;justify-content:center;color:${c.warm};flex-shrink:0}
-.wsEvalText{flex:1;min-width:0;line-height:1.2}
-.wsEvalLbl{font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:${c.warmDk}}
-.wsEvalTask{margin-top:3px;font-size:12px;font-weight:700;color:${c.text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.wsEvalBar{width:64px;height:4px;background:rgba(201,149,107,.15);border-radius:999px;overflow:hidden;flex-shrink:0}
-.wsEvalBarFill{height:100%;background:linear-gradient(90deg,${c.warm},${c.warmDk});border-radius:999px}
-.wsRowSupply{margin-top:7px;display:flex;align-items:center;gap:8px}
-.wsRowSupplyTrack{flex:1;height:3px;background:rgba(17,18,20,.06);border-radius:999px;overflow:hidden;min-width:60px}
-.wsRowSupplyFill{height:100%;border-radius:999px;transition:width .4s ease}
-.wsRowSupplyFill--warm{background:linear-gradient(90deg,${c.red},${c.warm})}
-.wsRowSupplyFill--blue{background:linear-gradient(90deg,${c.warm},${c.accent})}
-.wsRowSupplyFill--green{background:${c.green}}
-.wsRowSupplyLbl{font-size:9.5px;font-weight:700;color:${c.muted};letter-spacing:.02em;font-variant-numeric:tabular-nums;flex-shrink:0}
-.wsFeedItemFresh .wsFeedWho{position:relative}
-.wsFeedItemFresh .wsFeedWho::before{content:"";position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:5px;height:5px;border-radius:50%;background:${c.accent};box-shadow:0 0 0 3px rgba(37,99,235,.18);animation:wsPulse 1.6s ease-in-out infinite}
-.wsFeedWhenFresh{color:${c.accent}!important;font-weight:800!important;text-transform:uppercase;letter-spacing:.04em;font-size:9.5px!important}
-@keyframes wsPulse{0%,100%{opacity:.5;transform:translateY(-50%) scale(.9)}50%{opacity:1;transform:translateY(-50%) scale(1.15)}}
+
 .wsFeed{margin-top:12px;padding:13px 15px;background:${c.cream};border:1px solid ${c.borderSoft};border-radius:18px;position:relative}
 .wsDomainTabs{display:flex;gap:4px;margin-bottom:11px;padding:3px;background:rgba(17,18,20,.04);border-radius:10px}
-.wsDomainTab{flex:1;padding:7px 10px;background:none;border:none;border-radius:7px;font-size:10.5px;font-weight:700;color:${c.muted};cursor:pointer;transition:all .25s;letter-spacing:-.005em;font-family:inherit}
+.wsDomainTab{
+  flex:1;
+  padding:7px 10px;
+  background:none;
+  border:none;
+  border-radius:7px;
+  font-size:10.5px;
+  font-weight:700;
+  color:${c.muted};
+  cursor:pointer;
+  transition:all .25s;
+  letter-spacing:-.005em;
+  font-family:inherit
+}
 .wsDomainTab:hover{color:${c.text}}
 .wsDomainTabA{background:#fff;color:${c.text};box-shadow:0 1px 3px rgba(0,0,0,.06)}
-.wsDomainChip{display:flex;flex-direction:column;align-items:flex-end;line-height:1}
-.wsDomainChipLbl{font-size:8.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:${c.muted}}
-.wsDomainChipVal{margin-top:4px;font-size:11px;font-weight:800;color:${c.text};letter-spacing:-.01em}
-.prBadgeDot{width:6px;height:6px;border-radius:50%;background:${c.warm};box-shadow:0 0 0 3px rgba(201,149,107,.3)}
+.wsFeedHd{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:${c.muted};margin-bottom:9px}
+.wsFeedList{display:flex;flex-direction:column;gap:7px;min-height:74px}
+.wsFeedItem{display:flex;align-items:center;gap:8px;font-size:11px;line-height:1.4;color:${c.sub}}
+.wsFeedDot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.wsFeedDot--warm{background:${c.warm}}
+.wsFeedDot--blue{background:${c.accent}}
+.wsFeedDot--green{background:${c.green}}
+.wsFeedWho{font-weight:800;color:${c.text};flex-shrink:0;position:relative}
+.wsFeedWhat{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wsFeedWhen{flex-shrink:0;color:${c.muted};font-weight:600;font-variant-numeric:tabular-nums}
+.wsFeedItemFresh .wsFeedWho::before{
+  content:"";
+  position:absolute;
+  left:-10px;
+  top:50%;
+  transform:translateY(-50%);
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:${c.accent};
+  box-shadow:0 0 0 3px rgba(37,99,235,.18);
+  animation:wsPulse 1.6s ease-in-out infinite
+}
+.wsFeedWhenFresh{color:${c.accent}!important;font-weight:800!important;text-transform:uppercase;letter-spacing:.04em;font-size:9.5px!important}
+
+@keyframes wsPulse{
+  0%,100%{opacity:.5;transform:translateY(-50%) scale(.9)}
+  50%{opacity:1;transform:translateY(-50%) scale(1.15)}
+}
+
 .infraStrip{padding:40px 0;background:rgba(255,255,255,.5);border-bottom:1px solid rgba(227,221,210,.4);overflow:hidden}
 .infraHd{text-align:center;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${c.muted};margin-bottom:26px}
 .infraMarquee{position:relative;width:100%;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
@@ -701,16 +2219,7 @@ button,input,select{font-family:inherit}
 .infraLogo{display:flex;align-items:center;justify-content:center;height:32px;min-width:110px;flex-shrink:0;opacity:.5;filter:grayscale(100%);transition:opacity .25s,filter .25s}
 .infraLogo:hover{opacity:.9;filter:grayscale(0%)}
 @keyframes infraSlide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.wsFeedHd{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:${c.muted};margin-bottom:9px}
-.wsFeedList{display:flex;flex-direction:column;gap:7px}
-.wsFeedItem{display:flex;align-items:center;gap:8px;font-size:11px;line-height:1.4;color:${c.sub}}
-.wsFeedDot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.wsFeedDot--warm{background:${c.warm}}
-.wsFeedDot--blue{background:${c.accent}}
-.wsFeedDot--green{background:${c.green}}
-.wsFeedWho{font-weight:800;color:${c.text};flex-shrink:0}
-.wsFeedWhat{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.wsFeedWhen{flex-shrink:0;color:${c.muted};font-weight:600;font-variant-numeric:tabular-nums}
+
 .processStrip{padding:72px 0;border-top:1px solid rgba(227,221,210,.55);border-bottom:1px solid rgba(227,221,210,.55);background:rgba(255,255,255,.45)}
 .processHd{text-align:center;max-width:680px;margin:0 auto 44px}
 .processTi{margin-top:14px;font-size:clamp(28px,4.4vw,44px);line-height:1.08;letter-spacing:-.04em;color:${c.text}}
@@ -720,6 +2229,7 @@ button,input,select{font-family:inherit}
 .processNum{font-family:var(--font-instrument-serif),Georgia,serif;font-size:46px;line-height:1;color:${c.warm};letter-spacing:-.03em;margin-bottom:16px}
 .processStepTi{font-size:19px;font-weight:800;letter-spacing:-.02em;color:${c.text}}
 .processStepBd{margin-top:10px;font-size:14.5px;line-height:1.68;color:${c.sub}}
+
 .featGrid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:20px}
 .featCard{padding:28px;border-radius:22px;background:#fff;border:1px solid ${c.border};box-shadow:0 2px 14px rgba(0,0,0,.02);transition:transform .3s,box-shadow .3s}
 .featCard:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.06)}
@@ -729,6 +2239,7 @@ button,input,select{font-family:inherit}
 .featIc--green{background:${c.greenSoft};color:${c.greenDk}}
 .featTi{font-size:19px;font-weight:800;letter-spacing:-.02em;color:${c.text}}
 .featBd{margin-top:8px;font-size:15px;line-height:1.68;color:${c.sub}}
+
 .indGrid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:20px}
 .indCard{padding:24px;border-radius:20px;background:#fff;border:1px solid ${c.border};position:relative;transition:all .3s;display:flex;flex-direction:column}
 .indCardLive:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.06);border-color:rgba(201,149,107,.4)}
@@ -746,22 +2257,31 @@ button,input,select{font-family:inherit}
 .indTi{font-size:18px;font-weight:800;letter-spacing:-.02em;color:${c.text}}
 .indBd{margin-top:8px;font-size:14px;line-height:1.65;color:${c.sub};flex:1}
 .indPlayers{margin-top:14px;padding-top:12px;border-top:1px solid ${c.borderSoft};font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:${c.muted}}
+
+.painBand{padding:78px 0;background:linear-gradient(180deg,#FFF8F0,${c.bg});border-top:1px solid rgba(227,221,210,.45);border-bottom:1px solid rgba(227,221,210,.45)}
+.painWrap{text-align:center;max-width:760px;margin:0 auto}
+.painTi{margin-top:14px;font-size:clamp(30px,4.8vw,48px);line-height:1.06;letter-spacing:-.045em;color:${c.text}}
+.painBd{margin-top:16px;font-size:17px;line-height:1.7;color:${c.sub};max-width:700px;margin-left:auto;margin-right:auto}
+.painStrong{margin-top:16px;font-size:16px;line-height:1.6;color:${c.text};font-weight:700}
+
 .prGrid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:24px;max-width:1080px;margin-left:auto;margin-right:auto}
 .prCard{padding:32px 28px;border-radius:24px;background:#fff;border:1px solid ${c.border};position:relative;display:flex;flex-direction:column;transition:transform .3s,box-shadow .3s}
 .prCard:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.06)}
 .prCardFeat{border:1.5px solid ${c.warm};box-shadow:0 14px 40px rgba(201,149,107,.18);background:linear-gradient(180deg,#fff,#FFFCF8)}
 .prBadge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:${c.dark};color:#fff;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.prBadgeDot{width:6px;height:6px;border-radius:50%;background:${c.warm};box-shadow:0 0 0 3px rgba(201,149,107,.3)}
 .prName{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:${c.warmDk}}
 .prPrice{display:flex;align-items:baseline;gap:8px;margin-top:14px}
 .prPriceVal{font-size:52px;line-height:1;letter-spacing:-.04em;color:${c.text}}
 .prPricePer{font-size:13px;color:${c.muted};font-weight:600}
-.prDesc{margin-top:14px;font-size:14px;line-height:1.6;color:${c.sub};min-height:42px}
+.prDesc{margin-top:14px;font-size:14px;line-height:1.6;color:${c.sub};min-height:58px}
 .prFeats{list-style:none;margin:22px 0;padding:0;display:flex;flex-direction:column;gap:10px;flex:1}
 .prFeats li{display:flex;align-items:flex-start;gap:9px;font-size:13.5px;color:${c.text};line-height:1.5}
 .prFeats li svg{color:${c.greenDk};flex-shrink:0;margin-top:3px}
 .prBt{width:100%;justify-content:center}
 .prFoot{margin-top:30px;text-align:center;font-size:13px;color:${c.muted};line-height:1.65}
 .prFoot a{color:${c.text};font-weight:700;text-decoration:underline;text-underline-offset:2px}
+
 .statBand{background:${c.navy};padding:80px 0;color:#fff}
 .statHd{text-align:center;max-width:720px;margin:0 auto 44px}
 .statHd .overline{color:${c.warm}}
@@ -771,6 +2291,7 @@ button,input,select{font-family:inherit}
 .statCard{padding:32px 24px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);text-align:left}
 .statVal{font-size:clamp(48px,7vw,76px);line-height:1;letter-spacing:-.035em;color:#fff}
 .statLbl{margin-top:14px;font-size:14px;line-height:1.55;color:rgba(255,255,255,.7);font-weight:500}
+
 .tstSec{padding:96px 0;background:linear-gradient(180deg,${c.bg},#F5F1EA);border-top:1px solid rgba(227,221,210,.5);border-bottom:1px solid rgba(227,221,210,.5)}
 .tstWrap{max-width:780px;margin:0 auto;text-align:center;padding:0 12px;position:relative;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .tstIc{width:44px;height:44px;border-radius:14px;background:${c.warmSoft};color:${c.warm};display:flex;align-items:center;justify-content:center;border:1px solid rgba(201,149,107,.2);margin:0 auto 24px}
@@ -784,6 +2305,7 @@ button,input,select{font-family:inherit}
 .tstDot{width:6px;height:6px;border-radius:50%;background:rgba(42,31,20,.18);border:none;cursor:pointer;padding:0;transition:all .3s}
 .tstDot:hover{background:rgba(42,31,20,.35)}
 .tstDotA{background:${c.warmDk};width:22px;border-radius:999px}
+
 .trustGrid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:20px}
 .trustCard{padding:24px;border-radius:20px;background:#fff;border:1px solid ${c.border};transition:transform .25s,box-shadow .25s,border-color .25s}
 .trustCard:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.05);border-color:rgba(201,149,107,.35)}
@@ -792,6 +2314,7 @@ button,input,select{font-family:inherit}
 .trustIc{width:36px;height:36px;border-radius:11px;background:${c.warmSoft};color:${c.warmDk};display:flex;align-items:center;justify-content:center;border:1px solid rgba(201,149,107,.2)}
 .trustTi{font-size:17px;font-weight:800;letter-spacing:-.02em;color:${c.text}}
 .trustBd{margin-top:8px;font-size:14px;line-height:1.68;color:${c.sub}}
+
 .faqWrap{max-width:780px;margin:24px auto 0}
 .faqList{display:flex;flex-direction:column;gap:10px}
 .faqItem{background:#fff;border:1px solid ${c.border};border-radius:18px;overflow:hidden;transition:border-color .25s,box-shadow .25s}
@@ -803,9 +2326,10 @@ button,input,select{font-family:inherit}
 .faqItemOpen .faqQIc{transform:rotate(180deg)}
 .faqA{overflow:hidden}
 .faqAInner{padding:0 24px 22px;font-size:14.5px;line-height:1.72;color:${c.sub}}
+
 .wlC{background:#fff;border:1px solid ${c.border};border-radius:28px;padding:40px 32px;max-width:760px;margin:0 auto;box-shadow:0 4px 24px rgba(0,0,0,.04);text-align:center}
 .wlTi{font-size:clamp(28px,4.5vw,44px);letter-spacing:-.045em;margin-top:14px}
-.wlSub{margin-top:14px;font-size:16px;line-height:1.68;color:${c.sub};max-width:540px;margin-left:auto;margin-right:auto}
+.wlSub{margin-top:14px;font-size:16px;line-height:1.68;color:${c.sub};max-width:560px;margin-left:auto;margin-right:auto}
 .wlF{display:grid;grid-template-columns:1fr;gap:10px;margin-top:26px;position:relative}
 .wlBt{height:52px;width:100%;font-size:15px}
 .inp{width:100%;height:52px;border-radius:12px;border:1.5px solid ${c.border};background:#fff;padding:0 16px;font-size:15px;color:${c.text};outline:none;transition:all .2s}
@@ -815,6 +2339,7 @@ button,input,select{font-family:inherit}
 .pvLk{color:${c.text};font-weight:700;text-decoration:underline;text-underline-offset:2px}
 .fmOk{margin-top:14px;background:${c.greenSoft};color:${c.greenDk};border-radius:12px;padding:13px;font-size:13.5px;font-weight:600}
 .fmEr{margin-top:14px;background:${c.redSoft};color:${c.redDk};border-radius:12px;padding:13px;font-size:13.5px;font-weight:600}
+
 .modO{position:fixed;inset:0;z-index:220;background:rgba(9,10,13,.55);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;padding:14px}
 .modB{width:100%;max-width:420px;background:#fff;border:1px solid ${c.border};border-radius:24px;padding:30px;box-shadow:0 20px 50px rgba(0,0,0,.18);text-align:center}
 .modSeal{width:54px;height:54px;border-radius:999px;background:linear-gradient(135deg,#FFF8F0,#ECFDF3);border:1px solid rgba(34,197,94,.14);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:${c.greenDk}}
@@ -828,6 +2353,7 @@ button,input,select{font-family:inherit}
 .modRefBts{display:flex;gap:6px;margin-top:10px}
 .modShareBtn{flex:1;padding:9px 12px!important;font-size:12.5px!important}
 .modClose{margin-top:14px;background:none;border:none;color:${c.muted};font-size:12px;font-weight:600;cursor:pointer}
+
 .ft{background:${c.dark};padding:60px 0 28px;color:#fff}
 .ftTop{display:grid;grid-template-columns:1fr;gap:32px;padding-bottom:32px;border-bottom:1px solid rgba(255,255,255,.08)}
 .ftBrand{max-width:340px}
@@ -843,30 +2369,62 @@ button,input,select{font-family:inherit}
 .ftLkStatic{cursor:default}
 .ftDsc{margin-top:24px;padding:16px 0;font-size:11.5px;color:rgba(255,255,255,.35);line-height:1.7;text-align:center;max-width:680px;margin-left:auto;margin-right:auto}
 .ftBtm{border-top:1px solid rgba(255,255,255,.06);padding-top:18px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:11px;color:rgba(255,255,255,.35)}
+
 @media(max-width:639px){
   .sec{padding:56px 0}
-  .heroSec{padding:36px 0 44px}
-  .heroTi{font-size:clamp(30px,9vw,48px)}
-  .heroBt{flex-wrap:nowrap;gap:8px;justify-content:center}
-  .heroBtP,.heroBtS{flex:1;min-width:0;min-height:50px;padding:14px 14px;font-size:13.5px}
-  .heroBtP{gap:5px}
-  .navR{gap:6px;height:60px}
+  .container{padding:0 16px}
+  .navR{gap:8px;height:62px}
   .navNm{font-size:18px}
   .navLo{width:30px;height:30px}
   .navRight{gap:10px}
-  .navCt{padding:9px 14px!important;font-size:12px!important}
+  .navCt{padding:10px 14px!important;font-size:12px!important}
   .navSignIn{font-size:13px}
+  .heroSec{padding:34px 0 44px}
+  .heroTi{font-size:clamp(30px,9vw,48px)}
+  .heroSub{font-size:16px;line-height:1.65}
+  .heroSubTight{font-size:14px}
+  .heroBt{flex-wrap:nowrap;gap:8px;justify-content:center}
+  .heroBtP,.heroBtS{flex:1;min-width:0;min-height:50px;padding:14px 12px;font-size:13.5px}
+  .heroMini{font-size:12px}
+  .wsShell{min-height:unset;padding:14px}
+  .wsHead{padding:4px 4px 12px}
+  .wsEvalSlot{min-height:54px}
+  .wsStage,.wsStageInner{min-height:unset}
+  .wsStats{gap:6px}
+  .wsStat{padding:10px 10px}
+  .wsStatVal{font-size:22px}
+  .wsStatLbl{font-size:9px}
+  .wsBody{gap:10px}
+  .wsDetail{min-height:340px;padding:15px}
+  .wsDetailPane{min-height:308px}
+  .wsDtHd{gap:10px}
+  .wsDtRx{display:none}
+  .wsDtMetaLbl{width:58px}
+  .wsDtMetaRow{font-size:11px}
+  .wsDtMetaVal{white-space:normal}
+  .wsDtNextTx{font-size:12px}
+  .wsRowSupplyTrack{min-width:44px}
   .processStrip{padding:48px 0}
   .statBand{padding:60px 0}
   .statGrid{grid-template-columns:1fr;gap:12px}
   .statCard{padding:26px 22px}
   .tstSec{padding:64px 0}
-  .wlC{padding:30px 22px}
-  .wsDetail{min-height:340px}
-  .wsEval{display:none}
-  .wsRowSupply{margin-top:6px}
-  .wsRowSupplyTrack{min-width:50px}
+  .wlC{padding:28px 20px}
+  .ftCols{grid-template-columns:1fr 1fr;gap:22px}
 }
+
+@media(max-width:420px){
+  .navR{height:60px}
+  .navBr{gap:8px}
+  .navCt{padding:10px 12px!important}
+  .navRight{gap:8px}
+  .heroBtP,.heroBtS{font-size:13px;padding:14px 12px}
+  .wsBrand{gap:9px}
+  .wsDomainChipVal{font-size:10px}
+  .wsDomainTabs{gap:3px}
+  .wsDomainTab{padding:7px 6px;font-size:9.5px}
+}
+
 @media(min-width:640px){
   .container{padding:0 28px}
   .navR{height:72px}
@@ -882,18 +2440,22 @@ button,input,select{font-family:inherit}
   .ftTop{grid-template-columns:1.1fr 2fr;gap:48px}
   .wsBody{grid-template-columns:.92fr 1.08fr}
 }
+
 @media(min-width:960px){
   .container{padding:0 36px}
   .sec{padding:96px 0}
   .heroSec{padding:64px 0 80px}
   .heroGrid{grid-template-columns:minmax(0,1fr) minmax(540px,580px);gap:48px;align-items:center}
   .heroTxt{max-width:620px;margin:0;text-align:left}
-  .heroSub{margin-left:0;margin-right:0}
+  .heroSub,.heroSubTight,.heroMini{margin-left:0;margin-right:0}
   .heroBt{justify-content:flex-start}
   .heroBoardCol{justify-content:flex-end}
   .indGrid{grid-template-columns:repeat(4,1fr)}
   .trustGrid{grid-template-columns:repeat(4,1fr)}
   .statBand{padding:104px 0}
 }
-@media(min-width:1180px){.heroTi{font-size:clamp(56px,5.6vw,78px)}}
+
+@media(min-width:1180px){
+  .heroTi{font-size:clamp(56px,5.6vw,78px)}
+}
 `;
