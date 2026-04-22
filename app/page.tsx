@@ -1,35 +1,21 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { AnimatePresence, motion, useInView } from "framer-motion";
 import { DM_Sans, Instrument_Serif } from "next/font/google";
 import {
-  Activity,
-  ArrowRight,
-  Bell,
-  Building2,
   Check,
-  CheckCircle2,
   ChevronDown,
-  Clock,
   Copy,
   Database,
   Eye,
-  GraduationCap,
   History,
   Home,
-  Package,
-  PawPrint,
   Quote,
   RefreshCw,
-  Scale,
-  Share2,
   Shield,
   Stethoscope,
   Users,
-  Wrench,
 } from "lucide-react";
 
 const dmSans = DM_Sans({
@@ -44,404 +30,138 @@ const instrumentSerif = Instrument_Serif({
   variable: "--font-instrument-serif",
 });
 
-const c = {
-  bg: "#F8F6F1",
-  cream: "#FAF7F2",
-  dark: "#0A0E1A",
-  navy: "#0F1829",
-  text: "#111214",
-  sub: "#4A4F5C",
-  muted: "#888E9C",
-  accent: "#2563EB",
-  accentSoft: "#ECF2FF",
-  border: "#E3DDD2",
-  borderSoft: "#EDE8DF",
-  green: "#22C55E",
-  greenSoft: "#ECFDF3",
-  greenDk: "#15803D",
-  warm: "#C9956B",
-  warmDk: "#A07545",
-  warmSoft: "#FFF8F0",
-  red: "#EF4444",
-  redSoft: "#FEF2F2",
-  redDk: "#B91C1C",
+type Role = "carer" | "household" | "care_team" | "pharmacy" | "other";
+
+type TimelineItem = {
+  done: boolean;
+  text: string;
+  meta: string;
 };
 
-type Role =
-  | "carer"
-  | "household"
-  | "care_team"
-  | "pharmacy"
-  | "vet"
-  | "legal"
-  | "property"
-  | "other";
-
-type Person = {
+type Resident = {
   initials: string;
+  tone: "w" | "b" | "g";
   name: string;
-  sub: string;
+  shortName: string;
+  age: string;
   med: string;
-  dose: string;
-  tone: "warm" | "blue" | "green";
-  owner: string;
-  ownerRole: string;
+  medShort: string;
+  rx: string;
   status: string;
+  statusChip: "fo" | "se" | "re" | "du";
+  statusValueClass: "" | "bad" | "ok";
+  owner: string;
   practice: string;
   pharmacy: string;
-  rxId: string;
-  supply: number;
-  supplyMax: number;
-  timeline: { state: "done" | "active"; label: string; meta: string }[];
+  evalTask: string;
   next: string;
+  daysLeft: number;
+  supplyPercent: number;
+  timeline: TimelineItem[];
 };
 
-type Domain = {
-  id: string;
-  label: string;
-  headerLabel: string;
-  statsLabels: [string, string, string];
-  rxLbl: string;
-  practiceLbl: string;
-  pharmacyLbl: string;
-  listLbl: string;
-  people: Person[];
-  activity: {
-    who: string;
-    what: string;
-    when: string;
-    tone: "warm" | "blue" | "green";
-    fresh: boolean;
-  }[];
-  evalTasks: string[];
-};
-
-const WORKSPACE_DOMAINS: Domain[] = [
+const RESIDENTS: Resident[] = [
   {
-    id: "health",
-    label: "Healthcare",
-    headerLabel: "Care team",
-    statsLabels: ["Due soon", "Delayed", "Ready"],
-    rxLbl: "Rx",
-    practiceLbl: "Practice",
-    pharmacyLbl: "Pharmacy",
-    listLbl: "Residents",
-    people: [
-      {
-        initials: "ML",
-        name: "Margaret Littlewood",
-        sub: "Age 78",
-        med: "Amlodipine",
-        dose: "5mg, once daily",
-        tone: "warm",
-        owner: "Ada Kelly",
-        ownerRole: "daughter",
-        status: "Needs follow-up",
-        practice: "Greenfield Medical",
-        pharmacy: "Boots, High Street",
-        rxId: "RX-20814",
-        supply: 2,
-        supplyMax: 30,
-        timeline: [
-          { state: "done", label: "Draft prepared", meta: "Mon 09:14" },
-          { state: "done", label: "Sent to practice", meta: "Tue 11:32" },
-          { state: "done", label: "Practice acknowledged", meta: "Tue 16:05" },
-          { state: "active", label: "Awaiting response", meta: "3 days" },
-        ],
-        next: "Ada to call the practice before 4pm today.",
-      },
-      {
-        initials: "DR",
-        name: "David Reyes",
-        sub: "Age 64",
-        med: "Metformin",
-        dose: "500mg, twice daily",
-        tone: "blue",
-        owner: "Dr. Reyes",
-        ownerRole: "prescriber",
-        status: "Request sent",
-        practice: "Northgate Surgery",
-        pharmacy: "Well, Market Square",
-        rxId: "RX-20819",
-        supply: 6,
-        supplyMax: 30,
-        timeline: [
-          { state: "done", label: "Draft prepared", meta: "Tue 08:02" },
-          { state: "done", label: "Approved by Jamie", meta: "Tue 09:41" },
-          { state: "done", label: "Sent to pharmacy", meta: "Wed 10:15" },
-          { state: "active", label: "Awaiting confirmation", meta: "today" },
-        ],
-        next: "No action needed. Omela will alert on any change.",
-      },
-      {
-        initials: "IK",
-        name: "Irene Kowalski",
-        sub: "Age 81",
-        med: "Sertraline",
-        dose: "50mg, once daily",
-        tone: "green",
-        owner: "Jamie Marsh",
-        ownerRole: "support worker",
-        status: "Ready to collect",
-        practice: "Hillside Practice",
-        pharmacy: "Boots, High Street",
-        rxId: "RX-20806",
-        supply: 14,
-        supplyMax: 30,
-        timeline: [
-          { state: "done", label: "Draft prepared", meta: "Fri 14:20" },
-          { state: "done", label: "Sent to practice", meta: "Mon 09:03" },
-          { state: "done", label: "Dispensed", meta: "today 11:20" },
-          { state: "done", label: "Ready at pharmacy", meta: "today 12:44" },
-        ],
-        next: "Collection window open until 6pm.",
-      },
-    ],
-    activity: [
-      {
-        who: "Dr. Reyes",
-        what: "drafted Metformin refill for David",
-        when: "just now",
-        tone: "blue",
-        fresh: true,
-      },
-      {
-        who: "Ada Kelly",
-        what: "approved amlodipine request",
-        when: "14m",
-        tone: "warm",
-        fresh: false,
-      },
-      {
-        who: "Jamie M.",
-        what: "marked Sertraline ready at Boots",
-        when: "42m",
-        tone: "green",
-        fresh: false,
-      },
-    ],
-    evalTasks: [
-      "Checking Margaret's amlodipine supply",
-      "Drafting Metformin refill for David",
-      "Confirming Sertraline collection at Boots",
+    initials: "ML",
+    tone: "w",
+    name: "Margaret Littlewood",
+    shortName: "Margaret L.",
+    age: "78",
+    med: "Amlodipine 5mg, once daily",
+    medShort: "Amlodipine 5mg",
+    rx: "RX-20814",
+    status: "Needs follow-up",
+    statusChip: "fo",
+    statusValueClass: "bad",
+    owner: "Ada Kelly · daughter",
+    practice: "Greenfield Medical",
+    pharmacy: "Boots, High Street",
+    evalTask: "Checking Margaret's amlodipine supply",
+    next: "Ada to call the practice before 4pm today.",
+    daysLeft: 2,
+    supplyPercent: 7,
+    timeline: [
+      { done: true, text: "Draft prepared", meta: "Mon 09:14" },
+      { done: true, text: "Sent to practice", meta: "Tue 11:32" },
+      { done: true, text: "Practice acknowledged", meta: "Tue 16:05" },
+      { done: false, text: "Awaiting response", meta: "3 days" },
     ],
   },
   {
-    id: "property",
-    label: "Property compliance",
-    headerLabel: "Portfolio team",
-    statsLabels: ["Expiring", "Overdue", "Certified"],
-    rxLbl: "Cert",
-    practiceLbl: "Contractor",
-    pharmacyLbl: "Issuer",
-    listLbl: "Properties",
-    people: [
-      {
-        initials: "42",
-        name: "42 Kingsmead Road",
-        sub: "HMO, 6 beds",
-        med: "Gas Safety (CP12)",
-        dose: "Annual renewal",
-        tone: "warm",
-        owner: "Ben Ofori",
-        ownerRole: "property manager",
-        status: "Overdue by 4 days",
-        practice: "Arden Gas Services",
-        pharmacy: "Gas Safe Register",
-        rxId: "GS-44218",
-        supply: 0,
-        supplyMax: 30,
-        timeline: [
-          { state: "done", label: "Reminder sent to tenant", meta: "Mon 08:00" },
-          { state: "done", label: "Engineer booked", meta: "Mon 10:22" },
-          { state: "done", label: "Access window confirmed", meta: "Tue 09:15" },
-          { state: "active", label: "Awaiting inspection", meta: "Thu" },
-        ],
-        next: "Engineer arrives Thursday 10am. Tenant notified.",
-      },
-      {
-        initials: "17",
-        name: "17 Linden Court",
-        sub: "Flat, tenanted",
-        med: "EICR (Electrical)",
-        dose: "5-year renewal",
-        tone: "blue",
-        owner: "Maya Chen",
-        ownerRole: "compliance lead",
-        status: "Report awaiting sign-off",
-        practice: "Northline Electrical",
-        pharmacy: "NICEIC",
-        rxId: "EIC-88104",
-        supply: 9,
-        supplyMax: 60,
-        timeline: [
-          { state: "done", label: "Inspection completed", meta: "Mon 14:00" },
-          { state: "done", label: "Report uploaded", meta: "Tue 09:05" },
-          { state: "done", label: "Remedials quoted", meta: "Wed 11:20" },
-          { state: "active", label: "Awaiting landlord sign-off", meta: "today" },
-        ],
-        next: "Maya to chase Mr. Khan for remedial approval.",
-      },
-      {
-        initials: "08",
-        name: "8 Fairfax House",
-        sub: "Block, 24 units",
-        med: "Fire Alarm Service",
-        dose: "6-month service",
-        tone: "green",
-        owner: "Richard Oyelaran",
-        ownerRole: "contractor",
-        status: "Certified",
-        practice: "Safeguard Fire Ltd",
-        pharmacy: "BAFE",
-        rxId: "FA-33901",
-        supply: 26,
-        supplyMax: 30,
-        timeline: [
-          { state: "done", label: "Service scheduled", meta: "last month" },
-          { state: "done", label: "Engineer attended", meta: "Mon 09:30" },
-          { state: "done", label: "All panels tested", meta: "Mon 12:14" },
-          { state: "done", label: "Certificate issued", meta: "today 14:02" },
-        ],
-        next: "Certificate filed. Next service in October.",
-      },
-    ],
-    activity: [
-      {
-        who: "Ben Ofori",
-        what: "booked Gas Safe engineer for 42 Kingsmead",
-        when: "just now",
-        tone: "warm",
-        fresh: true,
-      },
-      {
-        who: "Maya Chen",
-        what: "received EICR report for 17 Linden",
-        when: "22m",
-        tone: "blue",
-        fresh: false,
-      },
-      {
-        who: "Safeguard",
-        what: "issued fire alarm certificate for Fairfax",
-        when: "1h",
-        tone: "green",
-        fresh: false,
-      },
-    ],
-    evalTasks: [
-      "Booking Gas Safe engineer for 42 Kingsmead",
-      "Reviewing EICR remedials for 17 Linden",
-      "Filing fire alarm certificate for Fairfax",
+    initials: "DR",
+    tone: "b",
+    name: "David Reyes",
+    shortName: "David Reyes",
+    age: "64",
+    med: "Metformin 500mg, twice daily",
+    medShort: "Metformin 500mg",
+    rx: "RX-20819",
+    status: "Request sent",
+    statusChip: "se",
+    statusValueClass: "",
+    owner: "Jamie Marsh · support worker",
+    practice: "Northgate Surgery",
+    pharmacy: "Well, Market Square",
+    evalTask: "Drafting Metformin refill for David",
+    next: "No action needed. Omela will alert on any change.",
+    daysLeft: 6,
+    supplyPercent: 20,
+    timeline: [
+      { done: true, text: "Draft prepared", meta: "Tue 08:02" },
+      { done: true, text: "Approved internally", meta: "Tue 09:41" },
+      { done: true, text: "Sent to practice", meta: "Wed 10:15" },
+      { done: false, text: "Awaiting GP response", meta: "today" },
     ],
   },
   {
-    id: "legal",
-    label: "Legal filings",
-    headerLabel: "Paralegal team",
-    statsLabels: ["Due soon", "Delayed", "Filed"],
-    rxLbl: "Ref",
-    practiceLbl: "Registry",
-    pharmacyLbl: "Client",
-    listLbl: "Matters",
-    people: [
-      {
-        initials: "TM",
-        name: "Thornton Mills Ltd",
-        sub: "Annual return",
-        med: "Confirmation Statement",
-        dose: "Due 14 days",
-        tone: "warm",
-        owner: "Priya Shah",
-        ownerRole: "paralegal",
-        status: "Client signature pending",
-        practice: "Companies House",
-        pharmacy: "Thornton Mills Ltd",
-        rxId: "CS-2026-0412",
-        supply: 3,
-        supplyMax: 30,
-        timeline: [
-          { state: "done", label: "Draft prepared", meta: "Mon 10:00" },
-          { state: "done", label: "Sent to client for review", meta: "Tue 09:15" },
-          { state: "done", label: "Reminder sent", meta: "Thu 14:00" },
-          { state: "active", label: "Awaiting signature", meta: "3 days" },
-        ],
-        next: "Call Mr. Thornton before 5pm today.",
-      },
-      {
-        initials: "KE",
-        name: "Kemi Eze",
-        sub: "Skilled Worker visa",
-        med: "Visa renewal",
-        dose: "Extension, 3 years",
-        tone: "blue",
-        owner: "Jonathan Wells",
-        ownerRole: "immigration solicitor",
-        status: "Submitted to UKVI",
-        practice: "UKVI",
-        pharmacy: "Kemi Eze",
-        rxId: "VR-77812",
-        supply: 8,
-        supplyMax: 30,
-        timeline: [
-          { state: "done", label: "Documents collected", meta: "last Fri" },
-          { state: "done", label: "Application drafted", meta: "Mon 11:40" },
-          { state: "done", label: "Submitted to UKVI", meta: "Wed 09:02" },
-          { state: "active", label: "Biometrics booked", meta: "next Tue" },
-        ],
-        next: "No action. UKVI decision expected within 8 weeks.",
-      },
-      {
-        initials: "VL",
-        name: "Vellum Labs",
-        sub: "Trademark",
-        med: "TM Renewal, Class 9",
-        dose: "10-year renewal",
-        tone: "green",
-        owner: "Priya Shah",
-        ownerRole: "paralegal",
-        status: "Filed with IPO",
-        practice: "UK IPO",
-        pharmacy: "Vellum Labs",
-        rxId: "TM-UK00003844102",
-        supply: 28,
-        supplyMax: 30,
-        timeline: [
-          { state: "done", label: "Renewal notice received", meta: "last month" },
-          { state: "done", label: "Client approved", meta: "Mon 14:20" },
-          { state: "done", label: "Fee paid", meta: "Tue 10:05" },
-          { state: "done", label: "Filed with IPO", meta: "today 11:30" },
-        ],
-        next: "Confirmation expected within 5 working days.",
-      },
+    initials: "IK",
+    tone: "g",
+    name: "Irene Kowalski",
+    shortName: "Irene Kowalski",
+    age: "81",
+    med: "Sertraline 50mg, once daily",
+    medShort: "Sertraline 50mg",
+    rx: "RX-20806",
+    status: "Ready to collect",
+    statusChip: "re",
+    statusValueClass: "ok",
+    owner: "James Kowalski · son",
+    practice: "Hillside Practice",
+    pharmacy: "Boots, High Street",
+    evalTask: "Notifying James about collection window",
+    next: "Collection window open until 6pm.",
+    daysLeft: 14,
+    supplyPercent: 47,
+    timeline: [
+      { done: true, text: "Draft prepared", meta: "Fri 14:20" },
+      { done: true, text: "Sent to practice", meta: "Mon 09:03" },
+      { done: true, text: "Dispensed", meta: "today 11:20" },
+      { done: true, text: "Ready at pharmacy", meta: "today 12:44" },
     ],
-    activity: [
-      {
-        who: "Priya Shah",
-        what: "chased Thornton Mills for signature",
-        when: "just now",
-        tone: "warm",
-        fresh: true,
-      },
-      {
-        who: "Jonathan W.",
-        what: "submitted Kemi's visa to UKVI",
-        when: "31m",
-        tone: "blue",
-        fresh: false,
-      },
-      {
-        who: "Priya Shah",
-        what: "filed Vellum Labs TM renewal",
-        when: "2h",
-        tone: "green",
-        fresh: false,
-      },
-    ],
-    evalTasks: [
-      "Chasing Thornton Mills for signature",
-      "Tracking UKVI decision for Kemi Eze",
-      "Confirming IPO receipt for Vellum Labs",
+  },
+  {
+    initials: "SW",
+    tone: "b",
+    name: "Samuel Wright",
+    shortName: "Samuel Wright",
+    age: "72",
+    med: "Apixaban 5mg, twice daily",
+    medShort: "Apixaban 5mg",
+    rx: "RX-20901",
+    status: "Due soon",
+    statusChip: "du",
+    statusValueClass: "bad",
+    owner: "Clara Moss · wife",
+    practice: "Riverbank Surgery",
+    pharmacy: "Lloyds, Station Road",
+    evalTask: "Reviewing Samuel's next refill date",
+    next: "Clara to confirm medication list before noon.",
+    daysLeft: 4,
+    supplyPercent: 13,
+    timeline: [
+      { done: true, text: "Cycle detected", meta: "today 08:10" },
+      { done: true, text: "Reminder sent", meta: "today 08:11" },
+      { done: false, text: "Awaiting request draft", meta: "today" },
     ],
   },
 ];
@@ -450,458 +170,167 @@ const TESTIMONIALS = [
   {
     quote:
       "Omela is the first thing I open on a Monday morning. I can see what needs attention across every resident in one place.",
-    author: "Care team lead",
+    name: "Care team lead",
     domain: "Residential care",
   },
   {
     quote:
-      "We used to miss gas safety deadlines across a 40-property portfolio. Now every cert, every renewal, every remedial sits in one view.",
-    author: "Property manager",
-    domain: "Lettings, Manchester",
-  },
-  {
-    quote:
-      "I stopped chasing clients for signatures over email. They get a reminder, I see the status, and the deadline stops being my problem.",
-    author: "Paralegal",
-    domain: "Corporate filings, London",
-  },
-  {
-    quote:
-      "Three of us manage prescriptions for my mum. Before Omela we were triple-calling the GP. Now we just see who did what.",
-    author: "Family carer",
+      "Three of us manage prescriptions for my mum. Before Omela we were double-calling the GP. Now we just see who did what.",
+    name: "Family carer",
     domain: "Supporting a parent",
   },
   {
     quote:
-      "Every trademark renewal used to need a spreadsheet and two reminders. One dashboard replaced both, and the nudges go out automatically.",
-    author: "IP paralegal",
-    domain: "Trademark firm",
+      "The pharmacy queue makes more sense when we can see the request state before the person even calls us.",
+    name: "Pharmacy manager",
+    domain: "Community pharmacy",
   },
 ];
 
-function FI({
-  children,
-  delay = 0,
-  className = "",
-}: {
-  children: ReactNode;
-  delay?: number;
-  className?: string;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const visible = useInView(ref, { once: true, amount: 0.08 });
+const FAQS = [
+  {
+    q: "Is Omela only for healthcare?",
+    a: "Omela is built first for repeat prescription coordination. The same coordination model may extend to other recurring workflows later, but the live product focus today is healthcare.",
+  },
+  {
+    q: "How is this different from Asana or Trello?",
+    a: "Asana and Trello help teams manage internal tasks. Omela is built for repeat prescription workflows that cross people, organisations, and external systems.",
+  },
+  {
+    q: "Do you need access to clinical records or patient data?",
+    a: "No. Omela is designed as a coordination layer, not a clinical record system. We only handle the state of a request, not its clinical content.",
+  },
+  {
+    q: "Is Omela a medical device?",
+    a: "No. Omela does not diagnose, prescribe, or make medical decisions. It helps track ownership, status, and next steps.",
+  },
+  {
+    q: "What happens when I book a demo?",
+    a: "We walk through your current workflow, show how Omela fits, and decide together whether you are a good pilot match.",
+  },
+  {
+    q: "Are you looking for pilot partners?",
+    a: "Yes. We are working with a small number of early teams who want a simpler way to coordinate repeat prescription workflows.",
+  },
+];
+
+const LOGOS = [
+  "Greenfield Medical",
+  "Northgate Surgery",
+  "Boots Pharmacy",
+  "Hillside Practice",
+  "Riverbank Surgery",
+  "Well Pharmacy",
+  "Lloyds Pharmacy",
+  "Park Lane Clinic",
+];
+
+const c = {
+  bg: "#F8F6F1",
+  bg2: "#F3EFE8",
+  white: "#FFFFFF",
+  ink: "#111214",
+  sub: "#4A4F5C",
+  muted: "#888E9C",
+  border: "#E3DDD2",
+  warm: "#C9956B",
+  warmDk: "#A07545",
+  warmBg: "#FFF8F0",
+  green: "#15803D",
+  greenBg: "#ECFDF3",
+  blue: "#1D4ED8",
+  blueBg: "#EFF6FF",
+  red: "#B91C1C",
+  redBg: "#FEF2F2",
+  dark: "#0F1829",
+};
+
+function LogoMark({ inverted = false }: { inverted?: boolean }) {
+  const stroke = inverted ? "#fff" : c.ink;
 
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 16 }}
-      animate={visible ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
-      className={className}
-    >
-      {children}
-    </motion.div>
+    <svg viewBox="0 0 17 17" fill="none" aria-hidden="true">
+      <circle cx="8.5" cy="8.5" r="4" stroke={stroke} strokeWidth="1.5" />
+      <path
+        d="M8.5 5.5C10 6.5 10.5 7.5 10.5 8.5C10.5 10 9 11 8.5 11.5"
+        stroke={stroke}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }
 
 function Overline({
   children,
-  tone = "default",
-  className = "",
+  warm = false,
 }: {
   children: ReactNode;
-  tone?: "default" | "warm" | "blue" | "green";
-  className?: string;
+  warm?: boolean;
 }) {
-  return <span className={`overline overline--${tone} ${className}`.trim()}>{children}</span>;
+  return <span className={`overline ${warm ? "warm" : ""}`}>{children}</span>;
 }
 
-function Testimonials() {
-  const [idx, setIdx] = useState(0);
-  const [fading, setFading] = useState(false);
+function CountUp({
+  target,
+  suffix = "",
+  decimals = 0,
+  prefix = "",
+}: {
+  target: number;
+  suffix?: string;
+  decimals?: number;
+  prefix?: string;
+}) {
+  const ref = useRef<HTMLSpanElement | null>(null);
+  const [started, setStarted] = useState(false);
+  const [value, setValue] = useState(0);
 
   useEffect(() => {
-    const id = window.setInterval(() => {
-      setFading(true);
-      window.setTimeout(() => {
-        setIdx((i) => (i + 1) % TESTIMONIALS.length);
-        setFading(false);
-      }, 220);
-    }, 5600);
+    const el = ref.current;
+    if (!el || started) return;
 
-    return () => window.clearInterval(id);
-  }, []);
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setStarted(true);
+        obs.disconnect();
+      },
+      { threshold: 0.4 }
+    );
 
-  const pick = (n: number) => {
-    if (n === idx) return;
-    setFading(true);
-    window.setTimeout(() => {
-      setIdx(n);
-      setFading(false);
-    }, 220);
-  };
+    obs.observe(el);
 
-  const cur = TESTIMONIALS[idx];
-
-  return (
-    <div className="tstWrap">
-      <div className="tstIc">
-        <Quote size={22} />
-      </div>
-
-      <div
-        className="tstQuote"
-        style={{
-          opacity: fading ? 0 : 1,
-          transform: fading ? "translateY(-6px)" : "translateY(0)",
-          transition: "opacity .22s ease, transform .22s ease",
-        }}
-      >
-        <p className="tstTx serif">{cur.quote}</p>
-        <div className="tstBy">
-          <span className="tstByName">{cur.author}</span>
-          <span className="tstBySep">·</span>
-          <span className="tstByDomain">{cur.domain}</span>
-        </div>
-      </div>
-
-      <div className="tstDots" role="tablist" aria-label="Testimonials">
-        {TESTIMONIALS.map((_, i) => (
-          <button
-            key={i}
-            type="button"
-            className={`tstDot ${i === idx ? "tstDotA" : ""}`}
-            onClick={() => pick(i)}
-            aria-label={`Testimonial ${i + 1}`}
-            aria-selected={i === idx}
-            role="tab"
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function LauraWorkspace() {
-  const [domainIdx, setDomainIdx] = useState(0);
-  const [active, setActive] = useState(0);
-  const [evaluating, setEvaluating] = useState(false);
-  const [evalTask, setEvalTask] = useState(0);
-
-  const dom = WORKSPACE_DOMAINS[domainIdx];
-  const people = dom.people;
-  const cur = people[active];
+    return () => obs.disconnect();
+  }, [started]);
 
   useEffect(() => {
-    const id = window.setInterval(() => {
-      setDomainIdx((i) => (i + 1) % WORKSPACE_DOMAINS.length);
-    }, 13200);
+    if (!started) return;
 
-    return () => window.clearInterval(id);
-  }, []);
+    let frame = 0;
+    const duration = 1800;
+    const start = performance.now();
 
-  useEffect(() => {
-    setActive(0);
-    setEvalTask(0);
-  }, [domainIdx]);
-
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setActive((p) => (p + 1) % people.length);
-    }, 4400);
-
-    return () => window.clearInterval(id);
-  }, [people.length]);
-
-  useEffect(() => {
-    const taskCount = WORKSPACE_DOMAINS[domainIdx].evalTasks.length;
-    let timeoutId: number | undefined;
-
-    const run = () => {
-      setEvaluating(true);
-      setEvalTask((t) => (t + 1) % taskCount);
-
-      timeoutId = window.setTimeout(() => {
-        setEvaluating(false);
-      }, 2600);
+    const step = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(target * eased);
+      if (progress < 1) frame = requestAnimationFrame(step);
     };
 
-    run();
-    const intervalId = window.setInterval(run, 7200);
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [started, target]);
 
-    return () => {
-      window.clearInterval(intervalId);
-      if (timeoutId) window.clearTimeout(timeoutId);
-    };
-  }, [domainIdx]);
-
-  const stats = [
-    { label: dom.statsLabels[0], value: 5, tone: "warm" as const },
-    { label: dom.statsLabels[1], value: 1, tone: "red" as const },
-    { label: dom.statsLabels[2], value: 2, tone: "green" as const },
-  ];
+  const shown =
+    decimals > 0 ? value.toFixed(decimals) : String(Math.round(value));
 
   return (
-    <div className="wsWrap">
-      <div className="wsGlow" />
-
-      <div className="wsShell">
-        <div className="wsHead">
-          <div className="wsBrand">
-            <div className="wsMark">
-              <Image
-                src="/omela-logo-mark.png"
-                alt=""
-                width={22}
-                height={22}
-                style={{ width: "100%", height: "100%", objectFit: "contain" }}
-              />
-            </div>
-
-            <div className="wsBrandTx">
-              <div className="wsName serif">Omela</div>
-              <div className="wsBrandSub">
-                <span className="wsLive">
-                  <span className="wsLiveDot" />
-                  Live
-                </span>
-                <span className="wsBrandSep">·</span>
-                <span className="wsBrandDate">{dom.label}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="wsDomainChip">
-            <span className="wsDomainChipLbl">Workspace</span>
-            <span className="wsDomainChipVal">{dom.headerLabel}</span>
-          </div>
-        </div>
-
-        <div className="wsEvalSlot" aria-live="polite">
-          <AnimatePresence mode="wait">
-            {evaluating ? (
-              <motion.div
-                key={`${dom.id}-${evalTask}`}
-                className="wsEval"
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <div className="wsEvalInner">
-                  <div className="wsEvalIcon">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1.6, repeat: Infinity, ease: "linear" }}
-                    >
-                      <RefreshCw size={11} />
-                    </motion.div>
-                  </div>
-
-                  <div className="wsEvalText">
-                    <div className="wsEvalLbl">Omela is evaluating</div>
-                    <div className="wsEvalTask">{dom.evalTasks[evalTask]}</div>
-                  </div>
-
-                  <div className="wsEvalBar">
-                    <motion.div
-                      className="wsEvalBarFill"
-                      initial={{ width: "0%" }}
-                      animate={{ width: "100%" }}
-                      transition={{ duration: 2.4, ease: "easeInOut" }}
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            ) : (
-              <div className="wsEvalGhost" />
-            )}
-          </AnimatePresence>
-        </div>
-
-        <div className="wsStage">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={dom.id}
-              className="wsStageInner"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <div className="wsStats">
-                {stats.map((s) => (
-                  <div key={s.label} className={`wsStat wsStat--${s.tone}`}>
-                    <div className="wsStatVal">{s.value}</div>
-                    <div className="wsStatLbl">{s.label}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="wsBody">
-                <div className="wsList">
-                  <div className="wsListHd">
-                    <span>{dom.listLbl}</span>
-                    <span className="wsListCt">{people.length}</span>
-                  </div>
-
-                  {people.map((p, i) => (
-                    <button
-                      key={`${dom.id}-${p.initials}`}
-                      type="button"
-                      onClick={() => setActive(i)}
-                      className={`wsRow ${i === active ? "wsRowA" : ""}`}
-                    >
-                      <div className={`wsAv wsAv--${p.tone}`}>{p.initials}</div>
-
-                      <div className="wsRowTx">
-                        <div className="wsRowNm">
-                          {p.name}
-                          <span className="wsRowAge"> · {p.sub}</span>
-                        </div>
-
-                        <div className="wsRowMd">
-                          {p.med} <span className="wsRowDose">{p.dose}</span>
-                        </div>
-
-                        <div className={`wsRowSt wsRowSt--${p.tone}`}>
-                          <span className="wsRowStDot" />
-                          {p.status}
-                        </div>
-
-                        <div className="wsRowSupply" aria-label={`${p.supply} days left`}>
-                          <div className="wsRowSupplyTrack">
-                            <div
-                              className={`wsRowSupplyFill wsRowSupplyFill--${p.tone}`}
-                              style={{ width: `${Math.min(100, (p.supply / p.supplyMax) * 100)}%` }}
-                            />
-                          </div>
-                          <span className="wsRowSupplyLbl">{p.supply}d left</span>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="wsDetail">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={`${dom.id}-${cur.initials}`}
-                      className="wsDetailPane"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -6 }}
-                      transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
-                    >
-                      <div className="wsDtHd">
-                        <div className={`wsAv wsAvLg wsAv--${cur.tone}`}>{cur.initials}</div>
-
-                        <div className="wsDtHdTx">
-                          <div className="wsDtNm">{cur.name}</div>
-                          <div className="wsDtMd">
-                            {cur.med} {cur.dose}
-                          </div>
-                        </div>
-
-                        <div className="wsDtRx">
-                          <div className="wsDtRxLbl">{dom.rxLbl}</div>
-                          <div className="wsDtRxVal">{cur.rxId}</div>
-                        </div>
-                      </div>
-
-                      <div className="wsDtMeta">
-                        <div className="wsDtMetaRow">
-                          <span className="wsDtMetaLbl">Status</span>
-                          <span className={`wsDtMetaVal wsDtMetaVal--${cur.tone}`}>{cur.status}</span>
-                        </div>
-
-                        <div className="wsDtMetaRow">
-                          <span className="wsDtMetaLbl">Owner</span>
-                          <span className="wsDtMetaVal">
-                            {cur.owner}
-                            <span className="wsDtMetaSub"> · {cur.ownerRole}</span>
-                          </span>
-                        </div>
-
-                        <div className="wsDtMetaRow">
-                          <span className="wsDtMetaLbl">{dom.practiceLbl}</span>
-                          <span className="wsDtMetaVal wsDtMetaValSub">{cur.practice}</span>
-                        </div>
-
-                        <div className="wsDtMetaRow">
-                          <span className="wsDtMetaLbl">{dom.pharmacyLbl}</span>
-                          <span className="wsDtMetaVal wsDtMetaValSub">{cur.pharmacy}</span>
-                        </div>
-                      </div>
-
-                      <div className="wsDtTl">
-                        <div className="wsDtTlHd">Timeline</div>
-
-                        <div className="wsDtTlList">
-                          {cur.timeline.map((s, i) => (
-                            <div key={i} className={`wsTlStep wsTlStep--${s.state}`}>
-                              <div className="wsTlMark">
-                                {s.state === "done" ? <Check size={11} strokeWidth={3} /> : <span className="wsTlPulse" />}
-                              </div>
-                              <span className="wsTlLbl">{s.label}</span>
-                              <span className="wsTlMeta">{s.meta}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="wsDtNext">
-                        <div className="wsDtNextHd">
-                          <span className="wsDtNextLbl">Next action</span>
-                          <span className="wsDtNextClock">
-                            <Clock size={10} />
-                            today
-                          </span>
-                        </div>
-                        <div className="wsDtNextTx">{cur.next}</div>
-                      </div>
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-              </div>
-
-              <div className="wsFeed">
-                <div className="wsDomainTabs" role="tablist" aria-label="Workspace domains">
-                  {WORKSPACE_DOMAINS.map((d, i) => (
-                    <button
-                      key={d.id}
-                      type="button"
-                      className={`wsDomainTab ${i === domainIdx ? "wsDomainTabA" : ""}`}
-                      onClick={() => setDomainIdx(i)}
-                      role="tab"
-                      aria-selected={i === domainIdx}
-                    >
-                      {d.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="wsFeedHd">
-                  <Activity size={11} />
-                  <span>Recent activity</span>
-                </div>
-
-                <div className="wsFeedList">
-                  {dom.activity.map((a, i) => (
-                    <div key={i} className={`wsFeedItem ${a.fresh ? "wsFeedItemFresh" : ""}`}>
-                      <span className={`wsFeedDot wsFeedDot--${a.tone}`} />
-                      <span className="wsFeedWho">{a.who}</span>
-                      <span className="wsFeedWhat">{a.what}</span>
-                      <span className={`wsFeedWhen ${a.fresh ? "wsFeedWhenFresh" : ""}`}>{a.when}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </div>
-    </div>
+    <span ref={ref}>
+      {prefix}
+      {shown}
+      {suffix}
+    </span>
   );
 }
 
@@ -932,114 +361,67 @@ function SuccessModal({
     window.setTimeout(() => setCopied(false), 1800);
   }
 
-  async function shareLink() {
-    if (!shareUrl) return;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: "Omela early access",
-          text: "Join Omela early access",
-          url: shareUrl,
-        });
-      } catch {
-        return;
-      }
-    } else {
-      await copyLink();
-    }
-  }
+  if (!open) return null;
 
   return (
-    <AnimatePresence>
-      {open ? (
-        <motion.div
-          className="modO"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-        >
-          <motion.div
-            className="modB"
-            initial={{ opacity: 0, y: 18, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ type: "spring", damping: 22, stiffness: 300 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modSeal">
-              <CheckCircle2 size={22} />
+    <div className="modO" onClick={onClose}>
+      <div className="modB" onClick={(e) => e.stopPropagation()}>
+        <div className="modSeal">
+          <Check size={22} />
+        </div>
+
+        <h3 className="serif modTi">You are on the list.</h3>
+        <p className="modBd">
+          We will be in touch as Omela opens up with early repeat prescription pilots.
+        </p>
+
+        {referralCode && shareUrl ? (
+          <div className="modRef">
+            <p className="modRefLbl">Share with a family member or team</p>
+
+            <div className="modRefBox">
+              <span className="modRefUrl">
+                {shareUrl.replace("https://", "").replace("http://", "")}
+              </span>
+              <button onClick={copyLink} className="modRefCp" type="button">
+                {copied ? <Check size={13} /> : <Copy size={13} />}
+              </button>
             </div>
+          </div>
+        ) : null}
 
-            <h3 className="serif modTi">You&apos;re on the list.</h3>
-            <p className="modBd">We&apos;ll be in touch as Omela opens up across healthcare, property, and legal pilots.</p>
-
-            {referralCode && shareUrl ? (
-              <div className="modRef">
-                <p className="modRefLbl">Share with a family member or team</p>
-
-                <div className="modRefBox">
-                  <span className="modRefUrl">{shareUrl.replace("https://", "").replace("http://", "")}</span>
-                  <button onClick={copyLink} className="modRefCp" type="button">
-                    {copied ? <Check size={13} /> : <Copy size={13} />}
-                  </button>
-                </div>
-
-                <div className="modRefBts">
-                  <button onClick={shareLink} className="btnP modShareBtn" type="button">
-                    <Share2 size={13} />
-                    Share
-                  </button>
-                </div>
-              </div>
-            ) : null}
-
-            <button type="button" className="modClose" onClick={onClose}>
-              Close
-            </button>
-          </motion.div>
-        </motion.div>
-      ) : null}
-    </AnimatePresence>
+        <button type="button" className="modClose" onClick={onClose}>
+          Close
+        </button>
+      </div>
+    </div>
   );
 }
 
-function Faq({ items }: { items: { q: string; a: string }[] }) {
-  const [open, setOpen] = useState<number | null>(0);
+function FAQAccordion() {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <div className="faqList">
-      {items.map((it, i) => {
-        const isOpen = open === i;
-
+    <div className="faq-wrap">
+      {FAQS.map((item, index) => {
+        const open = openIndex === index;
         return (
-          <div key={i} className={`faqItem ${isOpen ? "faqItemOpen" : ""}`}>
+          <div key={item.q} className={`fq-item ${open ? "open" : ""}`}>
             <button
+              className="fq-btn"
               type="button"
-              className="faqQ"
-              onClick={() => setOpen(isOpen ? null : i)}
-              aria-expanded={isOpen}
+              onClick={() => setOpenIndex(open ? null : index)}
             >
-              <span className="faqQTx">{it.q}</span>
-              <span className="faqQIc">
-                <ChevronDown size={16} />
+              {item.q}
+              <span className="fq-icon">
+                <span>
+                  <ChevronDown size={16} />
+                </span>
               </span>
             </button>
-
-            <AnimatePresence initial={false}>
-              {isOpen ? (
-                <motion.div
-                  className="faqA"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <div className="faqAInner">{it.a}</div>
-                </motion.div>
-              ) : null}
-            </AnimatePresence>
+            <div className="fq-answer">
+              <div className="fq-answer-inner">{item.a}</div>
+            </div>
           </div>
         );
       })}
@@ -1049,6 +431,10 @@ function Faq({ items }: { items: { q: string; a: string }[] }) {
 
 export default function Page() {
   const [mounted, setMounted] = useState(false);
+  const [selectedResident, setSelectedResident] = useState(0);
+  const [testimonialIndex, setTestimonialIndex] = useState(0);
+  const [visibleBubbles, setVisibleBubbles] = useState([false, false, false, false]);
+
   const [role, setRole] = useState<Role>("carer");
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
@@ -1060,8 +446,8 @@ export default function Page() {
   const [referralCode, setReferralCode] = useState("");
   const [refParam, setRefParam] = useState("");
 
-  const trialHref = "/login";
-  const demoHref = "mailto:hello@omela.ai?subject=Omela%20demo";
+  const activeResident = RESIDENTS[selectedResident];
+  const testimonial = TESTIMONIALS[testimonialIndex];
 
   useEffect(() => {
     setMounted(true);
@@ -1073,6 +459,36 @@ export default function Page() {
       const r = p.get("ref");
       if (r) setRefParam(r);
     }
+  }, []);
+
+  useEffect(() => {
+    const timers = [0, 380, 760, 1140].map((delay, index) =>
+      window.setTimeout(() => {
+        setVisibleBubbles((prev) => {
+          const next = [...prev];
+          next[index] = true;
+          return next;
+        });
+      }, delay + 700)
+    );
+
+    return () => timers.forEach((t) => window.clearTimeout(t));
+  }, []);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setSelectedResident((prev) => (prev + 1) % RESIDENTS.length);
+    }, 4200);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setTestimonialIndex((prev) => (prev + 1) % TESTIMONIALS.length);
+    }, 5600);
+
+    return () => window.clearInterval(interval);
   }, []);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -1119,761 +535,1034 @@ export default function Page() {
     }
   }
 
-  const features = [
-    {
-      icon: <Bell size={22} />,
-      title: "See what needs attention",
-      body: "Know what is due soon, what is delayed, and what needs follow-up right now. Works for prescriptions, renewals, certifications, or any recurring request.",
-      tone: "warm" as const,
-    },
-    {
-      icon: <RefreshCw size={22} />,
-      title: "Keep ownership clear",
-      body: "See who handled the request last, who owns the next step, and what should happen next. No more CC chains or ambiguous handoffs.",
-      tone: "blue" as const,
-    },
-    {
-      icon: <Package size={22} />,
-      title: "Follow every update",
-      body: "Track progress from draft, through approval, to completion without losing the thread. One shared timeline for every stakeholder.",
-      tone: "green" as const,
-    },
-  ];
-
-  const industries = [
-    {
-      icon: <Users size={22} />,
-      title: "Family carers",
-      body: "Helping a parent, partner, or relative stay on top of repeat prescriptions without carrying every detail alone.",
-      live: true,
-      players: "Family · GP · Pharmacy",
-    },
-    {
-      icon: <Building2 size={22} />,
-      title: "Residential care",
-      body: "Coordinating repeat-prescription workflows across many residents, practices, and pharmacies in one place.",
-      live: true,
-      players: "Care team · GP · Pharmacy",
-    },
-    {
-      icon: <Home size={22} />,
-      title: "Supported living",
-      body: "Giving staff and families a shared view of medication admin across residents and shift handovers.",
-      live: true,
-      players: "Staff · Family · GP",
-    },
-    {
-      icon: <Stethoscope size={22} />,
-      title: "Community pharmacies",
-      body: "A clearer incoming queue with context on who ordered what, for whom, and the collection window.",
-      live: true,
-      players: "Pharmacy · Patients · GPs",
-    },
-    {
-      icon: <PawPrint size={22} />,
-      title: "Veterinary repeat meds",
-      body: "Pet owners, vets, and pharmacies coordinating chronic care prescriptions on the same cycle pattern.",
-      live: false,
-      players: "Owner · Vet · Pharmacy",
-    },
-    {
-      icon: <Scale size={22} />,
-      title: "Recurring legal filings",
-      body: "Visa renewals, trademark renewals, and annual returns where paralegals chase clients, lawyers, and registries.",
-      live: false,
-      players: "Paralegal · Lawyer · Client",
-    },
-    {
-      icon: <Wrench size={22} />,
-      title: "Compliance and maintenance",
-      body: "Gas safety, EICR, PAT testing, lift servicing. Recurring certifications coordinated across managers, contractors, and tenants.",
-      live: false,
-      players: "Manager · Vendor · Tenant",
-    },
-    {
-      icon: <GraduationCap size={22} />,
-      title: "Childcare medication plans",
-      body: "Nurseries, parents, and GPs keeping allergy plans and recurring medications visible across handovers.",
-      live: false,
-      players: "Nursery · Parent · GP",
-    },
-  ];
-
-  const pricing = [
-    {
-      name: "Family",
-      price: "£9",
-      per: "per month",
-      desc: "For one person managing recurring responsibilities across family, property, or admin.",
-      features: [
-        "Up to 3 people",
-        "Unlimited requests",
-        "Email reminders",
-        "Activity history",
-        "Shared household access",
-        "Due date reminders",
-      ],
-      cta: "Start free trial",
-      featured: false,
-    },
-    {
-      name: "Team",
-      price: "£49",
-      per: "per month",
-      desc: "For care teams, property managers, paralegals, and small operators.",
-      features: [
-        "Up to 25 items",
-        "Shared workspace",
-        "Role permissions",
-        "Email support",
-        "Audit trail",
-        "Assigned ownership",
-      ],
-      cta: "Book a demo",
-      featured: true,
-    },
-    {
-      name: "Organisation",
-      price: "Custom",
-      per: "annual contract",
-      desc: "For multi-site providers and larger teams with compliance needs.",
-      features: [
-        "Unlimited items",
-        "SSO and Microsoft Entra",
-        "Onboarding support",
-        "Data Processing Agreement",
-        "Custom roles",
-        "Priority support",
-      ],
-      cta: "Talk to sales",
-      featured: false,
-    },
-  ];
-
-  const faq = [
-    {
-      q: "Is Omela only for healthcare?",
-      a: "No. Healthcare is our first focus because the cost of a missed handoff is highest there. The underlying pattern, coordinating recurring requests across multiple people, applies to veterinary prescriptions, legal filings, property compliance, equipment maintenance, and more. If you have a recurring workflow that crosses households, professionals, and fulfillers, Omela is built for you.",
-    },
-    {
-      q: "How is this different from a task manager like Asana or Trello?",
-      a: "Task managers assume everyone on the thread is on the same team. Omela is built for the opposite case, where the people doing the work are not all inside one organisation. A family carer, a GP practice, and a pharmacy are three separate systems. Omela is the shared layer between them.",
-    },
-    {
-      q: "Do you need access to clinical records or patient data?",
-      a: "No. Omela stores the metadata of a request, not clinical records. We track who ordered what, when, and what stage it is at. Clinical data stays where it belongs, in the practice's EHR and the pharmacy's PMR.",
-    },
-    {
-      q: "Is this a medical device or regulated software?",
-      a: "Omela is a coordination and admin tool. It does not provide diagnosis, treatment recommendations, or clinical decisions. It is classified as general-purpose workflow software, not a medical device.",
-    },
-    {
-      q: "What happens when I start a free trial?",
-      a: "You can create your workspace, start with your first recurring workflow, and invite household members or teammates from day one. If you need help, we also offer guided onboarding during early access.",
-    },
-    {
-      q: "Where is my data stored?",
-      a: "Omela runs on modern infrastructure aligned with GDPR. For pilot and early-access customers, data is stored in EU or UK regions of our hosting providers. We sign a Data Processing Agreement on request with Organisation-plan customers.",
-    },
-    {
-      q: "Can I use my work Microsoft or Google account to sign in?",
-      a: "Yes. Omela supports Google sign-in for individuals and Microsoft Entra ID for organisations with work accounts. SSO is available on the Organisation plan.",
-    },
-    {
-      q: "Are you hiring or looking for pilot partners?",
-      a: "Yes to both. We're running pilots with care teams, property operators, and legal firms in 2026. If you work in one of the coming-soon domains and want to be an early partner, email us at hello@omela.ai with a short note about your workflow.",
-    },
-  ];
-
-  const trustCards = [
-    {
-      icon: <Shield size={18} />,
-      title: "Metadata, not content",
-      body: "Omela tracks the state of a request: who owns it, what stage it is at, and what happens next. Clinical records, legal documents, and contractor reports stay in the systems they belong in.",
-    },
-    {
-      icon: <Eye size={18} />,
-      title: "Role-based visibility",
-      body: "Every workspace has explicit roles. A family carer sees their relative. A care team sees their residents. A paralegal sees their matters. Nothing spills sideways.",
-    },
-    {
-      icon: <History size={18} />,
-      title: "Full audit trail",
-      body: "Every status change, ownership transfer, and request is timestamped and attributable. If something needs to be reconstructed months later, it can be.",
-    },
-    {
-      icon: <Database size={18} />,
-      title: "Minimum data by design",
-      body: "We only ask for the fields needed to move a request forward. No extra profiling, no behaviour tracking, and no third-party advertising SDKs anywhere in the product.",
-    },
-  ];
-
-  const stats = [
-    { value: "1.1B", label: "prescription items issued each year in England (NHSBSA)" },
-    { value: "~77%", label: "of prescription items are repeats (NHS England)" },
-    { value: "£300M", label: "estimated medicines waste each year (NHS England)" },
-    { value: "Multi-party", label: "workflow across patient, practice, and pharmacy" },
-  ];
-
   return (
     <>
       <style>{CSS}</style>
 
-      <SuccessModal open={modalOpen} onClose={() => setModalOpen(false)} referralCode={referralCode} />
+      <SuccessModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        referralCode={referralCode}
+      />
 
-      <div className={`${dmSans.variable} ${instrumentSerif.variable} wrap`}>
-        <nav className="nav">
-          <div className="container navR">
-            <Link href="/" className="navBr">
-              <div className="navLo">
-                <Image
-                  src="/omela-logo-mark.png"
-                  alt="Omela"
-                  width={34}
-                  height={34}
-                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
-                />
+      <div className={`${dmSans.variable} ${instrumentSerif.variable}`}>
+        <nav>
+          <div className="nav-inner">
+            <a className="nav-logo" href="#">
+              <div className="nav-logo-mark">
+                <LogoMark inverted />
               </div>
-              <span className="navNm serif">Omela</span>
-            </Link>
+              <span className="nav-logo-name">Omela</span>
+            </a>
 
-            <div className="navLks">
-              <a href="#product" className="navLk">Product</a>
-              <a href="#industries" className="navLk">Industries</a>
-              <a href="#pricing" className="navLk">Pricing</a>
-              <a href="#faq" className="navLk">FAQ</a>
+            <div className="nav-links">
+              <a className="nav-link" href="#how">
+                Product
+              </a>
+              <a className="nav-link" href="#audiences">
+                Who it&apos;s for
+              </a>
+              <a className="nav-link" href="#pricing">
+                Pricing
+              </a>
+              <a className="nav-link" href="#faq">
+                FAQ
+              </a>
             </div>
 
-            <div className="navRight">
-              <Link href="/login" className="navSignIn">Sign in</Link>
-              <a href={demoHref} className="btnP navCt">
+            <div className="nav-right">
+              <Link className="btn-ghost" href="/login">
+                Sign in
+              </Link>
+              <a className="btn-primary" href="#onboarding">
                 Book a demo
-                <ArrowRight size={13} />
               </a>
             </div>
           </div>
         </nav>
 
-        <section className="heroSec">
-          <div className="container heroGrid">
-            <div className="heroTxt">
-              <FI delay={0.08}>
-                <h1 className="serif heroTi">Never lose track of recurring requests again.</h1>
-              </FI>
+        <div className="hero">
+          <div className="hero-eyebrow">
+            <span className="live-dot" />
+            Built first for repeat prescriptions in the UK
+          </div>
 
-              <FI delay={0.14}>
-                <p className="heroSub">
-                  Omela keeps ownership, status, and next steps visible across the people involved,
-                  from prescriptions to compliance to filings.
-                </p>
-              </FI>
+          <h1>
+            Stop chasing GPs, pharmacies, and family for <em>repeat prescriptions.</em>
+          </h1>
 
-              <FI delay={0.18}>
-                <p className="heroSub heroSubTight">
-                  No more chasing updates across calls, emails, and memory.
-                </p>
-              </FI>
+          <p className="hero-sub">
+            Omela keeps every request owned, tracked, and followed through, so nothing gets missed.
+          </p>
 
-              <FI delay={0.24}>
-                <div className="heroBt">
-                  <Link href={trialHref} className="btnP heroBtP">
-                    Start free trial
-                    <ArrowRight size={14} />
-                  </Link>
-                  <a href={demoHref} className="btnS heroBtS">Book a demo</a>
-                </div>
-              </FI>
+          <p className="hero-pain">
+            No more chasing updates across calls, emails, and memory.
+          </p>
 
-              <FI delay={0.3}>
-                <p className="heroMini">
-                  Starting with repeat prescriptions, then expanding across the same coordination pattern.
-                </p>
-              </FI>
+          <div className="hero-btns">
+            <a className="btn-primary" href="#onboarding">
+              Book a demo
+            </a>
+            <a className="btn-secondary" href="#onboarding">
+              Join the pilot
+            </a>
+          </div>
+
+          <div className="hero-note">
+            <span className="hero-note-dot" />
+            Onboarding a small number of early teams now
+          </div>
+        </div>
+
+        <div className="workspace-section">
+          <div className="workspace-shell">
+            <div className="ws-titlebar">
+              <div className="ws-dots">
+                <span />
+                <span />
+                <span />
+              </div>
+              <div className="ws-url">omela.ai / workspace / care-team</div>
             </div>
 
-            <FI delay={0.16} className="heroBoardCol">
-              <LauraWorkspace />
-            </FI>
-          </div>
-        </section>
-
-        <section className="infraStrip">
-          <div className="container">
-            <FI>
-              <div className="infraHd">Built on infrastructure trusted by secure teams worldwide</div>
-            </FI>
-          </div>
-
-          <div className="infraMarquee" aria-hidden="true">
-            <div className="infraTrack">
-              {[
-                { src: "/logos/vercel.svg", alt: "Vercel" },
-                { src: "/logos/stripe.svg", alt: "Stripe" },
-                { src: "/logos/twilio.svg", alt: "Twilio" },
-                { src: "/logos/microsoft-logo.png", alt: "Microsoft" },
-                { src: "/logos/google-logo.png", alt: "Google" },
-                { src: "/logos/aws-logo.png", alt: "AWS" },
-                { src: "/logos/vercel.svg", alt: "Vercel" },
-                { src: "/logos/stripe.svg", alt: "Stripe" },
-                { src: "/logos/twilio.svg", alt: "Twilio" },
-                { src: "/logos/microsoft-logo.png", alt: "Microsoft" },
-                { src: "/logos/google-logo.png", alt: "Google" },
-                { src: "/logos/aws-logo.png", alt: "AWS" },
-              ].map((l, i) => (
-                <div key={`${l.alt}-${i}`} className="infraLogo">
-                  <Image
-                    src={l.src}
-                    alt={l.alt}
-                    width={140}
-                    height={40}
-                    style={{ width: "auto", height: "28px", objectFit: "contain" }}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="processStrip">
-          <div className="container">
-            <FI>
-              <div className="processHd">
-                <Overline>How Omela works</Overline>
-                <h2 className="serif processTi">Three steps from due soon to resolved.</h2>
-              </div>
-
-              <div className="processGrid">
-                <div className="processCard">
-                  <div className="processNum">01</div>
-                  <h3 className="processStepTi">Omela spots what is due</h3>
-                  <p className="processStepBd">
-                    Supply, timing, and repeat cycles are tracked in one place, so nothing drifts
-                    into a last-minute scramble.
-                  </p>
-                </div>
-
-                <div className="processCard">
-                  <div className="processNum">02</div>
-                  <h3 className="processStepTi">A request is prepared</h3>
-                  <p className="processStepBd">
-                    Drafts are ready for review with clear context on who it is for, what is needed,
-                    and who owns the next step.
-                  </p>
-                </div>
-
-                <div className="processCard">
-                  <div className="processNum">03</div>
-                  <h3 className="processStepTi">Status stays visible</h3>
-                  <p className="processStepBd">
-                    From sent, to approved, to ready for completion, everyone with access sees the
-                    same truth at the same time.
-                  </p>
-                </div>
-              </div>
-            </FI>
-          </div>
-        </section>
-
-        <section id="product" className="sec">
-          <div className="container">
-            <FI>
-              <div className="shW">
-                <Overline>Product</Overline>
-                <h2 className="serif shT">One place to track what is due, delayed, and done.</h2>
-                <p className="shB">
-                  Omela is the shared workspace for recurring requests. It keeps ownership, status,
-                  and next steps visible without turning into the system of record.
-                </p>
-              </div>
-            </FI>
-
-            <div className="featGrid">
-              {features.map((f, i) => (
-                <FI key={f.title} delay={i * 0.06}>
-                  <div className="featCard">
-                    <div className={`featIc featIc--${f.tone}`}>{f.icon}</div>
-                    <h3 className="featTi">{f.title}</h3>
-                    <p className="featBd">{f.body}</p>
-                  </div>
-                </FI>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="industries" className="sec secTinted">
-          <div className="container">
-            <FI>
-              <div className="shW">
-                <Overline tone="warm" className="ovPlain">Healthcare, property, legal</Overline>
-                <h2 className="serif shT">One coordination system. Used across different workflows.</h2>
-                <p className="shB">
-                  Omela starts with repeat prescriptions because missed handoffs are costly and constant
-                  there. The same coordination shape applies anywhere a recurring request crosses
-                  households, professionals, and fulfillers.
-                </p>
-              </div>
-            </FI>
-
-            <div className="indGrid">
-              {industries.map((ind, i) => (
-                <FI key={ind.title} delay={i * 0.04}>
-                  <div className={`indCard ${ind.live ? "indCardLive" : "indCardSoon"}`}>
-                    <div className="indCardTop">
-                      <div className="indIc">{ind.icon}</div>
-                      <span className={`indTag ${ind.live ? "indTagLive" : "indTagSoon"}`}>
-                        {ind.live ? (
-                          <>
-                            <span className="indTagDot" />
-                            Live
-                          </>
-                        ) : (
-                          "Coming soon"
-                        )}
-                      </span>
-                    </div>
-
-                    <h3 className="indTi">{ind.title}</h3>
-                    <p className="indBd">{ind.body}</p>
-                    <div className="indPlayers">{ind.players}</div>
-                  </div>
-                </FI>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="painBand">
-          <div className="container">
-            <FI>
-              <div className="painWrap">
-                <Overline tone="warm">Why this matters</Overline>
-                <h2 className="serif painTi">Things fall through the cracks.</h2>
-                <p className="painBd">
-                  Requests get delayed. Ownership gets unclear. Updates are scattered across calls,
-                  emails, and memory. Someone always ends up chasing everything.
-                </p>
-                <p className="painStrong">Omela removes the chasing with one shared system.</p>
-              </div>
-            </FI>
-          </div>
-        </section>
-
-        <section id="results" className="statBand">
-          <div className="container">
-            <FI>
-              <div className="statHd">
-                <Overline tone="warm">The market we&apos;re entering through</Overline>
-                <h2 className="serif statTi">Starting with one of the largest unfixed admin workflows in healthcare.</h2>
-                <p className="statSub">
-                  England sees around 1.1 billion prescription items a year, and about 77% are repeat
-                  prescriptions. Medicines waste has been estimated at around £300 million annually.
-                  The repeat prescription workflow often spans multiple people across patient, practice,
-                  and pharmacy. The same coordination shape appears across other recurring workflows too.
-                </p>
-              </div>
-            </FI>
-
-            <div className="statGrid">
-              {stats.map((s, i) => (
-                <FI key={s.label} delay={i * 0.06}>
-                  <div className="statCard">
-                    <div className="statVal serif">{s.value}</div>
-                    <div className="statLbl">{s.label}</div>
-                  </div>
-                </FI>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="tstSec">
-          <div className="container">
-            <FI>
-              <div className="shW">
-                <Overline>What teams say</Overline>
-                <h2 className="serif shT">Teams using Omela, in their own words.</h2>
-              </div>
-            </FI>
-
-            <FI delay={0.08}>
-              <Testimonials />
-            </FI>
-          </div>
-        </section>
-
-        <section id="pricing" className="sec">
-          <div className="container">
-            <FI>
-              <div className="shW">
-                <Overline tone="warm">Simple pricing</Overline>
-                <h2 className="serif shT">Pay for the people you coordinate, not the seats.</h2>
-                <p className="shB">
-                  Built for individuals and teams managing ongoing work. Transparent monthly pricing.
-                  No hidden setup fees.
-                </p>
-              </div>
-            </FI>
-
-            <div className="prGrid">
-              {pricing.map((p, i) => {
-                const href =
-                  p.name === "Family"
-                    ? trialHref
-                    : p.name === "Team"
-                    ? "mailto:hello@omela.ai?subject=Omela%20team%20demo"
-                    : "mailto:hello@omela.ai?subject=Omela%20organisation%20sales";
-
-                const isInternal = href.startsWith("/");
-
-                return (
-                  <FI key={p.name} delay={i * 0.06}>
-                    <div className={`prCard ${p.featured ? "prCardFeat" : ""}`}>
-                      {p.featured ? (
-                        <div className="prBadge">
-                          <span className="prBadgeDot" />
-                          Most popular
-                        </div>
-                      ) : null}
-
-                      <div className="prName">{p.name}</div>
-
-                      <div className="prPrice">
-                        <span className="prPriceVal serif">{p.price}</span>
-                        <span className="prPricePer">{p.per}</span>
+            <div className="ws-body">
+              <div className="ws-sb">
+                <div className="ws-sb-head">
+                  <div className="ws-brand">
+                    <div className="ws-brand-mark">O</div>
+                    <div>
+                      <div className="ws-brand-name">Omela</div>
+                      <div className="ws-live">
+                        <span className="live-dot small-dot" />
+                        Live · Healthcare
                       </div>
-
-                      <p className="prDesc">{p.desc}</p>
-
-                      <ul className="prFeats">
-                        {p.features.map((f) => (
-                          <li key={f}>
-                            <Check size={14} />
-                            <span>{f}</span>
-                          </li>
-                        ))}
-                      </ul>
-
-                      {isInternal ? (
-                        <Link href={href} className={p.featured ? "btnP prBt" : "btnS prBt"}>
-                          {p.cta}
-                          {p.featured ? <ArrowRight size={14} /> : null}
-                        </Link>
-                      ) : (
-                        <a href={href} className={p.featured ? "btnP prBt" : "btnS prBt"}>
-                          {p.cta}
-                          {p.featured ? <ArrowRight size={14} /> : null}
-                        </a>
-                      )}
                     </div>
-                  </FI>
-                );
-              })}
-            </div>
-
-            <FI delay={0.18}>
-              <p className="prFoot">
-                All plans include role-based access and full audit history. Need something different?{" "}
-                <a href="mailto:hello@omela.ai">Contact sales.</a>
-              </p>
-            </FI>
-          </div>
-        </section>
-
-        <section id="trust" className="sec">
-          <div className="container">
-            <FI>
-              <div className="shW">
-                <Overline>Trust and boundaries</Overline>
-                <h2 className="serif shT">We take the thin slice. You keep the rest.</h2>
-                <p className="shB">
-                  Omela is a coordination layer, not a system of record. We handle ownership, status,
-                  and next actions. Your clinical records, legal documents, and operational data stay
-                  exactly where they are.
-                </p>
-              </div>
-            </FI>
-
-            <div className="trustGrid">
-              {trustCards.map((t, i) => (
-                <FI key={t.title} delay={i * 0.05}>
-                  <div className="trustCard">
-                    <div className="trustCardTop">
-                      <div className="trustNo">{String(i + 1).padStart(2, "0")}</div>
-                      <div className="trustIc">{t.icon}</div>
-                    </div>
-                    <h4 className="trustTi">{t.title}</h4>
-                    <p className="trustBd">{t.body}</p>
                   </div>
-                </FI>
+                </div>
+
+                <div className="ws-stats">
+                  <div className="ws-stat">
+                    <div className="ws-stat-n a">5</div>
+                    <div className="ws-stat-l">Due Soon</div>
+                  </div>
+                  <div className="ws-stat">
+                    <div className="ws-stat-n r">1</div>
+                    <div className="ws-stat-l">Delayed</div>
+                  </div>
+                  <div className="ws-stat">
+                    <div className="ws-stat-n g">2</div>
+                    <div className="ws-stat-l">Ready</div>
+                  </div>
+                </div>
+
+                <div className="ws-list-hd">
+                  <span>Residents</span>
+                  <span>4</span>
+                </div>
+
+                {RESIDENTS.map((resident, index) => (
+                  <button
+                    key={resident.rx}
+                    className={`ws-item ${selectedResident === index ? "sel" : ""}`}
+                    onClick={() => setSelectedResident(index)}
+                    type="button"
+                  >
+                    <div className="ws-item-top">
+                      <div className={`ws-av ${resident.tone}`}>{resident.initials}</div>
+                      <span className="ws-item-name">{resident.shortName}</span>
+                      <span className="ws-item-age"> · {resident.age}</span>
+                    </div>
+
+                    <div className="ws-item-med">{resident.medShort}</div>
+
+                    <div className="ws-item-row">
+                      <span className={`chip ${resident.statusChip}`}>{resident.status}</span>
+                      <span className="ws-item-days">{resident.daysLeft}d left</span>
+                    </div>
+
+                    <div className="supply-bar">
+                      <div className="supply-track">
+                        <div
+                          className={`supply-fill ${resident.tone === "g" ? "g" : resident.tone === "b" ? "b" : "w"}`}
+                          style={{ width: `${resident.supplyPercent}%` }}
+                        />
+                      </div>
+                      <span className="supply-lbl">{resident.daysLeft}d</span>
+                    </div>
+                  </button>
+                ))}
+
+                <div className="ws-feed">
+                  <div className="ws-feed-hd">
+                    <RefreshCw size={9} />
+                    Recent activity
+                  </div>
+
+                  <div className="ws-feed-item">
+                    <span className="ws-feed-dot b" />
+                    <span className="ws-feed-who">Jamie M.</span>
+                    <span className="ws-feed-what"> drafted Metformin refill for David</span>
+                    <span className="ws-feed-when fresh">now</span>
+                  </div>
+
+                  <div className="ws-feed-item">
+                    <span className="ws-feed-dot w" />
+                    <span className="ws-feed-who">Ada Kelly</span>
+                    <span className="ws-feed-what">
+                      {" "}
+                      approved Margaret&apos;s amlodipine request
+                    </span>
+                    <span className="ws-feed-when">14m</span>
+                  </div>
+
+                  <div className="ws-feed-item">
+                    <span className="ws-feed-dot g" />
+                    <span className="ws-feed-who">Jamie M.</span>
+                    <span className="ws-feed-what">
+                      {" "}
+                      marked Sertraline ready at Boots
+                    </span>
+                    <span className="ws-feed-when">42m</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ws-main">
+                <div className="ws-eval">
+                  <div className="ws-eval-copy">
+                    <span className="ws-eval-lbl">Omela is evaluating</span>
+                    <span className="ws-eval-task">{activeResident.evalTask}</span>
+                  </div>
+                  <div className="ws-eval-prog">
+                    <div className="ws-eval-fill" />
+                  </div>
+                </div>
+
+                <div className="ws-main-head">
+                  <div>
+                    <div className="ws-main-title">{activeResident.name}</div>
+                    <div className="ws-main-sub">
+                      {activeResident.med} · {activeResident.rx}
+                    </div>
+                  </div>
+                  <span className={`chip ${activeResident.statusChip}`}>
+                    {activeResident.status}
+                  </span>
+                </div>
+
+                <div className="ws-tl">
+                  <div className="ws-tl-hd">Timeline</div>
+
+                  {activeResident.timeline.map((item, index) => (
+                    <div key={`${item.text}-${index}`}>
+                      {index > 0 ? <div className="ws-connector" /> : null}
+
+                      <div className="ws-tl-item">
+                        <div className={`ws-tl-node ${item.done ? "done" : "wait"}`}>
+                          {item.done ? (
+                            <Check size={9} strokeWidth={2.5} />
+                          ) : (
+                            <svg viewBox="0 0 10 10" width="9" height="9" aria-hidden="true">
+                              <circle cx="5" cy="5" r="2.2" fill={c.warm} />
+                            </svg>
+                          )}
+                        </div>
+
+                        <span className={`ws-tl-text ${item.done ? "" : "p"}`}>
+                          {item.text}
+                        </span>
+
+                        <span className="ws-tl-time">{item.meta}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="ws-next">
+                  <div className="ws-next-lbl">Next action · Today</div>
+                  <div className="ws-next-text">{activeResident.next}</div>
+                </div>
+              </div>
+
+              <div className="ws-detail">
+                <div className={`ws-detail-av ${activeResident.tone}`}>
+                  {activeResident.initials}
+                </div>
+                <div className="ws-detail-name">{activeResident.name}</div>
+                <div className="ws-detail-med">{activeResident.med}</div>
+                <div className="ws-detail-rx">{activeResident.rx}</div>
+
+                <div className="ws-field">
+                  <div className="ws-field-l">Status</div>
+                  <div className={`ws-field-v ${activeResident.statusValueClass}`}>
+                    {activeResident.status}
+                  </div>
+                </div>
+
+                <div className="ws-field">
+                  <div className="ws-field-l">Owner</div>
+                  <div className="ws-field-v">{activeResident.owner}</div>
+                </div>
+
+                <div className="ws-field">
+                  <div className="ws-field-l">Practice</div>
+                  <div className="ws-field-v">{activeResident.practice}</div>
+                </div>
+
+                <div className="ws-field">
+                  <div className="ws-field-l">Pharmacy</div>
+                  <div className="ws-field-v">{activeResident.pharmacy}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="marquee-section">
+          <div className="marquee-label">
+            Trusted by early carers, care teams, and pharmacies
+          </div>
+
+          <div className="marquee-track-wrap">
+            <div className="marquee-track">
+              {[...LOGOS, ...LOGOS].map((logo, index) => (
+                <span key={`${logo}-${index}`} className="marquee-logo">
+                  {logo}
+                </span>
               ))}
             </div>
           </div>
-        </section>
+        </div>
 
-        <section id="waitlist" className="sec secTinted">
-          <div className="container">
-            <FI>
-              <div className="wlC">
-                <Overline>Early access</Overline>
-                <h2 className="serif wlTi">Need guided onboarding?</h2>
-                <p className="wlSub">
-                  If your workflow is more complex, tell us a bit about it and we&apos;ll help you get
-                  set up faster across healthcare, property, or legal work.
-                </p>
-
-                <form className="wlF" onSubmit={handleSubmit}>
-                  <input
-                    className="inp"
-                    type="email"
-                    placeholder="Your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    autoComplete="email"
-                  />
-
-                  <select className="inp" value={role} onChange={(e) => setRole(e.target.value as Role)}>
-                    <optgroup label="Healthcare (live)">
-                      <option value="carer">I manage for a family member</option>
-                      <option value="household">I manage across my household</option>
-                      <option value="care_team">I work in a care team</option>
-                      <option value="pharmacy">I work in a pharmacy</option>
-                    </optgroup>
-                    <optgroup label="Other (coming soon)">
-                      <option value="vet">Veterinary practice</option>
-                      <option value="legal">Legal or compliance work</option>
-                      <option value="property">Property management</option>
-                      <option value="other">Something else</option>
-                    </optgroup>
-                  </select>
-
-                  <input
-                    type="text"
-                    name="website"
-                    value={website}
-                    onChange={(e) => setWebsite(e.target.value)}
-                    tabIndex={-1}
-                    autoComplete="off"
-                    aria-hidden="true"
-                    style={{
-                      position: "absolute",
-                      left: "-9999px",
-                      opacity: 0,
-                      pointerEvents: "none",
-                      height: 0,
-                      width: 0,
-                    }}
-                  />
-
-                  <button
-                    type="submit"
-                    className="btnP wlBt"
-                    disabled={!mounted || submitting || !agreed}
-                  >
-                    {submitting ? "Submitting..." : "Request onboarding help"}
-                  </button>
-                </form>
-
-                <label className="pvL">
-                  <input
-                    type="checkbox"
-                    checked={agreed}
-                    onChange={(e) => setAgreed(e.target.checked)}
-                    required
-                    className="pvC"
-                  />
-                  <span>
-                    I agree to the{" "}
-                    <Link href="/privacy" className="pvLk">Privacy Notice</Link> and{" "}
-                    <Link href="/terms" className="pvLk">Terms</Link>.
-                  </span>
-                </label>
-
-                {success ? <div className="fmOk">{success}</div> : null}
-                {error ? <div className="fmEr">{error}</div> : null}
+        <div className="pain-section">
+          <div className="pain-inner">
+            <div className="pain-bubbles">
+              <div className={`bubble ${visibleBubbles[0] ? "show" : ""}`}>
+                Did you call the GP yet?
               </div>
-            </FI>
+              <div className={`bubble right ${visibleBubbles[1] ? "show" : ""}`}>
+                I thought you were handling it
+              </div>
+              <div className={`bubble ${visibleBubbles[2] ? "show" : ""}`}>
+                The pharmacy says they never got the request
+              </div>
+              <div className={`bubble right ${visibleBubbles[3] ? "show" : ""}`}>
+                She has 2 days of tablets left
+              </div>
+            </div>
+
+            <Overline warm>Why this matters</Overline>
+
+            <h2 className="pain-heading">
+              Things get <em>delayed</em> when nobody owns the next step.
+            </h2>
+
+            <p className="pain-body">
+              Requests get dropped. Pharmacies chase practices. Families chase pharmacies.
+              Staff assume someone else handled it. Updates scatter across calls, emails,
+              and memory.
+            </p>
+
+            <p className="pain-punch">
+              Omela removes the chasing with one shared coordination layer.
+            </p>
+          </div>
+        </div>
+
+        <section className="pad white-bg" id="how">
+          <div className="sec-inner">
+            <div className="sh-c">
+              <Overline>How Omela works</Overline>
+              <h2>
+                From due soon to resolved,
+                <br />
+                without the chasing.
+              </h2>
+            </div>
+
+            <div className="how-grid">
+              <div className="how-card">
+                <div className="how-num">01</div>
+                <h3>Omela spots what is due</h3>
+                <p>
+                  Repeat cycles, supply timing, and follow-up dates are tracked in one place.
+                </p>
+              </div>
+
+              <div className="how-card">
+                <div className="how-num">02</div>
+                <h3>A request is prepared</h3>
+                <p>
+                  Each request is linked to the person, medication, owner, and next action
+                  before it gets sent.
+                </p>
+              </div>
+
+              <div className="how-card">
+                <div className="how-num">03</div>
+                <h3>Status stays visible</h3>
+                <p>
+                  From sent, to acknowledged, to ready for collection, everyone sees the same
+                  timeline.
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
-        <section id="faq" className="sec">
-          <div className="container">
-            <FI>
-              <div className="shW">
-                <Overline>Questions</Overline>
-                <h2 className="serif shT">Answers to what most people ask.</h2>
-                <p className="shB">
-                  If your question isn&apos;t here, send a note to{" "}
-                  <a href="mailto:hello@omela.ai" className="pvLk">hello@omela.ai</a> and a real person will reply.
+        <section className="pad bg-main">
+          <div className="sec-inner">
+            <div className="sh-c">
+              <Overline>What Omela gives you</Overline>
+              <h2>
+                One place to see what is due,
+                <br />
+                delayed, and done.
+              </h2>
+              <p className="sec-sub">
+                The shared coordination layer for repeat prescription requests. Keeps
+                ownership, status, and next steps visible without replacing clinical systems.
+              </p>
+            </div>
+
+            <div className="benefit-grid">
+              <div className="benefit-card">
+                <div className="benefit-icon warm">
+                  <RefreshCw size={20} />
+                </div>
+                <h3>See what needs attention now</h3>
+                <p>
+                  Know what is due soon, what is delayed, and what needs following up today.
                 </p>
               </div>
-            </FI>
 
-            <FI delay={0.08}>
-              <div className="faqWrap">
-                <Faq items={faq} />
+              <div className="benefit-card">
+                <div className="benefit-icon blue">
+                  <Users size={20} />
+                </div>
+                <h3>Keep ownership clear</h3>
+                <p>
+                  See who last handled the request, who owns the next step, and what should
+                  happen next.
+                </p>
               </div>
-            </FI>
+
+              <div className="benefit-card">
+                <div className="benefit-icon green">
+                  <Check size={20} />
+                </div>
+                <h3>Follow every update</h3>
+                <p>
+                  Track progress from draft through acknowledgement to collection in one shared
+                  timeline.
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
-        <footer className="ft">
-          <div className="container ftIn">
-            <div className="ftTop">
-              <div className="ftBrand">
-                <Link href="/" className="ftBr">
-                  <div className="navLo ftLoW">
-                    <Image
-                      src="/omela-logo-mark.png"
-                      alt="Omela"
-                      width={24}
-                      height={24}
-                      style={{ width: "100%", height: "100%", objectFit: "contain" }}
-                    />
+        <section className="pad white-bg" id="audiences">
+          <div className="sec-inner">
+            <div className="sh-c">
+              <Overline warm>Built first for</Overline>
+              <h2>
+                The people carrying
+                <br />
+                the follow-through.
+              </h2>
+            </div>
+
+            <div className="audience-grid">
+              <div className="audience-card">
+                <div className="audience-card-top">
+                  <div className="audience-icon">
+                    <Users size={20} />
                   </div>
-                  <span className="ftBrN serif">Omela</span>
-                </Link>
+                  <div className="live-tag">
+                    <span className="live-tag-dot" />
+                    Live
+                  </div>
+                </div>
+                <h3>Family carers</h3>
+                <p>
+                  Helping a parent, partner, or relative stay on top of repeat prescriptions
+                  without carrying every detail alone.
+                </p>
+                <div className="audience-players">Family · GP · Pharmacy</div>
+              </div>
 
-                <p className="ftBrDesc">
-                  The coordination layer for recurring requests. Built for the people carrying the follow-through.
+              <div className="audience-card">
+                <div className="audience-card-top">
+                  <div className="audience-icon">
+                    <Home size={20} />
+                  </div>
+                  <div className="live-tag">
+                    <span className="live-tag-dot" />
+                    Live
+                  </div>
+                </div>
+                <h3>Residential care</h3>
+                <p>
+                  Coordinating repeat prescription workflows across residents, practices, and
+                  pharmacies in one place.
+                </p>
+                <div className="audience-players">Care team · GP · Pharmacy</div>
+              </div>
+
+              <div className="audience-card">
+                <div className="audience-card-top">
+                  <div className="audience-icon">
+                    <Home size={20} />
+                  </div>
+                  <div className="live-tag">
+                    <span className="live-tag-dot" />
+                    Live
+                  </div>
+                </div>
+                <h3>Supported living</h3>
+                <p>
+                  Giving staff and families a shared view of medication follow-up across
+                  handovers.
+                </p>
+                <div className="audience-players">Staff · Family · GP</div>
+              </div>
+
+              <div className="audience-card">
+                <div className="audience-card-top">
+                  <div className="audience-icon">
+                    <Stethoscope size={20} />
+                  </div>
+                  <div className="live-tag">
+                    <span className="live-tag-dot" />
+                    Live
+                  </div>
+                </div>
+                <h3>Community pharmacies</h3>
+                <p>
+                  A clearer incoming queue with context on who ordered what, for whom, and what
+                  still needs follow-up.
+                </p>
+                <div className="audience-players">Pharmacy · Patients · GPs</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="dark-section">
+          <div className="dark-inner">
+            <Overline>Why repeat prescriptions first</Overline>
+
+            <h2>
+              Starting with one of the largest unresolved admin workflows in healthcare.
+            </h2>
+
+            <p className="sec-sub dark-sub">
+              Repeat prescriptions are frequent, repetitive, multi-party, and still poorly
+              coordinated across patients, practices, pharmacies, and care teams. That makes
+              them painful enough to matter and common enough to build a serious business
+              around.
+            </p>
+
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-val">
+                  <CountUp target={1.1} decimals={1} suffix="B" />
+                </div>
+                <div className="stat-lbl">
+                  prescription items issued each year in England (NHSBSA)
+                </div>
+              </div>
+
+              <div className="stat-card">
+                <div className="stat-val">
+                  <CountUp target={77} suffix="%" />
+                </div>
+                <div className="stat-lbl">
+                  of all prescription items are repeats (NHS England)
+                </div>
+              </div>
+
+              <div className="stat-card">
+                <div className="stat-val">
+                  £<CountUp target={300} suffix="M" />
+                </div>
+                <div className="stat-lbl">
+                  estimated medicines waste each year (NHS England)
+                </div>
+              </div>
+
+              <div className="stat-card">
+                <div className="stat-val multi-party">
+                  Multi-
+                  <br />
+                  party
+                </div>
+                <div className="stat-lbl">
+                  patient, practice, pharmacy, and carer all involved in every cycle
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <section className="pad bg2">
+          <div className="sec-inner">
+            <div className="sh-c testimonial-shell">
+              <Overline>What teams say</Overline>
+              <h2>
+                The first thing they open
+                <br />
+                when the week starts.
+              </h2>
+            </div>
+
+            <div className="tst-wrap">
+              <div className="tst-icon">
+                <Quote size={20} />
+              </div>
+
+              <div className="tst-quote">{testimonial.quote}</div>
+
+              <div className="tst-attr">
+                <span className="tst-attr-name">{testimonial.name}</span>
+                <span>·</span>
+                <span>{testimonial.domain}</span>
+              </div>
+
+              <div className="tst-dots">
+                {TESTIMONIALS.map((_, index) => (
+                  <button
+                    key={index}
+                    className={`tst-dot ${index === testimonialIndex ? "active" : ""}`}
+                    onClick={() => setTestimonialIndex(index)}
+                    type="button"
+                    aria-label={`Testimonial ${index + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="pad white-bg">
+          <div className="sec-inner">
+            <div className="sh-c">
+              <Overline>Trust and boundaries</Overline>
+              <h2>
+                We take the thin slice.
+                <br />
+                You keep the rest.
+              </h2>
+              <p className="sec-sub">
+                Omela is a coordination layer, not a system of record. We handle ownership,
+                status, and next actions. Clinical records stay where they belong.
+              </p>
+            </div>
+
+            <div className="trust-grid">
+              <div className="trust-card">
+                <div className="trust-top">
+                  <span className="trust-num">01</span>
+                  <div className="trust-icon-wrap">
+                    <Shield size={16} />
+                  </div>
+                </div>
+                <h3>Metadata, not content</h3>
+                <p>
+                  Omela tracks the state of a request, not the underlying clinical record.
                 </p>
               </div>
 
-              <div className="ftCols">
-                <div className="ftCol">
-                  <div className="ftColT">Product</div>
-                  <a href="#product" className="ftLk">How it works</a>
-                  <a href="#industries" className="ftLk">Industries</a>
-                  <a href="#pricing" className="ftLk">Pricing</a>
-                  <Link href={trialHref} className="ftLk">Start free trial</Link>
+              <div className="trust-card">
+                <div className="trust-top">
+                  <span className="trust-num">02</span>
+                  <div className="trust-icon-wrap">
+                    <Eye size={16} />
+                  </div>
                 </div>
+                <h3>Role-based visibility</h3>
+                <p>Each workspace has explicit roles and scoped access.</p>
+              </div>
 
-                <div className="ftCol">
-                  <div className="ftColT">Company</div>
-                  <span className="ftLk ftLkStatic">Omela Ltd.</span>
-                  <a href="mailto:hello@omela.ai" className="ftLk">Contact</a>
-                  <a href={demoHref} className="ftLk">Book a demo</a>
+              <div className="trust-card">
+                <div className="trust-top">
+                  <span className="trust-num">03</span>
+                  <div className="trust-icon-wrap">
+                    <History size={16} />
+                  </div>
                 </div>
+                <h3>Full audit trail</h3>
+                <p>Every status change, ownership transfer, and action is timestamped.</p>
+              </div>
 
-                <div className="ftCol">
-                  <div className="ftColT">Legal</div>
-                  <Link href="/privacy" className="ftLk">Privacy</Link>
-                  <Link href="/terms" className="ftLk">Terms</Link>
-                  <a href="mailto:notice@omela.ai" className="ftLk">Notices</a>
+              <div className="trust-card">
+                <div className="trust-top">
+                  <span className="trust-num">04</span>
+                  <div className="trust-icon-wrap">
+                    <Database size={16} />
+                  </div>
                 </div>
+                <h3>Minimum data by design</h3>
+                <p>Only the fields needed to move a request forward.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="pad bg-main" id="pricing">
+          <div className="sec-inner">
+            <div className="sh-c">
+              <Overline warm>Simple pricing</Overline>
+              <h2>
+                Pay for the people you coordinate,
+                <br />
+                not the seats.
+              </h2>
+              <p className="sec-sub">
+                Built for carers, care teams, and growing providers. Transparent monthly pricing
+                for early teams.
+              </p>
+            </div>
+
+            <div className="pricing-grid">
+              <div className="p-card">
+                <div className="p-tier">Family</div>
+                <div className="p-price">
+                  <span className="p-amount">£9</span>
+                  <span className="p-per">/ month</span>
+                </div>
+                <p className="p-desc">
+                  For one person coordinating repeat prescriptions for a relative or household.
+                </p>
+                <ul className="p-features">
+                  <li>
+                    <span className="p-check">
+                      <Check size={9} />
+                    </span>
+                    Up to 3 people
+                  </li>
+                  <li>
+                    <span className="p-check">
+                      <Check size={9} />
+                    </span>
+                    Unlimited requests
+                  </li>
+                  <li>
+                    <span className="p-check">
+                      <Check size={9} />
+                    </span>
+                    Email reminders
+                  </li>
+                  <li>
+                    <span className="p-check">
+                      <Check size={9} />
+                    </span>
+                    Activity history
+                  </li>
+                </ul>
+                <a href="#onboarding" className="btn-secondary p-btn">
+                  Join the pilot
+                </a>
+              </div>
+
+              <div className="p-card feat">
+                <div className="p-badge">
+                  <span className="p-badge-dot" />
+                  Most popular
+                </div>
+                <div className="p-tier">Team</div>
+                <div className="p-price">
+                  <span className="p-amount">£49</span>
+                  <span className="p-per">/ month</span>
+                </div>
+                <p className="p-desc">
+                  For care teams and pharmacies managing ongoing prescription workflows.
+                </p>
+                <ul className="p-features">
+                  <li>
+                    <span className="p-check">
+                      <Check size={9} />
+                    </span>
+                    Up to 25 active people
+                  </li>
+                  <li>
+                    <span className="p-check">
+                      <Check size={9} />
+                    </span>
+                    Shared workspace
+                  </li>
+                  <li>
+                    <span className="p-check">
+                      <Check size={9} />
+                    </span>
+                    Role permissions
+                  </li>
+                  <li>
+                    <span className="p-check">
+                      <Check size={9} />
+                    </span>
+                    Email support
+                  </li>
+                  <li>
+                    <span className="p-check">
+                      <Check size={9} />
+                    </span>
+                    Audit trail
+                  </li>
+                </ul>
+                <a href="#onboarding" className="btn-primary p-btn">
+                  Book a demo
+                </a>
+              </div>
+
+              <div className="p-card">
+                <div className="p-tier">Organisation</div>
+                <div className="p-custom">Custom</div>
+                <div className="p-custom-note">Annual contract</div>
+                <p className="p-desc">
+                  For multi-site providers with onboarding, controls, and structured rollout.
+                </p>
+                <ul className="p-features">
+                  <li>
+                    <span className="p-check">
+                      <Check size={9} />
+                    </span>
+                    Unlimited items
+                  </li>
+                  <li>
+                    <span className="p-check">
+                      <Check size={9} />
+                    </span>
+                    SSO and Microsoft Entra
+                  </li>
+                  <li>
+                    <span className="p-check">
+                      <Check size={9} />
+                    </span>
+                    Onboarding support
+                  </li>
+                  <li>
+                    <span className="p-check">
+                      <Check size={9} />
+                    </span>
+                    Data processing agreement
+                  </li>
+                </ul>
+                <a href="mailto:hello@omela.ai" className="btn-secondary p-btn">
+                  Talk to us
+                </a>
               </div>
             </div>
 
-            <div className="ftDsc">
-              Omela is a coordination layer for recurring admin, ownership, and next-step guidance.
-              It is not a system of record and does not provide clinical, legal, or safety-critical decisions.
-              In a healthcare emergency, contact local emergency services.
+            <p className="pricing-note">
+              All plans include role-based access and full audit history. Questions?{" "}
+              <a href="mailto:hello@omela.ai">Contact us.</a>
+            </p>
+          </div>
+        </section>
+
+        <section className="pad white-bg" id="onboarding">
+          <div className="sec-inner">
+            <div className="ob-box">
+              <Overline>Early access</Overline>
+              <h2>Need guided onboarding?</h2>
+              <p>Tell us a bit about your workflow and we will help you get set up faster.</p>
+
+              <form className="ob-form" onSubmit={handleSubmit}>
+                <input
+                  className="ob-input"
+                  type="email"
+                  placeholder="Your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                />
+
+                <select
+                  className="ob-select"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value as Role)}
+                >
+                  <option value="carer">I manage for a family member</option>
+                  <option value="household">I manage across my household</option>
+                  <option value="care_team">I work in a care team</option>
+                  <option value="pharmacy">I work in a pharmacy</option>
+                  <option value="other">Something else</option>
+                </select>
+
+                <input
+                  type="text"
+                  name="website"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    left: "-9999px",
+                    opacity: 0,
+                    pointerEvents: "none",
+                    height: 0,
+                    width: 0,
+                  }}
+                />
+
+                <button
+                  className="btn-primary ob-submit"
+                  type="submit"
+                  disabled={!mounted || submitting || !agreed}
+                >
+                  {submitting ? "Submitting..." : "Request onboarding"}
+                </button>
+              </form>
+
+              <label className="agree-row">
+                <input
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                  required
+                />
+                <span>
+                  By submitting you agree to our{" "}
+                  <Link href="/privacy">Privacy Notice</Link> and{" "}
+                  <Link href="/terms">Terms</Link>.
+                </span>
+              </label>
+
+              {success ? <div className="form-ok">{success}</div> : null}
+              {error ? <div className="form-er">{error}</div> : null}
+            </div>
+          </div>
+        </section>
+
+        <section className="pad bg-main" id="faq">
+          <div className="sec-inner">
+            <div className="sh-c faq-head">
+              <Overline>Questions</Overline>
+              <h2>Answers to what most people ask.</h2>
+              <p className="sec-sub">
+                If your question is not here, send a note to{" "}
+                <a href="mailto:hello@omela.ai">hello@omela.ai</a> and a real person will reply.
+              </p>
             </div>
 
-            <div className="ftBtm">
-              <p>&copy; 2026 Omela Ltd.</p>
-              <p className="ftBtmRt">Built for individuals and teams.</p>
+            <FAQAccordion />
+          </div>
+        </section>
+
+        <section className="pad white-bg future-section">
+          <div className="sec-inner">
+            <div className="future-block">
+              <Overline warm>What comes after</Overline>
+              <h2>
+                The same coordination model
+                <br />
+                can extend further.
+              </h2>
+              <p className="sec-sub">
+                Once Omela proves itself in repeat prescriptions, the same ownership, timeline,
+                and next-step model can support other recurring workflows that cross people and
+                systems.
+              </p>
+
+              <div className="future-chips">
+                <span className="future-chip">Medication plans in other care settings</span>
+                <span className="future-chip">Recurring compliance workflows</span>
+                <span className="future-chip">Regulated filing workflows</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="final-cta">
+          <h2>
+            Still managing repeat prescriptions
+            <br />
+            across calls, notes, and memory?
+          </h2>
+
+          <p>
+            We are onboarding a small number of early teams and carers who want a cleaner way
+            to track requests, ownership, and follow-up.
+          </p>
+
+          <div className="final-btns">
+            <a href="#onboarding" className="btn-white">
+              Book a demo
+            </a>
+            <a href="#onboarding" className="btn-outline-white">
+              Join the pilot
+            </a>
+          </div>
+        </div>
+
+        <footer>
+          <div className="ft-inner">
+            <div className="ft-top">
+              <div>
+                <div className="ft-brand-logo">
+                  <div className="ft-lm">
+                    <LogoMark inverted />
+                  </div>
+                  <span className="ft-ln">Omela</span>
+                </div>
+                <p className="ft-tagline">
+                  The coordination layer for repeat prescription workflows. Built for the people
+                  carrying the follow-through.
+                </p>
+              </div>
+
+              <div>
+                <div className="ft-col-title">Product</div>
+                <a className="ft-link" href="#how">
+                  How it works
+                </a>
+                <a className="ft-link" href="#audiences">
+                  Who it&apos;s for
+                </a>
+                <a className="ft-link" href="#pricing">
+                  Pricing
+                </a>
+                <a className="ft-link" href="#onboarding">
+                  Join the pilot
+                </a>
+              </div>
+
+              <div>
+                <div className="ft-col-title">Company</div>
+                <span className="ft-link">Omela Ltd.</span>
+                <a className="ft-link" href="mailto:hello@omela.ai">
+                  Contact
+                </a>
+                <a className="ft-link" href="#onboarding">
+                  Book a demo
+                </a>
+              </div>
+
+              <div>
+                <div className="ft-col-title">Legal</div>
+                <Link className="ft-link" href="/privacy">
+                  Privacy
+                </Link>
+                <Link className="ft-link" href="/terms">
+                  Terms
+                </Link>
+                <a className="ft-link" href="mailto:notice@omela.ai">
+                  Notices
+                </a>
+              </div>
+            </div>
+
+            <div className="ft-bottom">
+              <p className="ft-copy">© 2026 Omela Ltd.</p>
+              <p className="ft-disc">
+                Omela is a coordination layer, not a clinical system of record, and does not
+                make medical decisions. In a healthcare emergency, contact local emergency
+                services.
+              </p>
             </div>
           </div>
         </footer>
@@ -1883,579 +1572,792 @@ export default function Page() {
 }
 
 const CSS = `
-*{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-html,body{max-width:100%;overflow-x:clip}
-body{background:${c.bg};color:${c.text};font-family:var(--font-dm-sans),-apple-system,sans-serif;-webkit-font-smoothing:antialiased;font-size:16px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{
+  font-family:var(--font-dm-sans),-apple-system,sans-serif;
+  background:${c.bg};
+  color:${c.ink};
+  font-size:16px;
+  line-height:1.6;
+  overflow-x:hidden
+}
 a{color:inherit;text-decoration:none}
 button,input,select{font-family:inherit}
-::selection{background:${c.accent};color:#fff}
+::selection{background:${c.warm};color:#fff}
 .serif{font-family:var(--font-instrument-serif),Georgia,serif}
-.wrap{width:100%;overflow-x:clip}
-.container{max-width:1200px;margin:0 auto;padding:0 20px}
-.sec{padding:72px 0}
-.secTinted{background:linear-gradient(180deg,#F5F1EA,${c.bg})}
 
-.overline{
-  display:inline-block;
-  font-size:12px;
-  font-weight:700;
-  letter-spacing:.16em;
-  text-transform:uppercase;
-  color:${c.muted};
-  line-height:1;
-}
-.overline--warm{color:${c.warm}}
-.overline--blue{color:${c.accent}}
-.overline--green{color:${c.greenDk}}
-.ovPlain{border:none!important;padding:0!important;margin:0 0 10px 0!important}
-
-.btnP{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:7px;
-  background:${c.dark};
-  color:#fff;
-  border:none;
-  border-radius:999px;
-  padding:15px 26px;
-  font-size:15px;
-  font-weight:700;
-  cursor:pointer;
-  transition:all .25s;
-  white-space:nowrap;
-  box-shadow:0 3px 10px rgba(0,0,0,.08)
-}
-.btnP:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,.13)}
-.btnP:disabled{opacity:.5;cursor:not-allowed}
-.btnS{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:7px;
-  background:#fff;
-  color:${c.text};
-  border:1.5px solid ${c.border};
-  border-radius:999px;
-  padding:15px 26px;
-  font-size:15px;
-  font-weight:700;
-  cursor:pointer;
-  transition:all .25s;
-  white-space:nowrap
-}
-.btnS:hover{border-color:${c.text}}
-
-.shW{text-align:center;max-width:760px;margin:0 auto 40px}
-.shT{font-size:clamp(32px,5vw,54px);line-height:1.05;letter-spacing:-.045em;margin-top:14px}
-.shB{font-size:17px;line-height:1.65;margin-top:16px;max-width:680px;margin-left:auto;margin-right:auto;color:${c.sub}}
-
-.nav{
-  position:sticky;
-  top:0;
-  z-index:100;
-  background:rgba(248,246,241,.92);
+/* ---- NAV ---- */
+nav{
+  position:sticky;top:0;z-index:200;
+  background:rgba(248,246,241,.94);
   backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
-  border-bottom:1px solid rgba(227,221,210,.5)
+  border-bottom:1px solid rgba(227,221,210,.6);
+  height:68px;
 }
-.navR{display:flex;align-items:center;justify-content:space-between;gap:8px;height:68px}
-.navBr{display:flex;align-items:center;gap:10px;flex-shrink:0}
-.navLo{width:34px;height:34px;border-radius:9px;overflow:hidden;flex-shrink:0}
-.navNm{font-size:22px;font-weight:400;letter-spacing:-.025em;color:${c.text}}
-.navLks{display:none;align-items:center;gap:28px}
-.navLk{font-size:14px;font-weight:600;color:${c.sub};transition:color .2s}
-.navLk:hover{color:${c.text}}
-.navRight{display:flex;align-items:center;gap:16px}
-.navSignIn{display:inline-flex;font-size:14px;font-weight:700;color:${c.sub};transition:color .2s}
-.navSignIn:hover{color:${c.text}}
-.navCt{padding:11px 18px!important;font-size:13px!important}
-
-.heroSec{padding:56px 0 64px;position:relative;overflow:hidden}
-.heroGrid{display:grid;grid-template-columns:1fr;gap:34px;align-items:center;position:relative}
-.heroTxt{max-width:640px;margin:0 auto;text-align:center}
-.heroTi{font-size:clamp(40px,7.5vw,72px);line-height:1;letter-spacing:-.04em;color:#3A2817}
-.heroSub{margin-top:18px;font-size:clamp(16px,2vw,19px);line-height:1.6;color:${c.sub};max-width:620px;margin-left:auto;margin-right:auto}
-.heroSubTight{margin-top:10px;font-size:15px;line-height:1.55;color:${c.text};font-weight:700;max-width:560px}
-.heroBt{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:26px}
-.heroBtP,.heroBtS{min-height:54px;padding:16px 28px;font-size:15.5px}
-.heroMini{margin-top:15px;font-size:13px;line-height:1.6;color:${c.muted};font-weight:600}
-.heroBoardCol{display:flex;justify-content:center;width:100%}
-
-.wsWrap{width:100%;max-width:580px;position:relative}
-.wsGlow{
-  position:absolute;
-  inset:-36px;
-  border-radius:52px;
-  background:radial-gradient(circle,rgba(201,149,107,.08),transparent 68%);
-  z-index:0;
-  pointer-events:none
+.nav-inner{
+  max-width:1200px;margin:0 auto;padding:0 32px;
+  height:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;
 }
-.wsShell{
-  position:relative;
-  z-index:1;
-  background:#fff;
-  border:1px solid rgba(227,221,210,.92);
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo-mark{
+  width:32px;height:32px;background:${c.ink};border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+}
+.nav-logo-mark svg{width:17px;height:17px}
+.nav-logo-name{
+  font-family:var(--font-instrument-serif),Georgia,serif;
+  font-size:21px;color:${c.ink};letter-spacing:-.01em
+}
+.nav-links{display:flex;align-items:center;gap:2px}
+.nav-link{
+  font-size:14.5px;font-weight:500;color:${c.sub};
+  padding:7px 14px;border-radius:8px;transition:color .15s,background .15s
+}
+.nav-link:hover{color:${c.ink};background:rgba(0,0,0,.04)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.btn-ghost{
+  font-size:14.5px;font-weight:500;color:${c.sub};background:none;border:none;cursor:pointer;
+  padding:7px 14px;border-radius:8px;transition:color .15s,background .15s
+}
+.btn-ghost:hover{color:${c.ink};background:rgba(0,0,0,.04)}
+.btn-primary{
+  display:inline-flex;align-items:center;gap:7px;
+  background:${c.warm};color:#fff;
+  font-size:14.5px;font-weight:700;padding:10px 22px;border-radius:100px;border:none;
+  cursor:pointer;transition:all .2s;white-space:nowrap;letter-spacing:-.01em;
+}
+.btn-primary:hover:not(:disabled){
+  background:${c.warmDk};
+  transform:translateY(-1px);
+  box-shadow:0 6px 20px rgba(160,117,69,.3)
+}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed}
+.btn-secondary{
+  display:inline-flex;align-items:center;gap:7px;
+  background:${c.white};color:${c.ink};
+  font-size:14.5px;font-weight:700;padding:10px 22px;border-radius:100px;
+  border:1.5px solid ${c.border};cursor:pointer;transition:all .2s;letter-spacing:-.01em;
+}
+.btn-secondary:hover{border-color:${c.ink};transform:translateY(-1px)}
+
+/* ---- HERO ---- */
+.hero{padding:80px 32px 72px;max-width:1200px;margin:0 auto;text-align:center}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:${c.white};border:1px solid ${c.border};border-radius:100px;
+  padding:6px 16px;font-size:13px;font-weight:600;color:${c.sub};
+  margin-bottom:32px;
+  animation:fadeUp .6s both;
+}
+.live-dot{width:7px;height:7px;background:${c.green};border-radius:50%;animation:livePulse 2s infinite}
+.small-dot{width:5px!important;height:5px!important}
+@keyframes livePulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(21,128,61,.4)}
+  60%{box-shadow:0 0 0 6px rgba(21,128,61,0)}
+}
+h1{
+  font-family:var(--font-instrument-serif),Georgia,serif;
+  font-size:clamp(42px,6.5vw,80px);
+  line-height:.98;letter-spacing:-.025em;color:${c.ink};
+  margin-bottom:24px;
+  animation:fadeUp .6s .08s both;
+}
+h1 em{font-style:italic;color:${c.warmDk}}
+.hero-sub{
+  font-size:19px;color:${c.sub};line-height:1.65;max-width:540px;margin:0 auto 10px;
+  animation:fadeUp .6s .14s both;
+}
+.hero-pain{
+  font-size:14px;color:${c.ink};font-weight:700;margin-bottom:36px;
+  animation:fadeUp .6s .18s both
+}
+.hero-btns{
+  display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;
+  animation:fadeUp .6s .22s both;
+}
+.hero-btns .btn-primary{font-size:16px;padding:14px 30px}
+.hero-btns .btn-secondary{font-size:16px;padding:13px 30px}
+.hero-note{
+  font-size:13px;color:${c.muted};display:flex;align-items:center;justify-content:center;gap:7px;
+  animation:fadeUp .6s .28s both
+}
+.hero-note-dot{width:6px;height:6px;background:${c.green};border-radius:50%}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:none}
+}
+
+/* ---- WORKSPACE MOCKUP ---- */
+.workspace-section{padding:0 32px 100px;animation:fadeUp .8s .3s both}
+.workspace-shell{
+  max-width:1040px;margin:0 auto;
+  background:${c.white};border:1px solid rgba(227,221,210,.9);
   border-radius:24px;
-  padding:18px;
-  box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 24px 50px rgba(14,18,26,.09),0 4px 14px rgba(14,18,26,.04);
+  box-shadow:0 1px 0 rgba(255,255,255,.8) inset, 0 2px 8px rgba(0,0,0,.04), 0 24px 60px rgba(15,24,41,.1);
   overflow:hidden;
-  min-height:760px
 }
-.wsHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 6px 14px;border-bottom:1px solid rgba(227,221,210,.7)}
-.wsBrand{display:flex;align-items:center;gap:11px}
-.wsMark{
-  width:36px;
-  height:36px;
-  border-radius:11px;
-  background:${c.warmSoft};
-  border:1px solid rgba(201,149,107,.16);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:5px
+.ws-titlebar{
+  background:${c.bg2};border-bottom:1px solid ${c.border};
+  padding:12px 18px;display:flex;align-items:center;gap:10px;
 }
-.wsBrandTx{display:flex;flex-direction:column;line-height:1}
-.wsName{font-size:19px;letter-spacing:-.03em;color:${c.text}}
-.wsBrandSub{display:flex;align-items:center;gap:6px;margin-top:5px;font-size:10.5px;color:${c.muted};font-weight:700}
-.wsLive{display:inline-flex;align-items:center;gap:5px;color:${c.greenDk};text-transform:uppercase;letter-spacing:.04em;font-size:9.5px}
-.wsLiveDot{width:6px;height:6px;border-radius:50%;background:${c.green};box-shadow:0 0 0 2px rgba(34,197,94,.2)}
-.wsBrandSep{color:${c.border}}
-.wsBrandDate{color:${c.sub}}
-.wsDomainChip{display:flex;flex-direction:column;align-items:flex-end;line-height:1}
-.wsDomainChipLbl{font-size:8.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:${c.muted}}
-.wsDomainChipVal{margin-top:4px;font-size:11px;font-weight:800;color:${c.text};letter-spacing:-.01em}
+.ws-dots{display:flex;gap:6px}
+.ws-dots span{width:12px;height:12px;border-radius:50%;display:block}
+.ws-dots span:nth-child(1){background:#FF5F57}
+.ws-dots span:nth-child(2){background:#FEBC2E}
+.ws-dots span:nth-child(3){background:#28C840}
+.ws-url{
+  flex:1;background:${c.white};border:1px solid ${c.border};
+  border-radius:6px;padding:5px 12px;font-size:12px;color:${c.muted};
+  text-align:center;max-width:280px;margin:0 auto;
+}
+.ws-body{display:grid;grid-template-columns:240px 1fr 250px;min-height:420px}
 
-.wsEvalSlot{position:relative;min-height:60px;margin-top:12px}
-.wsEval{position:absolute;left:0;right:0;top:0}
-.wsEvalGhost{height:52px;opacity:0}
-.wsEvalInner{
-  display:flex;
-  align-items:center;
-  gap:11px;
-  padding:11px 14px;
-  background:rgba(255,255,255,.98);
-  border:1px solid rgba(201,149,107,.3);
-  border-radius:14px;
-  box-shadow:0 10px 32px rgba(14,18,26,.12),0 2px 8px rgba(14,18,26,.04);
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px)
+/* sidebar */
+.ws-sb{background:${c.bg};border-right:1px solid ${c.border}}
+.ws-sb-head{padding:16px;border-bottom:1px solid ${c.border}}
+.ws-brand{display:flex;align-items:center;gap:9px;margin-bottom:5px}
+.ws-brand-mark{
+  width:26px;height:26px;background:${c.ink};border-radius:7px;
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff
 }
-.wsEvalIcon{
-  width:26px;
-  height:26px;
-  border-radius:50%;
-  background:#fff;
-  border:1px solid rgba(201,149,107,.28);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:${c.warm};
-  flex-shrink:0
+.ws-brand-name{
+  font-family:var(--font-instrument-serif),Georgia,serif;
+  font-size:15px;color:${c.ink}
 }
-.wsEvalText{flex:1;min-width:0;line-height:1.2}
-.wsEvalLbl{font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:${c.warmDk}}
-.wsEvalTask{margin-top:3px;font-size:12px;font-weight:700;color:${c.text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.wsEvalBar{width:64px;height:4px;background:rgba(201,149,107,.15);border-radius:999px;overflow:hidden;flex-shrink:0}
-.wsEvalBarFill{height:100%;background:linear-gradient(90deg,${c.warm},${c.warmDk});border-radius:999px}
-
-.wsStage{min-height:620px}
-.wsStageInner{min-height:620px}
-.wsStats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
-.wsStat{padding:12px 14px;border-radius:14px;border:1px solid ${c.borderSoft}}
-.wsStat--warm{background:linear-gradient(180deg,#FFF8F0,#FDF3E6);border-color:rgba(201,149,107,.22)}
-.wsStat--red{background:linear-gradient(180deg,#FEF6F6,#FCECEC);border-color:rgba(239,68,68,.2)}
-.wsStat--green{background:linear-gradient(180deg,#F3FBF5,#E8F5EC);border-color:rgba(34,197,94,.22)}
-.wsStatVal{font-family:var(--font-instrument-serif),Georgia,serif;font-size:26px;line-height:1;letter-spacing:-.02em}
-.wsStat--warm .wsStatVal{color:${c.warmDk}}
-.wsStat--red .wsStatVal{color:${c.redDk}}
-.wsStat--green .wsStatVal{color:${c.greenDk}}
-.wsStatLbl{margin-top:5px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:${c.muted}}
-
-.wsBody{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
-.wsList{background:${c.cream};border:1px solid ${c.borderSoft};border-radius:18px;padding:8px}
-.wsListHd{display:flex;justify-content:space-between;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.11em;color:${c.muted};padding:8px 10px 10px}
-.wsRow{
-  display:flex;
-  align-items:flex-start;
-  gap:11px;
+.ws-live{
+  display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:${c.green};
+  text-transform:uppercase;letter-spacing:.06em
+}
+.ws-stats{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid ${c.border}}
+.ws-stat{padding:11px 13px;border-right:1px solid ${c.border}}
+.ws-stat:last-child{border-right:none}
+.ws-stat-n{
+  font-family:var(--font-instrument-serif),Georgia,serif;
+  font-size:24px;line-height:1;letter-spacing:-.02em
+}
+.ws-stat-n.a{color:${c.warmDk}}
+.ws-stat-n.r{color:${c.red}}
+.ws-stat-n.g{color:${c.green}}
+.ws-stat-l{
+  font-size:9.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:${c.muted};margin-top:3px
+}
+.ws-list-hd{
+  padding:9px 14px;font-size:9.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.1em;color:${c.muted};border-bottom:1px solid ${c.border};
+  display:flex;justify-content:space-between
+}
+.ws-item{
   width:100%;
-  padding:11px;
-  border:none;
-  background:transparent;
-  border-radius:12px;
-  cursor:pointer;
-  text-align:left;
-  transition:background .25s,box-shadow .25s
-}
-.wsRow+.wsRow{margin-top:3px}
-.wsRowA{background:#fff;box-shadow:0 4px 14px rgba(14,18,26,.05),0 0 0 1px rgba(201,149,107,.1);position:relative}
-.wsRowA::before{
-  content:"";
-  position:absolute;
-  left:0;
-  top:10px;
-  bottom:10px;
-  width:3px;
-  border-radius:0 3px 3px 0;
-  background:linear-gradient(180deg,${c.warm},${c.warmDk});
-  opacity:.7
-}
-.wsAv{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;letter-spacing:.03em}
-.wsAv--warm{background:linear-gradient(135deg,#F7E7D2,#F0D5B6);color:${c.warmDk}}
-.wsAv--blue{background:linear-gradient(135deg,#E3EDFB,#C9DBF6);color:#1E40AF}
-.wsAv--green{background:linear-gradient(135deg,#DFF3E4,#C7E8CF);color:${c.greenDk}}
-.wsAvLg{width:46px;height:46px;font-size:13.5px}
-.wsRowTx{flex:1;min-width:0}
-.wsRowNm{font-size:13px;font-weight:800;letter-spacing:-.015em;color:${c.text}}
-.wsRowAge{font-size:11px;color:${c.muted};font-weight:500;margin-left:3px}
-.wsRowMd{margin-top:3px;font-size:11.5px;color:${c.sub};font-weight:600}
-.wsRowDose{color:${c.muted};font-weight:500}
-.wsRowSt{margin-top:6px;font-size:10.5px;font-weight:700;display:inline-flex;align-items:center;gap:5px}
-.wsRowStDot{width:5px;height:5px;border-radius:50%}
-.wsRowSt--warm{color:${c.warmDk}}
-.wsRowSt--warm .wsRowStDot{background:${c.warm}}
-.wsRowSt--blue{color:${c.accent}}
-.wsRowSt--blue .wsRowStDot{background:${c.accent}}
-.wsRowSt--green{color:${c.greenDk}}
-.wsRowSt--green .wsRowStDot{background:${c.green}}
-.wsRowSupply{margin-top:7px;display:flex;align-items:center;gap:8px}
-.wsRowSupplyTrack{flex:1;height:3px;background:rgba(17,18,20,.06);border-radius:999px;overflow:hidden;min-width:60px}
-.wsRowSupplyFill{height:100%;border-radius:999px;transition:width .4s ease}
-.wsRowSupplyFill--warm{background:linear-gradient(90deg,${c.red},${c.warm})}
-.wsRowSupplyFill--blue{background:linear-gradient(90deg,${c.warm},${c.accent})}
-.wsRowSupplyFill--green{background:${c.green}}
-.wsRowSupplyLbl{font-size:9.5px;font-weight:700;color:${c.muted};letter-spacing:.02em;font-variant-numeric:tabular-nums;flex-shrink:0}
-
-.wsDetail{background:${c.cream};border:1px solid ${c.borderSoft};border-radius:18px;padding:18px;min-height:400px;position:relative}
-.wsDetailPane{min-height:364px}
-.wsDtHd{display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid rgba(227,221,210,.7)}
-.wsDtHdTx{flex:1;min-width:0}
-.wsDtNm{font-size:14.5px;font-weight:800;letter-spacing:-.02em;color:${c.text}}
-.wsDtMd{margin-top:3px;font-size:12px;color:${c.sub};font-weight:500}
-.wsDtRx{text-align:right;line-height:1.1}
-.wsDtRxLbl{font-size:8.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:${c.muted}}
-.wsDtRxVal{margin-top:4px;font-size:11px;font-weight:800;color:${c.text};font-variant-numeric:tabular-nums}
-.wsDtMeta{display:flex;flex-direction:column;gap:8px;margin-top:14px}
-.wsDtMetaRow{display:flex;align-items:baseline;gap:10px;font-size:11.5px}
-.wsDtMetaLbl{flex-shrink:0;width:64px;font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:${c.muted}}
-.wsDtMetaVal{font-weight:700;color:${c.text};min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.wsDtMetaSub{color:${c.muted};font-weight:500}
-.wsDtMetaVal--warm{color:${c.warmDk}}
-.wsDtMetaVal--blue{color:${c.accent}}
-.wsDtMetaVal--green{color:${c.greenDk}}
-.wsDtMetaValSub{font-weight:600;color:${c.sub}}
-.wsDtTl{margin-top:16px;padding-top:14px;border-top:1px solid rgba(227,221,210,.7)}
-.wsDtTlHd{font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:${c.muted};margin-bottom:10px}
-.wsDtTlList{display:flex;flex-direction:column;gap:8px}
-.wsTlStep{display:flex;align-items:center;gap:10px;font-size:11.5px}
-.wsTlMark{width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#fff;border:1px solid ${c.border}}
-.wsTlStep--done .wsTlMark{background:${c.greenSoft};border-color:rgba(34,197,94,.3);color:${c.greenDk}}
-.wsTlStep--active .wsTlMark{background:${c.warmSoft};border-color:rgba(201,149,107,.35)}
-.wsTlPulse{width:5px;height:5px;border-radius:50%;background:${c.warm}}
-.wsTlLbl{flex:1;color:${c.text};font-weight:600}
-.wsTlStep--done .wsTlLbl{color:${c.sub}}
-.wsTlMeta{font-size:10.5px;color:${c.muted};font-weight:600;font-variant-numeric:tabular-nums}
-.wsDtNext{margin-top:14px;padding:12px 14px;background:#fff;border:1px solid rgba(227,221,210,.8);border-radius:12px}
-.wsDtNextHd{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.wsDtNextLbl{font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:${c.muted}}
-.wsDtNextClock{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:700;color:${c.warmDk};letter-spacing:.04em;text-transform:uppercase}
-.wsDtNextTx{font-size:12.5px;line-height:1.55;color:${c.text};font-weight:600}
-
-.wsFeed{margin-top:12px;padding:13px 15px;background:${c.cream};border:1px solid ${c.borderSoft};border-radius:18px;position:relative}
-.wsDomainTabs{display:flex;gap:4px;margin-bottom:11px;padding:3px;background:rgba(17,18,20,.04);border-radius:10px}
-.wsDomainTab{
-  flex:1;
-  padding:7px 10px;
   background:none;
   border:none;
-  border-radius:7px;
-  font-size:10.5px;
-  font-weight:700;
-  color:${c.muted};
-  cursor:pointer;
-  transition:all .25s;
-  letter-spacing:-.005em;
-  font-family:inherit
+  padding:11px 14px;border-bottom:1px solid rgba(227,221,210,.5);
+  cursor:pointer;transition:background .15s;position:relative;text-align:left
 }
-.wsDomainTab:hover{color:${c.text}}
-.wsDomainTabA{background:#fff;color:${c.text};box-shadow:0 1px 3px rgba(0,0,0,.06)}
-.wsFeedHd{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:${c.muted};margin-bottom:9px}
-.wsFeedList{display:flex;flex-direction:column;gap:7px;min-height:74px}
-.wsFeedItem{display:flex;align-items:center;gap:8px;font-size:11px;line-height:1.4;color:${c.sub}}
-.wsFeedDot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.wsFeedDot--warm{background:${c.warm}}
-.wsFeedDot--blue{background:${c.accent}}
-.wsFeedDot--green{background:${c.green}}
-.wsFeedWho{font-weight:800;color:${c.text};flex-shrink:0;position:relative}
-.wsFeedWhat{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.wsFeedWhen{flex-shrink:0;color:${c.muted};font-weight:600;font-variant-numeric:tabular-nums}
-.wsFeedItemFresh .wsFeedWho::before{
-  content:"";
-  position:absolute;
-  left:-10px;
-  top:50%;
-  transform:translateY(-50%);
-  width:5px;
-  height:5px;
-  border-radius:50%;
-  background:${c.accent};
-  box-shadow:0 0 0 3px rgba(37,99,235,.18);
-  animation:wsPulse 1.6s ease-in-out infinite
+.ws-item:hover{background:rgba(255,255,255,.7)}
+.ws-item.sel{background:${c.white};border-left:2.5px solid ${c.warm}}
+.ws-item-top{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.ws-av{
+  width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:9.5px;font-weight:800;flex-shrink:0
 }
-.wsFeedWhenFresh{color:${c.accent}!important;font-weight:800!important;text-transform:uppercase;letter-spacing:.04em;font-size:9.5px!important}
-
-@keyframes wsPulse{
-  0%,100%{opacity:.5;transform:translateY(-50%) scale(.9)}
-  50%{opacity:1;transform:translateY(-50%) scale(1.15)}
+.ws-av.w{background:linear-gradient(135deg,#F7E7D2,#F0D5B6);color:${c.warmDk}}
+.ws-av.b{background:linear-gradient(135deg,#E0EDFB,#C6D9F5);color:#1E40AF}
+.ws-av.g{background:linear-gradient(135deg,#DCF2E4,#C4E8CF);color:${c.green}}
+.ws-item-name{font-size:12px;font-weight:700;color:${c.ink};letter-spacing:-.01em}
+.ws-item-age{font-size:10px;color:${c.muted}}
+.ws-item-med{font-size:10.5px;color:${c.sub};margin-left:34px;margin-bottom:4px}
+.ws-item-row{display:flex;align-items:center;justify-content:space-between;margin-left:34px}
+.chip{
+  display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;
+  padding:2px 8px;border-radius:100px;letter-spacing:.02em
+}
+.chip.fo{background:${c.warmBg};color:${c.warmDk}}
+.chip.se{background:${c.blueBg};color:${c.blue}}
+.chip.re{background:${c.greenBg};color:${c.green}}
+.chip.du{background:#FEF9EC;color:#92400E}
+.ws-item-days{font-size:10px;color:${c.muted}}
+.supply-bar{margin:5px 0 0 34px;display:flex;align-items:center;gap:7px}
+.supply-track{flex:1;height:2.5px;background:rgba(0,0,0,.07);border-radius:99px;overflow:hidden}
+.supply-fill{height:100%;border-radius:99px}
+.supply-fill.w{background:linear-gradient(90deg,${c.red},${c.warm})}
+.supply-fill.b{background:${c.blue}}
+.supply-fill.g{background:${c.green}}
+.supply-lbl{
+  font-size:9.5px;font-weight:700;color:${c.muted};white-space:nowrap
 }
 
-.infraStrip{padding:40px 0;background:rgba(255,255,255,.5);border-bottom:1px solid rgba(227,221,210,.4);overflow:hidden}
-.infraHd{text-align:center;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${c.muted};margin-bottom:26px}
-.infraMarquee{position:relative;width:100%;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
-.infraTrack{display:flex;align-items:center;gap:64px;width:max-content;animation:infraSlide 32s linear infinite}
-.infraMarquee:hover .infraTrack{animation-play-state:paused}
-.infraLogo{display:flex;align-items:center;justify-content:center;height:32px;min-width:110px;flex-shrink:0;opacity:.5;filter:grayscale(100%);transition:opacity .25s,filter .25s}
-.infraLogo:hover{opacity:.9;filter:grayscale(0%)}
-@keyframes infraSlide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+/* main panel */
+.ws-main{border-right:1px solid ${c.border}}
+.ws-eval{
+  background:${c.warmBg};border-bottom:1px solid rgba(201,149,107,.3);
+  padding:9px 18px;display:flex;align-items:center;gap:12px;font-size:12px;
+  min-height:44px;transition:opacity .3s;
+}
+.ws-eval-copy{flex:1}
+.ws-eval-lbl{
+  font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:${c.warmDk};display:block;margin-bottom:2px
+}
+.ws-eval-task{font-weight:600;color:${c.ink}}
+.ws-eval-prog{
+  flex:1;height:3px;background:rgba(201,149,107,.2);border-radius:99px;
+  margin-left:auto;max-width:80px;overflow:hidden
+}
+.ws-eval-fill{
+  height:100%;background:linear-gradient(90deg,${c.warm},${c.warmDk});
+  border-radius:99px;animation:evalFill 3.2s ease-in-out infinite alternate
+}
+@keyframes evalFill{0%{width:10%}100%{width:90%}}
+.ws-main-head{
+  padding:14px 18px;border-bottom:1px solid ${c.border};
+  display:flex;align-items:center;justify-content:space-between;gap:16px
+}
+.ws-main-title{font-size:14px;font-weight:800;letter-spacing:-.02em}
+.ws-main-sub{font-size:10.5px;color:${c.muted};margin-top:1px}
+.ws-tl{padding:16px 18px}
+.ws-tl-hd{
+  font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:${c.muted};margin-bottom:14px
+}
+.ws-tl-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:11px}
+.ws-tl-node{
+  width:18px;height:18px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;margin-top:1px
+}
+.ws-tl-node.done{background:${c.greenBg};border:1px solid rgba(21,128,61,.25)}
+.ws-tl-node.wait{
+  background:${c.warmBg};border:1px solid rgba(201,149,107,.3);
+  animation:nodePulse 2s infinite
+}
+.ws-tl-node svg{width:9px;height:9px}
+@keyframes nodePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+.ws-tl-text{font-size:12px;font-weight:500;color:${c.ink};flex:1}
+.ws-tl-text.p{color:${c.warmDk};font-style:italic}
+.ws-tl-time{font-size:10px;color:${c.muted}}
+.ws-connector{width:2px;height:9px;background:${c.border};margin:1px 0 1px 8px}
+.ws-next{
+  margin:2px 16px 16px;background:${c.white};border:1px solid ${c.border};
+  border-radius:10px;padding:10px 14px
+}
+.ws-next-lbl{
+  font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:${c.muted};margin-bottom:4px
+}
+.ws-next-text{font-size:12px;font-weight:600;color:${c.ink};line-height:1.5}
 
-.processStrip{padding:72px 0;border-top:1px solid rgba(227,221,210,.55);border-bottom:1px solid rgba(227,221,210,.55);background:rgba(255,255,255,.45)}
-.processHd{text-align:center;max-width:680px;margin:0 auto 44px}
-.processTi{margin-top:14px;font-size:clamp(28px,4.4vw,44px);line-height:1.08;letter-spacing:-.04em;color:${c.text}}
-.processGrid{display:grid;grid-template-columns:1fr;gap:18px;max-width:1080px;margin:0 auto}
-.processCard{padding:32px 28px;border-radius:20px;background:#fff;border:1px solid ${c.border};transition:transform .25s,box-shadow .25s,border-color .25s;display:flex;flex-direction:column;align-items:flex-start}
-.processCard:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.05);border-color:rgba(201,149,107,.3)}
-.processNum{font-family:var(--font-instrument-serif),Georgia,serif;font-size:46px;line-height:1;color:${c.warm};letter-spacing:-.03em;margin-bottom:16px}
-.processStepTi{font-size:19px;font-weight:800;letter-spacing:-.02em;color:${c.text}}
-.processStepBd{margin-top:10px;font-size:14.5px;line-height:1.68;color:${c.sub}}
+/* detail */
+.ws-detail{padding:16px}
+.ws-detail-av{
+  width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;margin-bottom:10px;transition:all .4s
+}
+.ws-detail-av.w{background:linear-gradient(135deg,#F7E7D2,#F0D5B6);color:${c.warmDk}}
+.ws-detail-av.b{background:linear-gradient(135deg,#E0EDFB,#C6D9F5);color:#1E40AF}
+.ws-detail-av.g{background:linear-gradient(135deg,#DCF2E4,#C4E8CF);color:${c.green}}
+.ws-detail-name{
+  font-size:14px;font-weight:800;letter-spacing:-.02em;margin-bottom:2px;transition:all .3s
+}
+.ws-detail-med{font-size:11.5px;color:${c.sub};margin-bottom:1px}
+.ws-detail-rx{
+  font-size:10px;color:${c.muted};padding-bottom:12px;border-bottom:1px solid ${c.border};
+  margin-bottom:12px
+}
+.ws-field{margin-bottom:9px}
+.ws-field-l{
+  font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:${c.muted};margin-bottom:2px
+}
+.ws-field-v{font-size:12px;font-weight:700;color:${c.ink}}
+.ws-field-v.bad{color:${c.red}}
+.ws-field-v.ok{color:${c.green}}
 
-.featGrid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:20px}
-.featCard{padding:28px;border-radius:22px;background:#fff;border:1px solid ${c.border};box-shadow:0 2px 14px rgba(0,0,0,.02);transition:transform .3s,box-shadow .3s}
-.featCard:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.06)}
-.featIc{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
-.featIc--warm{background:${c.warmSoft};color:${c.warm}}
-.featIc--blue{background:${c.accentSoft};color:${c.accent}}
-.featIc--green{background:${c.greenSoft};color:${c.greenDk}}
-.featTi{font-size:19px;font-weight:800;letter-spacing:-.02em;color:${c.text}}
-.featBd{margin-top:8px;font-size:15px;line-height:1.68;color:${c.sub}}
+/* activity feed */
+.ws-feed{border-top:1px solid ${c.border};padding:10px 14px}
+.ws-feed-hd{
+  font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:${c.muted};margin-bottom:8px;display:flex;align-items:center;gap:5px
+}
+.ws-feed-item{display:flex;align-items:center;gap:7px;font-size:10.5px;padding:3px 0}
+.ws-feed-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.ws-feed-dot.w{background:${c.warm}}
+.ws-feed-dot.b{background:${c.blue}}
+.ws-feed-dot.g{background:${c.green}}
+.ws-feed-who{font-weight:700;flex-shrink:0}
+.ws-feed-what{
+  flex:1;color:${c.sub};overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+.ws-feed-when{
+  color:${c.muted};font-size:9.5px;font-weight:600;flex-shrink:0
+}
+.ws-feed-when.fresh{
+  color:${c.blue};font-weight:800;text-transform:uppercase;letter-spacing:.04em
+}
 
-.indGrid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:20px}
-.indCard{padding:24px;border-radius:20px;background:#fff;border:1px solid ${c.border};position:relative;transition:all .3s;display:flex;flex-direction:column}
-.indCardLive:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.06);border-color:rgba(201,149,107,.4)}
-.indCardSoon{background:rgba(255,255,255,.55);border-style:dashed;border-color:rgba(201,149,107,.25)}
-.indCardSoon:hover{background:#fff;border-style:solid}
-.indCardSoon .indIc{opacity:.55}
-.indCardSoon .indTi{opacity:.7}
-.indCardSoon .indBd{opacity:.55}
-.indCardTop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
-.indIc{width:44px;height:44px;border-radius:12px;background:${c.warmSoft};color:${c.warmDk};display:flex;align-items:center;justify-content:center;border:1px solid rgba(201,149,107,.2);transition:opacity .25s}
-.indTag{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;padding:4px 9px;border-radius:999px;border:1px solid}
-.indTagLive{background:${c.greenSoft};color:${c.greenDk};border-color:rgba(34,197,94,.25)}
-.indTagDot{width:5px;height:5px;border-radius:50%;background:${c.green};box-shadow:0 0 0 2px rgba(34,197,94,.18);animation:wsPulse 1.6s ease-in-out infinite}
-.indTagSoon{background:${c.warmSoft};color:${c.warmDk};border-color:rgba(201,149,107,.3)}
-.indTi{font-size:18px;font-weight:800;letter-spacing:-.02em;color:${c.text}}
-.indBd{margin-top:8px;font-size:14px;line-height:1.65;color:${c.sub};flex:1}
-.indPlayers{margin-top:14px;padding-top:12px;border-top:1px solid ${c.borderSoft};font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:${c.muted}}
+/* ---- LOGO MARQUEE ---- */
+.marquee-section{
+  border-top:1px solid ${c.border};border-bottom:1px solid ${c.border};
+  padding:28px 0;overflow:hidden;
+  background:rgba(255,255,255,.5);
+}
+.marquee-label{
+  text-align:center;font-size:11px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:${c.muted};margin-bottom:22px
+}
+.marquee-track-wrap{
+  overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)
+}
+.marquee-track{
+  display:flex;align-items:center;gap:56px;width:max-content;animation:marquee 28s linear infinite
+}
+.marquee-track:hover{animation-play-state:paused}
+.marquee-logo{
+  font-size:15px;font-weight:800;color:${c.muted};letter-spacing:-.02em;
+  white-space:nowrap;opacity:.7;transition:opacity .2s
+}
+.marquee-logo:hover{opacity:1}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
-.painBand{padding:78px 0;background:linear-gradient(180deg,#FFF8F0,${c.bg});border-top:1px solid rgba(227,221,210,.45);border-bottom:1px solid rgba(227,221,210,.45)}
-.painWrap{text-align:center;max-width:760px;margin:0 auto}
-.painTi{margin-top:14px;font-size:clamp(30px,4.8vw,48px);line-height:1.06;letter-spacing:-.045em;color:${c.text}}
-.painBd{margin-top:16px;font-size:17px;line-height:1.7;color:${c.sub};max-width:700px;margin-left:auto;margin-right:auto}
-.painStrong{margin-top:16px;font-size:16px;line-height:1.6;color:${c.text};font-weight:700}
+/* ---- PAIN SECTION ---- */
+.pain-section{
+  background:${c.warmBg};
+  border-top:1px solid rgba(201,149,107,.2);
+  border-bottom:1px solid rgba(201,149,107,.2);
+  padding:96px 32px;
+}
+.pain-inner{max-width:680px;margin:0 auto;text-align:center}
+.pain-bubbles{
+  margin-bottom:40px;position:relative;min-height:120px;display:flex;
+  flex-direction:column;gap:10px;align-items:flex-start
+}
+.bubble{
+  background:rgba(255,255,255,.9);border:1px solid ${c.border};
+  border-radius:18px 18px 18px 4px;
+  padding:10px 16px;font-size:14px;color:${c.sub};font-weight:500;
+  display:inline-block;max-width:80%;box-shadow:0 2px 8px rgba(0,0,0,.06);
+  opacity:0;transform:translateX(-16px);transition:all .5s ease;
+}
+.bubble.right{
+  align-self:flex-end;border-radius:18px 18px 4px 18px;transform:translateX(16px)
+}
+.bubble.show{opacity:1;transform:none}
+.pain-heading{
+  font-family:var(--font-instrument-serif),Georgia,serif;
+  font-size:clamp(32px,5vw,54px);line-height:1.05;letter-spacing:-.03em;
+  margin-bottom:20px;color:${c.ink}
+}
+.pain-heading em{font-style:italic}
+.pain-body{font-size:17px;color:${c.sub};line-height:1.72;margin-bottom:14px}
+.pain-punch{font-size:17px;font-weight:700;color:${c.ink}}
 
-.prGrid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:24px;max-width:1080px;margin-left:auto;margin-right:auto}
-.prCard{padding:32px 28px;border-radius:24px;background:#fff;border:1px solid ${c.border};position:relative;display:flex;flex-direction:column;transition:transform .3s,box-shadow .3s}
-.prCard:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.06)}
-.prCardFeat{border:1.5px solid ${c.warm};box-shadow:0 14px 40px rgba(201,149,107,.18);background:linear-gradient(180deg,#fff,#FFFCF8)}
-.prBadge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:${c.dark};color:#fff;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;box-shadow:0 6px 16px rgba(0,0,0,.18)}
-.prBadgeDot{width:6px;height:6px;border-radius:50%;background:${c.warm};box-shadow:0 0 0 3px rgba(201,149,107,.3)}
-.prName{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:${c.warmDk}}
-.prPrice{display:flex;align-items:baseline;gap:8px;margin-top:14px}
-.prPriceVal{font-size:52px;line-height:1;letter-spacing:-.04em;color:${c.text}}
-.prPricePer{font-size:13px;color:${c.muted};font-weight:600}
-.prDesc{margin-top:14px;font-size:14px;line-height:1.6;color:${c.sub};min-height:58px}
-.prFeats{list-style:none;margin:22px 0;padding:0;display:flex;flex-direction:column;gap:10px;flex:1}
-.prFeats li{display:flex;align-items:flex-start;gap:9px;font-size:13.5px;color:${c.text};line-height:1.5}
-.prFeats li svg{color:${c.greenDk};flex-shrink:0;margin-top:3px}
-.prBt{width:100%;justify-content:center}
-.prFoot{margin-top:30px;text-align:center;font-size:13px;color:${c.muted};line-height:1.65}
-.prFoot a{color:${c.text};font-weight:700;text-decoration:underline;text-underline-offset:2px}
+/* ---- GENERIC SECTION ---- */
+section.pad{padding:96px 32px}
+.sec-inner{max-width:1100px;margin:0 auto}
+.overline{
+  display:block;font-size:11px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:${c.muted};margin-bottom:16px
+}
+.overline.warm{color:${c.warmDk}}
+h2{
+  font-family:var(--font-instrument-serif),Georgia,serif;
+  font-size:clamp(30px,4.5vw,52px);line-height:1.08;letter-spacing:-.03em;
+  margin-bottom:18px;color:${c.ink}
+}
+h2 em{font-style:italic;color:${c.warmDk}}
+.sec-sub{font-size:17px;color:${c.sub};line-height:1.7;max-width:580px}
+.sh-c{text-align:center;max-width:760px;margin:0 auto 56px}
+.sh-c .sec-sub{margin:0 auto}
+.white-bg{background:${c.white}}
+.bg-main{background:${c.bg}}
+.bg2{background:${c.bg2}}
 
-.statBand{background:${c.navy};padding:80px 0;color:#fff}
-.statHd{text-align:center;max-width:720px;margin:0 auto 44px}
-.statHd .overline{color:${c.warm}}
-.statTi{margin-top:14px;font-size:clamp(30px,4.5vw,46px);line-height:1.08;letter-spacing:-.04em;color:#fff}
-.statSub{margin-top:14px;font-size:16px;line-height:1.65;color:rgba(255,255,255,.7)}
-.statGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-.statCard{padding:32px 24px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);text-align:left}
-.statVal{font-size:clamp(48px,7vw,76px);line-height:1;letter-spacing:-.035em;color:#fff}
-.statLbl{margin-top:14px;font-size:14px;line-height:1.55;color:rgba(255,255,255,.7);font-weight:500}
+/* ---- HOW IT WORKS ---- */
+.how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:16px}
+.how-card{
+  background:${c.white};border:1px solid ${c.border};border-radius:20px;padding:32px 28px;
+  transition:transform .25s,box-shadow .25s,border-color .25s;
+}
+.how-card:hover{
+  transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.07);
+  border-color:rgba(201,149,107,.4)
+}
+.how-num{
+  font-family:var(--font-instrument-serif),Georgia,serif;
+  font-size:52px;color:${c.warm};opacity:.35;line-height:1;margin-bottom:18px;
+  letter-spacing:-.02em
+}
+.how-card h3{font-size:17px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px}
+.how-card p{font-size:14.5px;color:${c.sub};line-height:1.7}
 
-.tstSec{padding:96px 0;background:linear-gradient(180deg,${c.bg},#F5F1EA);border-top:1px solid rgba(227,221,210,.5);border-bottom:1px solid rgba(227,221,210,.5)}
-.tstWrap{max-width:780px;margin:0 auto;text-align:center;padding:0 12px;position:relative;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.tstIc{width:44px;height:44px;border-radius:14px;background:${c.warmSoft};color:${c.warm};display:flex;align-items:center;justify-content:center;border:1px solid rgba(201,149,107,.2);margin:0 auto 24px}
-.tstQuote{width:100%}
-.tstTx{font-size:clamp(22px,3.2vw,30px);line-height:1.35;letter-spacing:-.022em;color:${c.text};font-style:italic;max-width:720px;margin:0 auto}
-.tstBy{margin-top:20px;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
-.tstByName{color:${c.warmDk}}
-.tstBySep{color:${c.muted};font-weight:600}
-.tstByDomain{color:${c.muted};font-weight:700}
-.tstDots{display:flex;gap:6px;margin-top:28px;justify-content:center}
-.tstDot{width:6px;height:6px;border-radius:50%;background:rgba(42,31,20,.18);border:none;cursor:pointer;padding:0;transition:all .3s}
-.tstDot:hover{background:rgba(42,31,20,.35)}
-.tstDotA{background:${c.warmDk};width:22px;border-radius:999px}
+/* ---- BENEFIT CARDS ---- */
+.benefit-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.benefit-card{
+  background:${c.white};border:1px solid ${c.border};border-radius:20px;padding:32px 28px;
+  transition:transform .25s,box-shadow .25s
+}
+.benefit-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.07)}
+.benefit-icon{
+  width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  margin-bottom:20px
+}
+.benefit-icon.warm{background:${c.warmBg};color:${c.warm}}
+.benefit-icon.blue{background:${c.blueBg};color:${c.blue}}
+.benefit-icon.green{background:${c.greenBg};color:${c.green}}
+.benefit-card h3{font-size:17px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px}
+.benefit-card p{font-size:14.5px;color:${c.sub};line-height:1.7}
 
-.trustGrid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:20px}
-.trustCard{padding:24px;border-radius:20px;background:#fff;border:1px solid ${c.border};transition:transform .25s,box-shadow .25s,border-color .25s}
-.trustCard:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.05);border-color:rgba(201,149,107,.35)}
-.trustCardTop{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-.trustNo{font-family:var(--font-instrument-serif),Georgia,serif;font-size:24px;line-height:1;color:${c.warm};letter-spacing:-.02em;min-width:28px}
-.trustIc{width:36px;height:36px;border-radius:11px;background:${c.warmSoft};color:${c.warmDk};display:flex;align-items:center;justify-content:center;border:1px solid rgba(201,149,107,.2)}
-.trustTi{font-size:17px;font-weight:800;letter-spacing:-.02em;color:${c.text}}
-.trustBd{margin-top:8px;font-size:14px;line-height:1.68;color:${c.sub}}
+/* ---- AUDIENCE GRID ---- */
+.audience-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.audience-card{
+  background:${c.white};border:1px solid ${c.border};border-radius:20px;padding:28px 24px;
+  display:flex;flex-direction:column;transition:transform .25s,border-color .25s,box-shadow .25s;
+}
+.audience-card:hover{
+  transform:translateY(-3px);border-color:rgba(201,149,107,.4);
+  box-shadow:0 12px 32px rgba(0,0,0,.06)
+}
+.audience-card-top{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:16px
+}
+.audience-icon{
+  width:42px;height:42px;border-radius:11px;background:${c.warmBg};
+  border:1px solid rgba(201,149,107,.2);display:flex;align-items:center;justify-content:center;
+  color:${c.warmDk}
+}
+.live-tag{
+  display:inline-flex;align-items:center;gap:5px;background:${c.greenBg};
+  border:1px solid rgba(21,128,61,.2);border-radius:100px;padding:3px 9px;
+  font-size:10px;font-weight:700;color:${c.green}
+}
+.live-tag-dot{
+  width:5px;height:5px;background:${c.green};border-radius:50%;animation:livePulse 2s infinite
+}
+.audience-card h3{font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:9px}
+.audience-card p{font-size:14px;color:${c.sub};line-height:1.68;flex:1}
+.audience-players{
+  margin-top:14px;padding-top:12px;border-top:1px solid ${c.border};
+  font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:${c.muted}
+}
 
-.faqWrap{max-width:780px;margin:24px auto 0}
-.faqList{display:flex;flex-direction:column;gap:10px}
-.faqItem{background:#fff;border:1px solid ${c.border};border-radius:18px;overflow:hidden;transition:border-color .25s,box-shadow .25s}
-.faqItem:hover{border-color:rgba(201,149,107,.35)}
-.faqItemOpen{border-color:rgba(201,149,107,.4);box-shadow:0 8px 24px rgba(0,0,0,.04)}
-.faqQ{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;padding:20px 24px;background:none;border:none;cursor:pointer;text-align:left;color:${c.text}}
-.faqQTx{font-size:16px;font-weight:800;letter-spacing:-.015em;line-height:1.4;flex:1}
-.faqQIc{flex-shrink:0;color:${c.warmDk};transition:transform .3s cubic-bezier(.22,1,.36,1)}
-.faqItemOpen .faqQIc{transform:rotate(180deg)}
-.faqA{overflow:hidden}
-.faqAInner{padding:0 24px 22px;font-size:14.5px;line-height:1.72;color:${c.sub}}
+/* ---- DARK STATS ---- */
+.dark-section{background:${c.dark};padding:96px 32px}
+.dark-inner{max-width:1100px;margin:0 auto}
+.dark-inner .overline{color:rgba(255,255,255,.35)}
+.dark-inner h2{color:#fff;max-width:680px;margin-bottom:20px}
+.dark-inner .dark-sub{color:rgba(255,255,255,.55);margin-bottom:56px}
+.stats-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:2px;
+  border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden
+}
+.stat-card{
+  padding:36px 28px;background:rgba(255,255,255,.03);
+  border-right:1px solid rgba(255,255,255,.06);transition:background .2s
+}
+.stat-card:hover{background:rgba(255,255,255,.06)}
+.stat-card:last-child{border-right:none}
+.stat-val{
+  font-family:var(--font-instrument-serif),Georgia,serif;
+  font-size:52px;line-height:1;letter-spacing:-.03em;color:#fff;margin-bottom:12px
+}
+.stat-lbl{font-size:13px;color:rgba(255,255,255,.45);line-height:1.55}
+.multi-party{font-size:32px!important;line-height:1.3!important}
 
-.wlC{background:#fff;border:1px solid ${c.border};border-radius:28px;padding:40px 32px;max-width:760px;margin:0 auto;box-shadow:0 4px 24px rgba(0,0,0,.04);text-align:center}
-.wlTi{font-size:clamp(28px,4.5vw,44px);letter-spacing:-.045em;margin-top:14px}
-.wlSub{margin-top:14px;font-size:16px;line-height:1.68;color:${c.sub};max-width:560px;margin-left:auto;margin-right:auto}
-.wlF{display:grid;grid-template-columns:1fr;gap:10px;margin-top:26px;position:relative}
-.wlBt{height:52px;width:100%;font-size:15px}
-.inp{width:100%;height:52px;border-radius:12px;border:1.5px solid ${c.border};background:#fff;padding:0 16px;font-size:15px;color:${c.text};outline:none;transition:all .2s}
-.inp:focus{border-color:${c.accent};box-shadow:0 0 0 3px rgba(37,99,235,.08)}
-.pvL{display:flex;align-items:flex-start;gap:7px;margin-top:14px;color:${c.sub};font-size:12px;line-height:1.55;cursor:pointer;max-width:460px;margin-left:auto;margin-right:auto}
-.pvC{margin-top:2px;width:14px;height:14px;accent-color:${c.accent};flex-shrink:0}
-.pvLk{color:${c.text};font-weight:700;text-decoration:underline;text-underline-offset:2px}
-.fmOk{margin-top:14px;background:${c.greenSoft};color:${c.greenDk};border-radius:12px;padding:13px;font-size:13.5px;font-weight:600}
-.fmEr{margin-top:14px;background:${c.redSoft};color:${c.redDk};border-radius:12px;padding:13px;font-size:13.5px;font-weight:600}
+/* ---- TESTIMONIALS ---- */
+.testimonial-shell{margin-bottom:40px}
+.tst-wrap{
+  max-width:700px;margin:0 auto;text-align:center;min-height:220px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center
+}
+.tst-icon{
+  width:44px;height:44px;background:${c.warmBg};
+  border:1px solid rgba(201,149,107,.2);border-radius:12px;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 28px;color:${c.warm}
+}
+.tst-quote{
+  font-family:var(--font-instrument-serif),Georgia,serif;
+  font-size:clamp(22px,3vw,30px);line-height:1.38;letter-spacing:-.02em;
+  color:${c.ink};margin-bottom:24px;transition:opacity .25s,transform .25s
+}
+.tst-attr{
+  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;
+  color:${c.muted};display:flex;align-items:center;justify-content:center;gap:8px
+}
+.tst-attr-name{color:${c.warmDk}}
+.tst-dots{display:flex;gap:6px;margin-top:28px;justify-content:center}
+.tst-dot{
+  width:7px;height:7px;border-radius:50%;background:rgba(0,0,0,.15);
+  border:none;cursor:pointer;padding:0;transition:all .3s
+}
+.tst-dot.active{width:24px;border-radius:100px;background:${c.warmDk}}
 
-.modO{position:fixed;inset:0;z-index:220;background:rgba(9,10,13,.55);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;padding:14px}
-.modB{width:100%;max-width:420px;background:#fff;border:1px solid ${c.border};border-radius:24px;padding:30px;box-shadow:0 20px 50px rgba(0,0,0,.18);text-align:center}
-.modSeal{width:54px;height:54px;border-radius:999px;background:linear-gradient(135deg,#FFF8F0,#ECFDF3);border:1px solid rgba(34,197,94,.14);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:${c.greenDk}}
-.modTi{font-size:clamp(24px,4.5vw,30px);letter-spacing:-.045em}
+/* ---- TRUST ---- */
+.trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.trust-card{
+  background:${c.white};border:1px solid ${c.border};border-radius:20px;padding:28px 24px;
+  transition:transform .25s,border-color .25s
+}
+.trust-card:hover{transform:translateY(-3px);border-color:rgba(201,149,107,.35)}
+.trust-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.trust-num{
+  font-family:var(--font-instrument-serif),Georgia,serif;
+  font-size:26px;color:${c.warm};opacity:.6;line-height:1
+}
+.trust-icon-wrap{
+  width:34px;height:34px;background:${c.warmBg};border-radius:9px;
+  border:1px solid rgba(201,149,107,.2);display:flex;align-items:center;justify-content:center;
+  color:${c.warmDk}
+}
+.trust-card h3{font-size:15px;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+.trust-card p{font-size:14px;color:${c.sub};line-height:1.68}
+
+/* ---- PRICING ---- */
+.pricing-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1000px;margin:0 auto
+}
+.p-card{
+  background:${c.white};border:1.5px solid ${c.border};border-radius:22px;padding:32px 28px;
+  position:relative;display:flex;flex-direction:column;transition:transform .25s,box-shadow .25s
+}
+.p-card:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,.07)}
+.p-card.feat{border-color:${c.warm};box-shadow:0 0 0 1px ${c.warm}}
+.p-badge{
+  position:absolute;top:-13px;left:50%;transform:translateX(-50%);
+  background:${c.ink};color:#fff;font-size:11px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;padding:4px 14px;border-radius:100px;display:flex;
+  align-items:center;gap:5px;white-space:nowrap
+}
+.p-badge-dot{
+  width:5px;height:5px;background:${c.warm};border-radius:50%;
+  box-shadow:0 0 0 3px rgba(201,149,107,.3)
+}
+.p-tier{
+  font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:${c.warmDk};margin-bottom:12px
+}
+.p-price{display:flex;align-items:baseline;gap:5px;margin-bottom:6px}
+.p-amount{
+  font-family:var(--font-instrument-serif),Georgia,serif;
+  font-size:52px;line-height:1;letter-spacing:-.03em
+}
+.p-per{font-size:14px;color:${c.muted}}
+.p-custom{
+  font-family:var(--font-instrument-serif),Georgia,serif;
+  font-size:42px;line-height:1;letter-spacing:-.02em;margin-bottom:4px
+}
+.p-custom-note{font-size:12px;color:${c.muted};margin-bottom:6px}
+.p-desc{
+  font-size:14px;color:${c.sub};line-height:1.6;padding-bottom:20px;
+  border-bottom:1px solid ${c.border};margin-bottom:20px
+}
+.p-features{list-style:none;margin-bottom:28px;flex:1}
+.p-features li{display:flex;align-items:center;gap:9px;font-size:14px;color:${c.sub};padding:5.5px 0}
+.p-check{
+  width:16px;height:16px;background:${c.greenBg};border-radius:50%;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${c.green}
+}
+.p-btn{width:100%;text-align:center;justify-content:center;display:flex}
+.pricing-note{
+  text-align:center;margin-top:24px;font-size:13px;color:${c.muted}
+}
+.pricing-note a{
+  color:${c.ink};font-weight:700;text-decoration:underline;text-underline-offset:2px
+}
+
+/* ---- ONBOARDING ---- */
+.ob-box{
+  max-width:640px;margin:0 auto;
+  background:${c.white};border:1px solid ${c.border};border-radius:24px;padding:48px 44px;text-align:center;
+  box-shadow:0 4px 24px rgba(0,0,0,.05);
+}
+.ob-box h2{font-size:clamp(24px,3.5vw,38px);margin-bottom:14px}
+.ob-box>p{font-size:16px;color:${c.sub};margin-bottom:28px;line-height:1.65}
+.ob-form{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;position:relative}
+.ob-input{
+  flex:1;min-width:180px;padding:13px 18px;border-radius:100px;
+  border:1.5px solid ${c.border};font-size:14px;background:${c.bg};
+  color:${c.ink};outline:none;transition:border-color .15s;
+}
+.ob-input:focus{border-color:${c.warm}}
+.ob-select{
+  padding:13px 36px 13px 18px;border-radius:100px;border:1.5px solid ${c.border};
+  font-size:14px;
+  background:${c.bg};
+  appearance:none;color:${c.ink};outline:none;cursor:pointer;transition:border-color .15s;
+}
+.ob-select:focus{border-color:${c.warm}}
+.ob-submit{padding:13px 24px;border-radius:100px}
+.agree-row{
+  display:flex;align-items:flex-start;justify-content:center;gap:8px;
+  margin-top:14px;font-size:12px;color:${c.muted};line-height:1.6
+}
+.agree-row input{margin-top:2px}
+.agree-row a{color:${c.sub};text-decoration:underline;text-underline-offset:2px}
+.form-ok{
+  margin-top:14px;background:${c.greenBg};color:${c.green};
+  border-radius:12px;padding:13px;font-size:13.5px;font-weight:600
+}
+.form-er{
+  margin-top:14px;background:${c.redBg};color:${c.red};
+  border-radius:12px;padding:13px;font-size:13.5px;font-weight:600
+}
+
+/* ---- FAQ ---- */
+.faq-head a{color:${c.ink};font-weight:700;text-decoration:underline;text-underline-offset:2px}
+.faq-wrap{max-width:720px;margin:0 auto}
+.fq-item{border-bottom:1px solid ${c.border}}
+.fq-btn{
+  width:100%;background:none;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:22px 0;text-align:left;font-family:inherit;font-size:16px;font-weight:700;
+  color:${c.ink};letter-spacing:-.015em;transition:color .15s;
+}
+.fq-btn:hover{color:${c.warmDk}}
+.fq-icon{
+  width:28px;height:28px;border-radius:8px;background:${c.bg2};border:1px solid ${c.border};
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;
+}
+.fq-icon span{
+  font-size:18px;font-weight:300;color:${c.sub};line-height:1;display:flex;
+  align-items:center;justify-content:center;transition:transform .28s
+}
+.fq-item.open .fq-icon{background:${c.ink};border-color:${c.ink}}
+.fq-item.open .fq-icon span{color:#fff;transform:rotate(180deg)}
+.fq-answer{max-height:0;overflow:hidden;transition:max-height .35s ease}
+.fq-answer-inner{padding-bottom:22px;font-size:15px;color:${c.sub};line-height:1.75}
+.fq-item.open .fq-answer{max-height:220px}
+
+/* ---- FUTURE ---- */
+.future-section{padding-bottom:48px}
+.future-block{max-width:600px}
+.future-chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.future-chip{
+  padding:10px 18px;background:${c.white};border:1px solid ${c.border};
+  border-radius:100px;font-size:14px;font-weight:500;color:${c.sub}
+}
+
+/* ---- FINAL CTA ---- */
+.final-cta{background:${c.dark};padding:96px 32px;text-align:center}
+.final-cta h2{
+  color:#fff;max-width:640px;margin:0 auto 18px;
+  font-family:var(--font-instrument-serif),Georgia,serif;
+  font-size:clamp(30px,4.5vw,52px);line-height:1.08;letter-spacing:-.03em
+}
+.final-cta p{
+  font-size:17px;color:rgba(255,255,255,.5);max-width:480px;margin:0 auto 36px;line-height:1.7
+}
+.final-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-white{
+  display:inline-flex;align-items:center;gap:7px;background:#fff;color:${c.ink};
+  font-size:16px;font-weight:700;padding:14px 30px;border-radius:100px;border:none;
+  cursor:pointer;transition:all .2s;letter-spacing:-.01em
+}
+.btn-white:hover{background:${c.bg2};transform:translateY(-1px)}
+.btn-outline-white{
+  display:inline-flex;align-items:center;gap:7px;background:transparent;color:rgba(255,255,255,.8);
+  font-size:16px;font-weight:700;padding:13px 30px;border-radius:100px;
+  border:1.5px solid rgba(255,255,255,.2);cursor:pointer;transition:all .2s;letter-spacing:-.01em
+}
+.btn-outline-white:hover{border-color:rgba(255,255,255,.5);transform:translateY(-1px)}
+
+/* ---- FOOTER ---- */
+footer{background:${c.dark};border-top:1px solid rgba(255,255,255,.06);padding:60px 32px 36px}
+.ft-inner{max-width:1100px;margin:0 auto}
+.ft-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px}
+.ft-brand-logo{display:flex;align-items:center;gap:9px;margin-bottom:16px}
+.ft-lm{
+  width:28px;height:28px;background:rgba(255,255,255,.1);border-radius:7px;
+  display:flex;align-items:center;justify-content:center
+}
+.ft-lm svg{width:14px;height:14px}
+.ft-ln{
+  font-family:var(--font-instrument-serif),Georgia,serif;
+  font-size:18px;color:rgba(255,255,255,.85)
+}
+.ft-tagline{font-size:13.5px;color:rgba(255,255,255,.35);line-height:1.7}
+.ft-col-title{
+  font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:rgba(255,255,255,.35);margin-bottom:14px
+}
+.ft-link{display:block;font-size:14px;color:rgba(255,255,255,.45);padding:4px 0;transition:color .15s}
+.ft-link:hover{color:rgba(255,255,255,.85)}
+.ft-bottom{
+  border-top:1px solid rgba(255,255,255,.07);padding-top:24px;
+  display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap
+}
+.ft-copy{font-size:12px;color:rgba(255,255,255,.3)}
+.ft-disc{
+  font-size:12px;color:rgba(255,255,255,.2);max-width:540px;text-align:right;line-height:1.6
+}
+
+/* ---- MODAL ---- */
+.modO{
+  position:fixed;inset:0;z-index:220;background:rgba(9,10,13,.55);
+  backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;padding:14px
+}
+.modB{
+  width:100%;max-width:420px;background:#fff;border:1px solid ${c.border};border-radius:24px;
+  padding:30px;box-shadow:0 20px 50px rgba(0,0,0,.18);text-align:center
+}
+.modSeal{
+  width:54px;height:54px;border-radius:999px;background:linear-gradient(135deg,#FFF8F0,#ECFDF3);
+  border:1px solid rgba(34,197,94,.14);display:flex;align-items:center;justify-content:center;
+  margin:0 auto 16px;color:${c.green}
+}
+.modTi{
+  font-family:var(--font-instrument-serif),Georgia,serif;
+  font-size:clamp(24px,4.5vw,30px);letter-spacing:-.045em
+}
 .modBd{margin-top:8px;color:${c.sub};font-size:14px;line-height:1.68}
-.modRef{margin-top:20px;padding:15px;border-radius:14px;background:rgba(37,99,235,.03);border:1px solid rgba(37,99,235,.08)}
-.modRefLbl{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:${c.muted};margin-bottom:8px}
-.modRefBox{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid ${c.border};border-radius:8px;padding:7px 9px}
-.modRefUrl{flex:1;font-size:12px;color:${c.sub};font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
-.modRefCp{width:32px;height:32px;border-radius:7px;background:${c.accentSoft};border:1px solid rgba(37,99,235,.1);color:${c.accent};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
-.modRefBts{display:flex;gap:6px;margin-top:10px}
-.modShareBtn{flex:1;padding:9px 12px!important;font-size:12.5px!important}
-.modClose{margin-top:14px;background:none;border:none;color:${c.muted};font-size:12px;font-weight:600;cursor:pointer}
-
-.ft{background:${c.dark};padding:60px 0 28px;color:#fff}
-.ftTop{display:grid;grid-template-columns:1fr;gap:32px;padding-bottom:32px;border-bottom:1px solid rgba(255,255,255,.08)}
-.ftBrand{max-width:340px}
-.ftBr{display:flex;align-items:center;gap:11px;color:#fff}
-.ftLoW{background:rgba(255,255,255,.08);border-radius:8px;padding:3px}
-.ftBrN{font-size:22px;letter-spacing:-.03em;color:#fff}
-.ftBrDesc{margin-top:16px;font-size:13.5px;line-height:1.7;color:rgba(255,255,255,.5);max-width:300px}
-.ftCols{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-.ftCol{display:flex;flex-direction:column;gap:10px}
-.ftColT{font-size:10.5px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px}
-.ftLk{font-size:13px;color:rgba(255,255,255,.58);font-weight:500;transition:color .2s}
-.ftLk:hover{color:#fff}
-.ftLkStatic{cursor:default}
-.ftDsc{margin-top:24px;padding:16px 0;font-size:11.5px;color:rgba(255,255,255,.35);line-height:1.7;text-align:center;max-width:680px;margin-left:auto;margin-right:auto}
-.ftBtm{border-top:1px solid rgba(255,255,255,.06);padding-top:18px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:11px;color:rgba(255,255,255,.35)}
-
-@media(max-width:639px){
-  .sec{padding:56px 0}
-  .container{padding:0 16px}
-  .navR{gap:8px;height:62px}
-  .navNm{font-size:18px}
-  .navLo{width:30px;height:30px}
-  .navRight{gap:10px}
-  .navCt{padding:10px 14px!important;font-size:12px!important}
-  .navSignIn{font-size:13px}
-  .heroSec{padding:34px 0 44px}
-  .heroTi{font-size:clamp(30px,9vw,48px)}
-  .heroSub{font-size:16px;line-height:1.65}
-  .heroSubTight{font-size:14px}
-  .heroBt{flex-wrap:nowrap;gap:8px;justify-content:center}
-  .heroBtP,.heroBtS{flex:1;min-width:0;min-height:50px;padding:14px 12px;font-size:13.5px}
-  .heroMini{font-size:12px}
-  .wsShell{min-height:unset;padding:14px}
-  .wsHead{padding:4px 4px 12px}
-  .wsEvalSlot{min-height:54px}
-  .wsStage,.wsStageInner{min-height:unset}
-  .wsStats{gap:6px}
-  .wsStat{padding:10px 10px}
-  .wsStatVal{font-size:22px}
-  .wsStatLbl{font-size:9px}
-  .wsBody{gap:10px}
-  .wsDetail{min-height:340px;padding:15px}
-  .wsDetailPane{min-height:308px}
-  .wsDtHd{gap:10px}
-  .wsDtRx{display:none}
-  .wsDtMetaLbl{width:58px}
-  .wsDtMetaRow{font-size:11px}
-  .wsDtMetaVal{white-space:normal}
-  .wsDtNextTx{font-size:12px}
-  .wsRowSupplyTrack{min-width:44px}
-  .processStrip{padding:48px 0}
-  .statBand{padding:60px 0}
-  .statGrid{grid-template-columns:1fr;gap:12px}
-  .statCard{padding:26px 22px}
-  .tstSec{padding:64px 0}
-  .wlC{padding:28px 20px}
-  .ftCols{grid-template-columns:1fr 1fr;gap:22px}
+.modRef{
+  margin-top:20px;padding:15px;border-radius:14px;background:rgba(29,78,216,.03);
+  border:1px solid rgba(29,78,216,.08)
+}
+.modRefLbl{
+  font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+  color:${c.muted};margin-bottom:8px
+}
+.modRefBox{
+  display:flex;align-items:center;gap:6px;background:#fff;border:1px solid ${c.border};
+  border-radius:8px;padding:7px 9px
+}
+.modRefUrl{
+  flex:1;font-size:12px;color:${c.sub};font-weight:500;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left
+}
+.modRefCp{
+  width:32px;height:32px;border-radius:7px;background:${c.blueBg};
+  border:1px solid rgba(29,78,216,.1);color:${c.blue};display:flex;
+  align-items:center;justify-content:center;cursor:pointer;flex-shrink:0
+}
+.modClose{
+  margin-top:14px;background:none;border:none;color:${c.muted};
+  font-size:12px;font-weight:600;cursor:pointer
 }
 
-@media(max-width:420px){
-  .navR{height:60px}
-  .navBr{gap:8px}
-  .navCt{padding:10px 12px!important}
-  .navRight{gap:8px}
-  .heroBtP,.heroBtS{font-size:13px;padding:14px 12px}
-  .wsBrand{gap:9px}
-  .wsDomainChipVal{font-size:10px}
-  .wsDomainTabs{gap:3px}
-  .wsDomainTab{padding:7px 6px;font-size:9.5px}
+/* ---- RESPONSIVE ---- */
+@media(max-width:1024px){
+  .ws-body{grid-template-columns:220px 1fr}
+  .ws-detail{display:none}
+  .audience-grid{grid-template-columns:repeat(2,1fr)}
+  .trust-grid{grid-template-columns:repeat(2,1fr)}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .ft-top{grid-template-columns:1fr 1fr}
 }
-
-@media(min-width:640px){
-  .container{padding:0 28px}
-  .navR{height:72px}
-  .navLks{display:flex}
-  .processGrid{grid-template-columns:repeat(3,1fr);gap:16px}
-  .featGrid{grid-template-columns:repeat(3,1fr)}
-  .indGrid{grid-template-columns:repeat(2,1fr)}
-  .prGrid{grid-template-columns:repeat(3,1fr);gap:16px}
-  .statGrid{grid-template-columns:repeat(4,1fr)}
-  .trustGrid{grid-template-columns:repeat(2,1fr)}
-  .wlF{grid-template-columns:1.2fr .9fr auto}
-  .wlBt{width:auto}
-  .ftTop{grid-template-columns:1.1fr 2fr;gap:48px}
-  .wsBody{grid-template-columns:.92fr 1.08fr}
-}
-
-@media(min-width:960px){
-  .container{padding:0 36px}
-  .sec{padding:96px 0}
-  .heroSec{padding:64px 0 80px}
-  .heroGrid{grid-template-columns:minmax(0,1fr) minmax(540px,580px);gap:48px;align-items:center}
-  .heroTxt{max-width:620px;margin:0;text-align:left}
-  .heroSub,.heroSubTight,.heroMini{margin-left:0;margin-right:0}
-  .heroBt{justify-content:flex-start}
-  .heroBoardCol{justify-content:flex-end}
-  .indGrid{grid-template-columns:repeat(4,1fr)}
-  .trustGrid{grid-template-columns:repeat(4,1fr)}
-  .statBand{padding:104px 0}
-}
-
-@media(min-width:1180px){
-  .heroTi{font-size:clamp(56px,5.6vw,78px)}
+@media(max-width:720px){
+  nav .nav-inner{padding:0 16px}
+  .nav-links{display:none}
+  .hero,.workspace-section,.dark-section,section.pad,.pain-section,.final-cta,footer{padding-left:20px;padding-right:20px}
+  .how-grid,.benefit-grid,.pricing-grid{grid-template-columns:1fr}
+  .audience-grid,.trust-grid{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .ws-body{grid-template-columns:1fr}
+  .ws-sb{display:none}
+  .ft-top{grid-template-columns:1fr;gap:28px}
+  .ft-disc{text-align:left}
+  .ob-box{padding:32px 22px}
+  .ob-form{flex-direction:column}
+  .agree-row{align-items:flex-start;text-align:left}
+  .ob-submit{width:100%}
 }
 `;
