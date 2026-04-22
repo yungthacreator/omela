@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { DM_Sans, Instrument_Serif } from "next/font/google";
@@ -190,7 +191,7 @@ const TESTIMONIALS = [
 const FAQS = [
   {
     q: "Is Omela only for healthcare?",
-    a: "Omela is built first for repeat prescription coordination. The same coordination model may extend to other recurring workflows later, but the live product focus today is healthcare.",
+    a: "Omela is focused on repeat prescription coordination today. The product stays intentionally narrow so the workflow remains clear, calm, and useful from the start.",
   },
   {
     q: "How is this different from Asana or Trello?",
@@ -206,23 +207,46 @@ const FAQS = [
   },
   {
     q: "What happens when I book a demo?",
-    a: "We walk through your current workflow, show how Omela fits, and decide together whether you are a good pilot match.",
+    a: "We walk through your current workflow, show how Omela fits, and decide together whether it is a good operational fit for you or your team.",
   },
   {
-    q: "Are you looking for pilot partners?",
-    a: "Yes. We are working with a small number of early teams who want a simpler way to coordinate repeat prescription workflows.",
+    q: "Who is Omela for right now?",
+    a: "Omela is designed for family carers, residential care teams, supported living teams, and community pharmacies coordinating repeat prescriptions.",
   },
 ];
 
-const LOGOS = [
-  "Greenfield Medical",
-  "Northgate Surgery",
-  "Boots Pharmacy",
-  "Hillside Practice",
-  "Riverbank Surgery",
-  "Well Pharmacy",
-  "Lloyds Pharmacy",
-  "Park Lane Clinic",
+const INFRA_LOGOS = [
+  { src: "/logos/stripe.svg", alt: "Stripe" },
+  { src: "/logos/twilio.svg", alt: "Twilio" },
+  { src: "/logos/microsoft-logo.png", alt: "Microsoft" },
+  { src: "/logos/google-logo.png", alt: "Google" },
+  { src: "/logos/aws-logo.png", alt: "AWS" },
+  { src: "/logos/openai-wordmark.svg", alt: "OpenAI" },
+  { src: "/logos/vercel.svg", alt: "Vercel" },
+];
+
+const FEED_ITEMS = [
+  {
+    dot: "b",
+    who: "Jamie M.",
+    what: "drafted Metformin refill for David",
+    when: "now",
+    fresh: true,
+  },
+  {
+    dot: "w",
+    who: "Ada Kelly",
+    what: "approved Margaret's amlodipine request",
+    when: "14m",
+    fresh: false,
+  },
+  {
+    dot: "g",
+    who: "Jamie M.",
+    what: "marked Sertraline ready at Boots",
+    when: "42m",
+    fresh: false,
+  },
 ];
 
 const c = {
@@ -246,18 +270,15 @@ const c = {
 };
 
 function LogoMark({ inverted = false }: { inverted?: boolean }) {
-  const stroke = inverted ? "#fff" : c.ink;
-
   return (
-    <svg viewBox="0 0 17 17" fill="none" aria-hidden="true">
-      <circle cx="8.5" cy="8.5" r="4" stroke={stroke} strokeWidth="1.5" />
-      <path
-        d="M8.5 5.5C10 6.5 10.5 7.5 10.5 8.5C10.5 10 9 11 8.5 11.5"
-        stroke={stroke}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
+    <Image
+      src="/omela-logo-mark.png"
+      alt=""
+      aria-hidden="true"
+      width={17}
+      height={17}
+      className={`omela-mark ${inverted ? "inv" : ""}`}
+    />
   );
 }
 
@@ -322,8 +343,7 @@ function CountUp({
     return () => cancelAnimationFrame(frame);
   }, [started, target]);
 
-  const shown =
-    decimals > 0 ? value.toFixed(decimals) : String(Math.round(value));
+  const shown = decimals > 0 ? value.toFixed(decimals) : String(Math.round(value));
 
   return (
     <span ref={ref}>
@@ -372,7 +392,7 @@ function SuccessModal({
 
         <h3 className="serif modTi">You are on the list.</h3>
         <p className="modBd">
-          We will be in touch as Omela opens up with early repeat prescription pilots.
+          We will be in touch after your demo request is reviewed.
         </p>
 
         {referralCode && shareUrl ? (
@@ -550,7 +570,7 @@ export default function Page() {
           <div className="nav-inner">
             <a className="nav-logo" href="#">
               <div className="nav-logo-mark">
-                <LogoMark inverted />
+                <LogoMark />
               </div>
               <span className="nav-logo-name">Omela</span>
             </a>
@@ -582,11 +602,6 @@ export default function Page() {
         </nav>
 
         <div className="hero">
-          <div className="hero-eyebrow">
-            <span className="live-dot" />
-            Built first for repeat prescriptions in the UK
-          </div>
-
           <h1>
             Stop chasing GPs, pharmacies, and family for <em>repeat prescriptions.</em>
           </h1>
@@ -600,17 +615,12 @@ export default function Page() {
           </p>
 
           <div className="hero-btns">
-            <a className="btn-primary" href="#onboarding">
-              Book a demo
+            <a className="btn-primary" href="#how">
+              See the workflow
             </a>
-            <a className="btn-secondary" href="#onboarding">
-              Join the pilot
+            <a className="btn-secondary" href="#pricing">
+              View pricing
             </a>
-          </div>
-
-          <div className="hero-note">
-            <span className="hero-note-dot" />
-            Onboarding a small number of early teams now
           </div>
         </div>
 
@@ -629,7 +639,9 @@ export default function Page() {
               <div className="ws-sb">
                 <div className="ws-sb-head">
                   <div className="ws-brand">
-                    <div className="ws-brand-mark">O</div>
+                    <div className="ws-brand-mark ws-brand-logo">
+                      <LogoMark />
+                    </div>
                     <div>
                       <div className="ws-brand-name">Omela</div>
                       <div className="ws-live">
@@ -683,7 +695,9 @@ export default function Page() {
                     <div className="supply-bar">
                       <div className="supply-track">
                         <div
-                          className={`supply-fill ${resident.tone === "g" ? "g" : resident.tone === "b" ? "b" : "w"}`}
+                          className={`supply-fill ${
+                            resident.tone === "g" ? "g" : resident.tone === "b" ? "b" : "w"
+                          }`}
                           style={{ width: `${resident.supplyPercent}%` }}
                         />
                       </div>
@@ -698,31 +712,19 @@ export default function Page() {
                     Recent activity
                   </div>
 
-                  <div className="ws-feed-item">
-                    <span className="ws-feed-dot b" />
-                    <span className="ws-feed-who">Jamie M.</span>
-                    <span className="ws-feed-what"> drafted Metformin refill for David</span>
-                    <span className="ws-feed-when fresh">now</span>
-                  </div>
-
-                  <div className="ws-feed-item">
-                    <span className="ws-feed-dot w" />
-                    <span className="ws-feed-who">Ada Kelly</span>
-                    <span className="ws-feed-what">
-                      {" "}
-                      approved Margaret&apos;s amlodipine request
-                    </span>
-                    <span className="ws-feed-when">14m</span>
-                  </div>
-
-                  <div className="ws-feed-item">
-                    <span className="ws-feed-dot g" />
-                    <span className="ws-feed-who">Jamie M.</span>
-                    <span className="ws-feed-what">
-                      {" "}
-                      marked Sertraline ready at Boots
-                    </span>
-                    <span className="ws-feed-when">42m</span>
+                  <div className="ws-feed-vp">
+                    <div className="ws-feed-track">
+                      {[...FEED_ITEMS, ...FEED_ITEMS].map((item, index) => (
+                        <div key={`${item.who}-${item.what}-${index}`} className="ws-feed-item">
+                          <span className={`ws-feed-dot ${item.dot}`} />
+                          <span className="ws-feed-who">{item.who}</span>
+                          <span className="ws-feed-what"> {item.what}</span>
+                          <span className={`ws-feed-when ${item.fresh ? "fresh" : ""}`}>
+                            {item.when}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -768,9 +770,7 @@ export default function Page() {
                           )}
                         </div>
 
-                        <span className={`ws-tl-text ${item.done ? "" : "p"}`}>
-                          {item.text}
-                        </span>
+                        <span className={`ws-tl-text ${item.done ? "" : "p"}`}>{item.text}</span>
 
                         <span className="ws-tl-time">{item.meta}</span>
                       </div>
@@ -785,9 +785,7 @@ export default function Page() {
               </div>
 
               <div className="ws-detail">
-                <div className={`ws-detail-av ${activeResident.tone}`}>
-                  {activeResident.initials}
-                </div>
+                <div className={`ws-detail-av ${activeResident.tone}`}>{activeResident.initials}</div>
                 <div className="ws-detail-name">{activeResident.name}</div>
                 <div className="ws-detail-med">{activeResident.med}</div>
                 <div className="ws-detail-rx">{activeResident.rx}</div>
@@ -820,15 +818,15 @@ export default function Page() {
 
         <div className="marquee-section">
           <div className="marquee-label">
-            Trusted by early carers, care teams, and pharmacies
+            Built on infrastructure trusted by secure teams worldwide
           </div>
 
-          <div className="marquee-track-wrap">
-            <div className="marquee-track">
-              {[...LOGOS, ...LOGOS].map((logo, index) => (
-                <span key={`${logo}-${index}`} className="marquee-logo">
-                  {logo}
-                </span>
+          <div className="marquee-track-wrap infra-wrap">
+            <div className="marquee-track infra-track">
+              {[...INFRA_LOGOS, ...INFRA_LOGOS].map((logo, index) => (
+                <div key={`${logo.alt}-${index}`} className="infra-logo-card">
+                  <img src={logo.src} alt={logo.alt} className="infra-logo-img" />
+                </div>
               ))}
             </div>
           </div>
@@ -837,9 +835,7 @@ export default function Page() {
         <div className="pain-section">
           <div className="pain-inner">
             <div className="pain-bubbles">
-              <div className={`bubble ${visibleBubbles[0] ? "show" : ""}`}>
-                Did you call the GP yet?
-              </div>
+              <div className={`bubble ${visibleBubbles[0] ? "show" : ""}`}>Did you call the GP yet?</div>
               <div className={`bubble right ${visibleBubbles[1] ? "show" : ""}`}>
                 I thought you were handling it
               </div>
@@ -858,9 +854,8 @@ export default function Page() {
             </h2>
 
             <p className="pain-body">
-              Requests get dropped. Pharmacies chase practices. Families chase pharmacies.
-              Staff assume someone else handled it. Updates scatter across calls, emails,
-              and memory.
+              Requests get dropped. Pharmacies chase practices. Families chase pharmacies. Staff
+              assume someone else handled it. Updates scatter across calls, emails, and memory.
             </p>
 
             <p className="pain-punch">
@@ -884,17 +879,15 @@ export default function Page() {
               <div className="how-card">
                 <div className="how-num">01</div>
                 <h3>Omela spots what is due</h3>
-                <p>
-                  Repeat cycles, supply timing, and follow-up dates are tracked in one place.
-                </p>
+                <p>Repeat cycles, supply timing, and follow-up dates are tracked in one place.</p>
               </div>
 
               <div className="how-card">
                 <div className="how-num">02</div>
                 <h3>A request is prepared</h3>
                 <p>
-                  Each request is linked to the person, medication, owner, and next action
-                  before it gets sent.
+                  Each request is linked to the person, medication, owner, and next action before
+                  it gets sent.
                 </p>
               </div>
 
@@ -920,8 +913,8 @@ export default function Page() {
                 delayed, and done.
               </h2>
               <p className="sec-sub">
-                The shared coordination layer for repeat prescription requests. Keeps
-                ownership, status, and next steps visible without replacing clinical systems.
+                The shared coordination layer for repeat prescription requests. Keeps ownership,
+                status, and next steps visible without replacing clinical systems.
               </p>
             </div>
 
@@ -942,8 +935,8 @@ export default function Page() {
                 </div>
                 <h3>Keep ownership clear</h3>
                 <p>
-                  See who last handled the request, who owns the next step, and what should
-                  happen next.
+                  See who last handled the request, who owns the next step, and what should happen
+                  next.
                 </p>
               </div>
 
@@ -1021,8 +1014,7 @@ export default function Page() {
                 </div>
                 <h3>Supported living</h3>
                 <p>
-                  Giving staff and families a shared view of medication follow-up across
-                  handovers.
+                  Giving staff and families a shared view of medication follow-up across handovers.
                 </p>
                 <div className="audience-players">Staff · Family · GP</div>
               </div>
@@ -1052,15 +1044,12 @@ export default function Page() {
           <div className="dark-inner">
             <Overline>Why repeat prescriptions first</Overline>
 
-            <h2>
-              Starting with one of the largest unresolved admin workflows in healthcare.
-            </h2>
+            <h2>Starting with one of the largest unresolved admin workflows in healthcare.</h2>
 
             <p className="sec-sub dark-sub">
               Repeat prescriptions are frequent, repetitive, multi-party, and still poorly
-              coordinated across patients, practices, pharmacies, and care teams. That makes
-              them painful enough to matter and common enough to build a serious business
-              around.
+              coordinated across patients, practices, pharmacies, and care teams. That makes them
+              painful enough to matter and common enough to build a serious business around.
             </p>
 
             <div className="stats-grid">
@@ -1154,8 +1143,8 @@ export default function Page() {
                 You keep the rest.
               </h2>
               <p className="sec-sub">
-                Omela is a coordination layer, not a system of record. We handle ownership,
-                status, and next actions. Clinical records stay where they belong.
+                Omela is a coordination layer, not a system of record. We handle ownership, status,
+                and next actions. Clinical records stay where they belong.
               </p>
             </div>
 
@@ -1261,7 +1250,7 @@ export default function Page() {
                   </li>
                 </ul>
                 <a href="#onboarding" className="btn-secondary p-btn">
-                  Join the pilot
+                  Book a demo
                 </a>
               </div>
 
@@ -1364,9 +1353,12 @@ export default function Page() {
         <section className="pad white-bg" id="onboarding">
           <div className="sec-inner">
             <div className="ob-box">
-              <Overline>Early access</Overline>
-              <h2>Need guided onboarding?</h2>
-              <p>Tell us a bit about your workflow and we will help you get set up faster.</p>
+              <Overline>Book a demo</Overline>
+              <h2>See whether Omela fits your workflow.</h2>
+              <p>
+                Tell us how you currently manage repeat prescriptions and we will show you the
+                cleanest way Omela would work for you.
+              </p>
 
               <form className="ob-form" onSubmit={handleSubmit}>
                 <input
@@ -1414,7 +1406,7 @@ export default function Page() {
                   type="submit"
                   disabled={!mounted || submitting || !agreed}
                 >
-                  {submitting ? "Submitting..." : "Request onboarding"}
+                  {submitting ? "Submitting..." : "Request a demo"}
                 </button>
               </form>
 
@@ -1426,8 +1418,7 @@ export default function Page() {
                   required
                 />
                 <span>
-                  By submitting you agree to our{" "}
-                  <Link href="/privacy">Privacy Notice</Link> and{" "}
+                  By submitting you agree to our <Link href="/privacy">Privacy Notice</Link> and{" "}
                   <Link href="/terms">Terms</Link>.
                 </span>
               </label>
@@ -1456,23 +1447,16 @@ export default function Page() {
         <section className="pad white-bg future-section">
           <div className="sec-inner">
             <div className="future-block">
-              <Overline warm>What comes after</Overline>
+              <Overline warm>Focused first</Overline>
               <h2>
-                The same coordination model
+                One workflow,
                 <br />
-                can extend further.
+                done properly.
               </h2>
               <p className="sec-sub">
-                Once Omela proves itself in repeat prescriptions, the same ownership, timeline,
-                and next-step model can support other recurring workflows that cross people and
-                systems.
+                Omela is focused on making repeat prescription coordination clear, calm, and
+                visible across the people involved.
               </p>
-
-              <div className="future-chips">
-                <span className="future-chip">Medication plans in other care settings</span>
-                <span className="future-chip">Recurring compliance workflows</span>
-                <span className="future-chip">Regulated filing workflows</span>
-              </div>
             </div>
           </div>
         </section>
@@ -1485,16 +1469,16 @@ export default function Page() {
           </h2>
 
           <p>
-            We are onboarding a small number of early teams and carers who want a cleaner way
-            to track requests, ownership, and follow-up.
+            See how Omela keeps repeat prescription requests visible from first draft to final
+            collection.
           </p>
 
           <div className="final-btns">
             <a href="#onboarding" className="btn-white">
               Book a demo
             </a>
-            <a href="#onboarding" className="btn-outline-white">
-              Join the pilot
+            <a href="#how" className="btn-outline-white">
+              See the workflow
             </a>
           </div>
         </div>
@@ -1505,7 +1489,7 @@ export default function Page() {
               <div>
                 <div className="ft-brand-logo">
                   <div className="ft-lm">
-                    <LogoMark inverted />
+                    <LogoMark />
                   </div>
                   <span className="ft-ln">Omela</span>
                 </div>
@@ -1527,7 +1511,7 @@ export default function Page() {
                   Pricing
                 </a>
                 <a className="ft-link" href="#onboarding">
-                  Join the pilot
+                  Book a demo
                 </a>
               </div>
 
@@ -1559,9 +1543,8 @@ export default function Page() {
             <div className="ft-bottom">
               <p className="ft-copy">© 2026 Omela Ltd.</p>
               <p className="ft-disc">
-                Omela is a coordination layer, not a clinical system of record, and does not
-                make medical decisions. In a healthcare emergency, contact local emergency
-                services.
+                Omela is a coordination layer, not a clinical system of record, and does not make
+                medical decisions. In a healthcare emergency, contact local emergency services.
               </p>
             </div>
           </div>
@@ -1601,13 +1584,23 @@ nav{
 }
 .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
 .nav-logo-mark{
-  width:32px;height:32px;background:${c.ink};border-radius:8px;
+  width:32px;height:32px;background:${c.white};border-radius:8px;
+  border:1px solid ${c.border};
+  box-shadow:0 2px 10px rgba(0,0,0,.05);
   display:flex;align-items:center;justify-content:center;
 }
-.nav-logo-mark svg{width:17px;height:17px}
 .nav-logo-name{
   font-family:var(--font-instrument-serif),Georgia,serif;
   font-size:21px;color:${c.ink};letter-spacing:-.01em
+}
+.omela-mark{
+  width:17px;
+  height:17px;
+  object-fit:contain;
+  display:block;
+}
+.omela-mark.inv{
+  filter:brightness(0) invert(1);
 }
 .nav-links{display:flex;align-items:center;gap:2px}
 .nav-link{
@@ -1642,14 +1635,7 @@ nav{
 .btn-secondary:hover{border-color:${c.ink};transform:translateY(-1px)}
 
 /* ---- HERO ---- */
-.hero{padding:80px 32px 72px;max-width:1200px;margin:0 auto;text-align:center}
-.hero-eyebrow{
-  display:inline-flex;align-items:center;gap:8px;
-  background:${c.white};border:1px solid ${c.border};border-radius:100px;
-  padding:6px 16px;font-size:13px;font-weight:600;color:${c.sub};
-  margin-bottom:32px;
-  animation:fadeUp .6s both;
-}
+.hero{padding:88px 32px 72px;max-width:1200px;margin:0 auto;text-align:center}
 .live-dot{width:7px;height:7px;background:${c.green};border-radius:50%;animation:livePulse 2s infinite}
 .small-dot{width:5px!important;height:5px!important}
 @keyframes livePulse{
@@ -1673,16 +1659,11 @@ h1 em{font-style:italic;color:${c.warmDk}}
   animation:fadeUp .6s .18s both
 }
 .hero-btns{
-  display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;
+  display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:0;
   animation:fadeUp .6s .22s both;
 }
 .hero-btns .btn-primary{font-size:16px;padding:14px 30px}
 .hero-btns .btn-secondary{font-size:16px;padding:13px 30px}
-.hero-note{
-  font-size:13px;color:${c.muted};display:flex;align-items:center;justify-content:center;gap:7px;
-  animation:fadeUp .6s .28s both
-}
-.hero-note-dot{width:6px;height:6px;background:${c.green};border-radius:50%}
 @keyframes fadeUp{
   from{opacity:0;transform:translateY(20px)}
   to{opacity:1;transform:none}
@@ -1718,8 +1699,15 @@ h1 em{font-style:italic;color:${c.warmDk}}
 .ws-sb-head{padding:16px;border-bottom:1px solid ${c.border}}
 .ws-brand{display:flex;align-items:center;gap:9px;margin-bottom:5px}
 .ws-brand-mark{
-  width:26px;height:26px;background:${c.ink};border-radius:7px;
-  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff
+  width:26px;height:26px;background:${c.white};border-radius:7px;
+  border:1px solid rgba(227,221,210,.9);
+  color:transparent;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800
+}
+.ws-brand-logo .omela-mark{
+  width:14px;
+  height:14px;
 }
 .ws-brand-name{
   font-family:var(--font-instrument-serif),Georgia,serif;
@@ -1879,6 +1867,25 @@ h1 em{font-style:italic;color:${c.warmDk}}
   font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
   color:${c.muted};margin-bottom:8px;display:flex;align-items:center;gap:5px
 }
+.ws-feed-vp{
+  height:74px;
+  overflow:hidden;
+  position:relative;
+  mask-image:linear-gradient(180deg,transparent,#000 14%,#000 86%,transparent);
+}
+.ws-feed-track{
+  display:flex;
+  flex-direction:column;
+  gap:0;
+  animation:feedScroll 12s linear infinite;
+}
+.ws-feed:hover .ws-feed-track{
+  animation-play-state:paused;
+}
+@keyframes feedScroll{
+  from{transform:translateY(0)}
+  to{transform:translateY(-50%)}
+}
 .ws-feed-item{display:flex;align-items:center;gap:7px;font-size:10.5px;padding:3px 0}
 .ws-feed-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
 .ws-feed-dot.w{background:${c.warm}}
@@ -1898,26 +1905,47 @@ h1 em{font-style:italic;color:${c.warmDk}}
 /* ---- LOGO MARQUEE ---- */
 .marquee-section{
   border-top:1px solid ${c.border};border-bottom:1px solid ${c.border};
-  padding:28px 0;overflow:hidden;
-  background:rgba(255,255,255,.5);
+  padding:34px 0;overflow:hidden;
+  background:rgba(255,255,255,.42);
 }
 .marquee-label{
-  text-align:center;font-size:11px;font-weight:700;letter-spacing:.14em;
+  text-align:center;font-size:11px;font-weight:700;letter-spacing:.16em;
   text-transform:uppercase;color:${c.muted};margin-bottom:22px
 }
 .marquee-track-wrap{
   overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)
 }
+.infra-wrap{
+  mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);
+}
 .marquee-track{
   display:flex;align-items:center;gap:56px;width:max-content;animation:marquee 28s linear infinite
 }
-.marquee-track:hover{animation-play-state:paused}
-.marquee-logo{
-  font-size:15px;font-weight:800;color:${c.muted};letter-spacing:-.02em;
-  white-space:nowrap;opacity:.7;transition:opacity .2s
+.infra-track{
+  gap:18px;
 }
-.marquee-logo:hover{opacity:1}
+.marquee-track:hover{animation-play-state:paused}
 @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.infra-logo-card{
+  height:76px;
+  min-width:184px;
+  padding:0 24px;
+  border-radius:20px;
+  border:1px solid rgba(227,221,210,.9);
+  background:rgba(255,255,255,.72);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 8px 22px rgba(15,24,41,.04);
+}
+.infra-logo-img{
+  height:28px;
+  width:auto;
+  max-width:130px;
+  object-fit:contain;
+  display:block;
+  opacity:.96;
+}
 
 /* ---- PAIN SECTION ---- */
 .pain-section{
@@ -1941,7 +1969,16 @@ h1 em{font-style:italic;color:${c.warmDk}}
 .bubble.right{
   align-self:flex-end;border-radius:18px 18px 4px 18px;transform:translateX(16px)
 }
-.bubble.show{opacity:1;transform:none}
+.bubble.show{opacity:1;transform:none;animation:bobLeft 5.2s ease-in-out infinite}
+.bubble.right.show{animation:bobRight 5.8s ease-in-out infinite}
+@keyframes bobLeft{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-6px)}
+}
+@keyframes bobRight{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-6px)}
+}
 .pain-heading{
   font-family:var(--font-instrument-serif),Georgia,serif;
   font-size:clamp(32px,5vw,54px);line-height:1.05;letter-spacing:-.03em;
@@ -2230,11 +2267,6 @@ h2 em{font-style:italic;color:${c.warmDk}}
 /* ---- FUTURE ---- */
 .future-section{padding-bottom:48px}
 .future-block{max-width:600px}
-.future-chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
-.future-chip{
-  padding:10px 18px;background:${c.white};border:1px solid ${c.border};
-  border-radius:100px;font-size:14px;font-weight:500;color:${c.sub}
-}
 
 /* ---- FINAL CTA ---- */
 .final-cta{background:${c.dark};padding:96px 32px;text-align:center}
@@ -2266,10 +2298,10 @@ footer{background:${c.dark};border-top:1px solid rgba(255,255,255,.06);padding:6
 .ft-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px}
 .ft-brand-logo{display:flex;align-items:center;gap:9px;margin-bottom:16px}
 .ft-lm{
-  width:28px;height:28px;background:rgba(255,255,255,.1);border-radius:7px;
+  width:28px;height:28px;background:rgba(255,255,255,.92);border-radius:7px;
+  border:1px solid rgba(255,255,255,.12);
   display:flex;align-items:center;justify-content:center
 }
-.ft-lm svg{width:14px;height:14px}
 .ft-ln{
   font-family:var(--font-instrument-serif),Georgia,serif;
   font-size:18px;color:rgba(255,255,255,.85)
@@ -2348,6 +2380,7 @@ footer{background:${c.dark};border-top:1px solid rgba(255,255,255,.06);padding:6
   nav .nav-inner{padding:0 16px}
   .nav-links{display:none}
   .hero,.workspace-section,.dark-section,section.pad,.pain-section,.final-cta,footer{padding-left:20px;padding-right:20px}
+  h1{font-size:clamp(36px,12vw,54px);line-height:1.02}
   .how-grid,.benefit-grid,.pricing-grid{grid-template-columns:1fr}
   .audience-grid,.trust-grid{grid-template-columns:1fr}
   .stats-grid{grid-template-columns:repeat(2,1fr)}
@@ -2359,5 +2392,14 @@ footer{background:${c.dark};border-top:1px solid rgba(255,255,255,.06);padding:6
   .ob-form{flex-direction:column}
   .agree-row{align-items:flex-start;text-align:left}
   .ob-submit{width:100%}
+  .infra-logo-card{
+    min-width:150px;
+    height:66px;
+    padding:0 18px;
+  }
+  .infra-logo-img{
+    height:24px;
+    max-width:108px;
+  }
 }
 `;
