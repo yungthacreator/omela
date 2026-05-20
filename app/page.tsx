@@ -1,416 +1,390 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { DM_Sans, Instrument_Serif } from "next/font/google";
+import { Inter } from "next/font/google";
 import {
+  ArrowRight,
+  Bell,
   Check,
   ChevronDown,
+  ClipboardCheck,
   Copy,
-  Database,
-  Eye,
+  FileText,
   History,
-  Home,
-  Quote,
+  LockKeyhole,
+  Mail,
+  MessageCircle,
+  PhoneCall,
   RefreshCw,
-  Shield,
-  Stethoscope,
-  Users,
+  ShieldCheck,
+  UserRoundCheck,
+  UsersRound,
+  type LucideIcon,
 } from "lucide-react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 
-const dmSans = DM_Sans({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-dm-sans",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
 });
 
-const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-instrument-serif",
-});
-
-type Role = "carer" | "household" | "care_team" | "pharmacy" | "other";
-
-type TimelineItem = {
-  done: boolean;
-  text: string;
-  meta: string;
-};
+type Role = "self" | "carer" | "household" | "care_team" | "pharmacy" | "other";
 
 type Resident = {
+  id: string;
   initials: string;
-  tone: "w" | "b" | "g";
   name: string;
-  shortName: string;
-  age: string;
-  med: string;
-  medShort: string;
+  psw: string;
+  medicine: string;
   rx: string;
-  status: string;
-  statusChip: "fo" | "se" | "re" | "du";
-  statusValueClass: "" | "bad" | "ok";
+  status: "Needs follow-up" | "Request sent" | "Ready to collect" | "Due soon";
+  statusTone: "danger" | "info" | "success" | "warning";
+  summaryStatus: "Needs action" | "In progress" | "Ready";
   owner: string;
+  worker: string;
   practice: string;
   pharmacy: string;
-  evalTask: string;
   next: string;
-  daysLeft: number;
-  supplyPercent: number;
-  timeline: TimelineItem[];
+  supply: number;
+  progress: number;
+  timeline: { done: boolean; label: string; meta: string }[];
+  activity: { text: string; time: string; icon: "check" | "bell" | "phone" }[];
+};
+
+type Feature = {
+  icon: LucideIcon;
+  title: string;
+  copy: string;
+  bullets: string[];
+};
+
+type BrandLogo = {
+  src: string;
+  alt: string;
 };
 
 const RESIDENTS: Resident[] = [
   {
+    id: "margaret",
     initials: "ML",
-    tone: "w",
     name: "Margaret Littlewood",
-    shortName: "Margaret L.",
-    age: "78",
-    med: "Amlodipine 5mg, once daily",
-    medShort: "Amlodipine 5mg",
+    psw: "PSW1",
+    medicine: "Amlodipine 5mg",
     rx: "RX-20814",
     status: "Needs follow-up",
-    statusChip: "fo",
-    statusValueClass: "bad",
-    owner: "Ada Kelly · daughter",
+    statusTone: "danger",
+    summaryStatus: "Needs action",
+    owner: "Ada Kelly",
+    worker: "Tomi Adebayo",
     practice: "Greenfield Medical",
     pharmacy: "Boots, High Street",
-    evalTask: "Checking Margaret's amlodipine supply",
-    next: "Ada to call the practice before 4pm today.",
-    daysLeft: 2,
-    supplyPercent: 7,
+    next: "Call Greenfield Medical to confirm whether the prescription was approved.",
+    supply: 2,
+    progress: 58,
     timeline: [
-      { done: true, text: "Draft prepared", meta: "Mon 09:14" },
-      { done: true, text: "Sent to practice", meta: "Tue 11:32" },
-      { done: true, text: "Practice acknowledged", meta: "Tue 16:05" },
-      { done: false, text: "Awaiting response", meta: "3 days" },
+      { done: true, label: "Reminder sent", meta: "Today 08:10" },
+      { done: true, label: "Request prepared", meta: "Today 08:18" },
+      { done: true, label: "Sent to practice", meta: "Today 08:26" },
+      { done: false, label: "Awaiting GP response", meta: "Now" },
+    ],
+    activity: [
+      { text: "Tomi updated Margaret’s note", time: "Now", icon: "check" },
+      { text: "Follow-up reminder scheduled", time: "12m", icon: "bell" },
+      { text: "Practice contact added", time: "38m", icon: "phone" },
     ],
   },
   {
+    id: "david",
     initials: "DR",
-    tone: "b",
     name: "David Reyes",
-    shortName: "David Reyes",
-    age: "64",
-    med: "Metformin 500mg, twice daily",
-    medShort: "Metformin 500mg",
-    rx: "RX-20819",
+    psw: "PSW2",
+    medicine: "Metformin 500mg",
+    rx: "RX-20831",
     status: "Request sent",
-    statusChip: "se",
-    statusValueClass: "",
-    owner: "Jamie Marsh · support worker",
+    statusTone: "info",
+    summaryStatus: "In progress",
+    owner: "James Otieno",
+    worker: "Ben Carter",
     practice: "Northgate Surgery",
     pharmacy: "Well, Market Square",
-    evalTask: "Drafting Metformin refill for David",
-    next: "No action needed. Omela will alert on any change.",
-    daysLeft: 6,
-    supplyPercent: 20,
+    next: "Wait for the practice to confirm approval before updating the pharmacy.",
+    supply: 8,
+    progress: 68,
     timeline: [
-      { done: true, text: "Draft prepared", meta: "Tue 08:02" },
-      { done: true, text: "Approved internally", meta: "Tue 09:41" },
-      { done: true, text: "Sent to practice", meta: "Wed 10:15" },
-      { done: false, text: "Awaiting GP response", meta: "today" },
+      { done: true, label: "Reminder sent", meta: "Mon 09:02" },
+      { done: true, label: "Request prepared", meta: "Mon 09:10" },
+      { done: true, label: "Sent to practice", meta: "Mon 09:18" },
+      { done: false, label: "Awaiting approval", meta: "Now" },
+    ],
+    activity: [
+      { text: "Ben sent the request", time: "Now", icon: "check" },
+      { text: "Practice note added", time: "19m", icon: "phone" },
+      { text: "Timeline reviewed", time: "44m", icon: "bell" },
     ],
   },
   {
+    id: "irene",
     initials: "IK",
-    tone: "g",
     name: "Irene Kowalski",
-    shortName: "Irene Kowalski",
-    age: "81",
-    med: "Sertraline 50mg, once daily",
-    medShort: "Sertraline 50mg",
+    psw: "PSW3",
+    medicine: "Sertraline 50mg",
     rx: "RX-20806",
     status: "Ready to collect",
-    statusChip: "re",
-    statusValueClass: "ok",
-    owner: "James Kowalski · son",
+    statusTone: "success",
+    summaryStatus: "Ready",
+    owner: "James Kowalski",
+    worker: "Maya Singh",
     practice: "Hillside Practice",
     pharmacy: "Boots, High Street",
-    evalTask: "Notifying James about collection window",
-    next: "Collection window open until 6pm.",
-    daysLeft: 14,
-    supplyPercent: 47,
+    next: "Collection window is open until 6pm.",
+    supply: 14,
+    progress: 92,
     timeline: [
-      { done: true, text: "Draft prepared", meta: "Fri 14:20" },
-      { done: true, text: "Sent to practice", meta: "Mon 09:03" },
-      { done: true, text: "Dispensed", meta: "today 11:20" },
-      { done: true, text: "Ready at pharmacy", meta: "today 12:44" },
+      { done: true, label: "Request prepared", meta: "Fri 14:20" },
+      { done: true, label: "Sent to practice", meta: "Mon 09:03" },
+      { done: true, label: "Dispensed", meta: "Today 11:20" },
+      { done: true, label: "Ready at pharmacy", meta: "Today 12:44" },
+    ],
+    activity: [
+      { text: "Maya updated Irene’s timeline", time: "Now", icon: "check" },
+      { text: "Collection reminder sent", time: "14m", icon: "bell" },
+      { text: "Pharmacy status confirmed", time: "42m", icon: "phone" },
     ],
   },
   {
+    id: "samuel",
     initials: "SW",
-    tone: "b",
     name: "Samuel Wright",
-    shortName: "Samuel Wright",
-    age: "72",
-    med: "Apixaban 5mg, twice daily",
-    medShort: "Apixaban 5mg",
+    psw: "PSW4",
+    medicine: "Apixaban 5mg",
     rx: "RX-20901",
     status: "Due soon",
-    statusChip: "du",
-    statusValueClass: "bad",
-    owner: "Clara Moss · wife",
+    statusTone: "warning",
+    summaryStatus: "Needs action",
+    owner: "Clara Moss",
+    worker: "Ben Carter",
     practice: "Riverbank Surgery",
     pharmacy: "Lloyds, Station Road",
-    evalTask: "Reviewing Samuel's next refill date",
-    next: "Clara to confirm medication list before noon.",
-    daysLeft: 4,
-    supplyPercent: 13,
+    next: "Confirm the medication list before noon.",
+    supply: 4,
+    progress: 42,
     timeline: [
-      { done: true, text: "Cycle detected", meta: "today 08:10" },
-      { done: true, text: "Reminder sent", meta: "today 08:11" },
-      { done: false, text: "Awaiting request draft", meta: "today" },
+      { done: true, label: "Cycle detected", meta: "Today 08:10" },
+      { done: true, label: "Reminder sent", meta: "Today 08:11" },
+      { done: false, label: "Confirm medication list", meta: "Today" },
+      { done: false, label: "Prepare request", meta: "Next" },
+    ],
+    activity: [
+      { text: "Ben updated Samuel’s timeline", time: "Now", icon: "check" },
+      { text: "Follow-up reminder sent", time: "14m", icon: "bell" },
+      { text: "Practice note added", time: "42m", icon: "phone" },
     ],
   },
 ];
 
-const TESTIMONIALS = [
-  {
-    quote:
-      "Omela is the first thing I open on a Monday morning. I can see what needs attention across every resident in one place.",
-    name: "Care team lead",
-    domain: "Residential care",
-  },
-  {
-    quote:
-      "Three of us manage prescriptions for my mum. Before Omela we were double-calling the GP. Now we just see who did what.",
-    name: "Family carer",
-    domain: "Supporting a parent",
-  },
-  {
-    quote:
-      "The pharmacy queue makes more sense when we can see the request state before the person even calls us.",
-    name: "Pharmacy manager",
-    domain: "Community pharmacy",
-  },
-];
-
-const FAQS = [
-  {
-    q: "Is Omela only for healthcare?",
-    a: "Omela is focused on repeat prescription coordination today. The product stays intentionally narrow so the workflow remains clear, calm, and useful from the start.",
-  },
-  {
-    q: "How is this different from Asana or Trello?",
-    a: "Asana and Trello help teams manage internal tasks. Omela is built for repeat prescription workflows that cross people, organisations, and external systems.",
-  },
-  {
-    q: "Do you need access to clinical records or patient data?",
-    a: "No. Omela is designed as a coordination layer, not a clinical record system. We only handle the state of a request, not its clinical content.",
-  },
-  {
-    q: "Is Omela a medical device?",
-    a: "No. Omela does not diagnose, prescribe, or make medical decisions. It helps track ownership, status, and next steps.",
-  },
-  {
-    q: "What happens when I book a demo?",
-    a: "We walk through your current workflow, show how Omela fits, and decide together whether it is a good operational fit for you or your team.",
-  },
-  {
-    q: "Who is Omela for right now?",
-    a: "Omela is designed for family carers, residential care teams, supported living teams, and community pharmacies coordinating repeat prescriptions.",
-  },
-];
-
-const INFRA_LOGOS = [
+const BRAND_LOGOS: BrandLogo[] = [
   { src: "/logos/stripe.svg", alt: "Stripe" },
   { src: "/logos/twilio.svg", alt: "Twilio" },
   { src: "/logos/microsoft-logo.png", alt: "Microsoft" },
   { src: "/logos/google-logo.png", alt: "Google" },
   { src: "/logos/aws-logo.png", alt: "AWS" },
-  { src: "/logos/openai-wordmark.svg", alt: "OpenAI" },
-  { src: "/logos/vercel.svg", alt: "Vercel" },
 ];
 
-const FEED_ITEMS = [
+const LOGO_LOOP = [...BRAND_LOGOS, ...BRAND_LOGOS, ...BRAND_LOGOS];
+
+const FEATURES: Feature[] = [
   {
-    dot: "b",
-    who: "Jamie M.",
-    what: "drafted Metformin refill for David",
-    when: "now",
-    fresh: true,
+    icon: FileText,
+    title: "Request preparation",
+    copy: "Prepare care admin requests with the person, context, owner, notes, and next step in one place.",
+    bullets: ["Person details", "Request context", "Notes", "Family-ready update"],
   },
   {
-    dot: "w",
-    who: "Ada Kelly",
-    what: "approved Margaret's amlodipine request",
-    when: "14m",
-    fresh: false,
+    icon: UserRoundCheck,
+    title: "Ownership",
+    copy: "Make it obvious who is responsible for the next step, so follow-up does not sit in someone’s memory.",
+    bullets: ["Named owner", "Support worker", "Handover clarity", "Reminder routing"],
   },
   {
-    dot: "g",
-    who: "Jamie M.",
-    what: "marked Sertraline ready at Boots",
-    when: "42m",
-    fresh: false,
+    icon: ClipboardCheck,
+    title: "Status tracking",
+    copy: "See whether a request is due, prepared, sent, acknowledged, delayed, approved, or ready.",
+    bullets: ["Due soon", "Sent", "In progress", "Ready"],
+  },
+  {
+    icon: History,
+    title: "Shared timeline",
+    copy: "Keep the full trail visible, so families, managers, and support workers do not reconstruct it from memory.",
+    bullets: ["Every update", "Every owner", "Every status", "Every next step"],
+  },
+  {
+    icon: LockKeyhole,
+    title: "Role visibility",
+    copy: "Give the right people access to the right workflow details without exposing unnecessary information.",
+    bullets: ["Family", "Care team", "Pharmacy", "Organisation"],
+  },
+  {
+    icon: ShieldCheck,
+    title: "Audit trail",
+    copy: "Create a clear record of who changed what, when, and why across care admin work.",
+    bullets: ["Status changes", "Owner changes", "Follow-up notes", "Collection updates"],
   },
 ];
 
-const c = {
-  bg: "#F8F6F1",
-  bg2: "#F3EFE8",
-  white: "#FFFFFF",
-  ink: "#111214",
-  sub: "#4A4F5C",
-  muted: "#888E9C",
-  border: "#E3DDD2",
-  warm: "#C9956B",
-  warmDk: "#A07545",
-  warmBg: "#FFF8F0",
-  green: "#15803D",
-  greenBg: "#ECFDF3",
-  blue: "#1D4ED8",
-  blueBg: "#EFF6FF",
-  red: "#B91C1C",
-  redBg: "#FEF2F2",
-  dark: "#0F1829",
-};
+const WORKFLOW = [
+  ["01", "Spot what needs attention", "Omela shows what is due before anyone has to chase."],
+  ["02", "Prepare the request", "The person, context, notes, and next step stay together."],
+  ["03", "Assign ownership", "Everyone can see who owns the next action."],
+  ["04", "Track until complete", "The request stays visible until the work is done."],
+];
 
-function LogoMark({ inverted = false }: { inverted?: boolean }) {
+const PAIN_MESSAGES = [
+  "Did you call the GP yet?",
+  "I thought you were handling it",
+  "The pharmacy says they never got the request",
+  "She only has two days left",
+];
+
+const TEAMS = [
+  ["Family carers", "Coordinate repeat prescriptions and care admin for a parent, partner, or relative without carrying every detail alone."],
+  ["Residential care", "Track requests across residents, GP practices, pharmacies, staff handovers, and managers."],
+  ["Supported living", "Keep support workers, families, and service managers aligned around what is due, delayed, or ready."],
+  ["Community pharmacies", "Understand incoming repeat-prescription work with clearer context and fewer chasing calls."],
+];
+
+const TESTIMONIALS = [
+  ["Family carer", "Before Omela, three of us were chasing the same prescription. Now we can see who owns the next step."],
+  ["Care team lead", "The timeline makes handovers much easier. Staff do not have to reconstruct what happened from memory."],
+  ["Service manager", "I can see what each support worker owns before it becomes a missed follow-up."],
+  ["Pharmacy manager", "It gives us a clearer way to understand what is ready, delayed, or waiting on a response."],
+  ["Supported living manager", "The biggest change is accountability. Every request has a person responsible for the next action."],
+];
+
+const PRICING = [
+  {
+    name: "Personal",
+    price: "£7",
+    suffix: "/month",
+    copy: "For one person managing their own repeat prescription and care admin follow-through.",
+    features: ["1 profile", "Repeat prescription reminders", "Request status tracking", "Personal timeline", "Email reminders"],
+    cta: "Get started",
+    href: "#waitlist",
+  },
+  {
+    name: "Family",
+    price: "£14",
+    suffix: "/month",
+    copy: "For households and family carers coordinating repeat prescriptions for someone else.",
+    features: ["Up to 4 profiles", "Shared family access", "Ownership assignment", "Timeline and activity history", "Pharmacy and practice notes", "Email reminders"],
+    cta: "Get started",
+    href: "#waitlist",
+    featured: true,
+  },
+  {
+    name: "Team",
+    price: "£49",
+    suffix: "/month",
+    copy: "For care teams, supported living teams, and small operators managing multiple people.",
+    features: ["Up to 25 profiles", "Shared workspace", "Staff roles", "Activity feed", "Audit trail", "Priority onboarding"],
+    cta: "Get started",
+    href: "#waitlist",
+  },
+  {
+    name: "Organisation",
+    price: "Custom",
+    suffix: "",
+    copy: "For multi-site providers, pharmacy groups, and larger care organisations.",
+    features: ["Unlimited profiles", "Custom onboarding", "Advanced roles", "Data processing agreement", "SSO-ready structure", "Priority support"],
+    cta: "Talk to us",
+    href: "mailto:hello@omela.ai?subject=Omela%20organisation%20demo",
+  },
+];
+
+const RESOURCES = [
+  ["Repeat prescription checklist", "A simple checklist for what is due, who owns it, and what needs follow-up."],
+  ["Care-team handover guide", "A cleaner structure for passing care admin updates between staff."],
+  ["Pharmacy coordination notes", "A practical way to keep collection, delays, and next actions clear."],
+];
+
+const FAQS = [
+  ["Is Omela a prescribing tool?", "No. Omela helps coordinate care admin. It does not prescribe, diagnose, or make medical decisions."],
+  ["Does Omela replace my GP or pharmacy system?", "No. Omela sits around the workflow as a coordination layer. GP and pharmacy systems remain the systems of record."],
+  ["Why start with repeat prescriptions?", "Repeat prescriptions are a painful recurring workflow for families, carers, care teams, and pharmacies. Omela starts there, then expands into other care admin requests that need follow-through."],
+  ["Who is Omela for?", "Omela is for people who help manage care admin follow-through, including individuals, family carers, care teams, supported living teams, and pharmacies."],
+  ["What does Omela track?", "Omela tracks request status, owner, timeline, next action, notes, and basic workflow context needed to follow up safely."],
+  ["Is Omela for emergencies?", "No. Omela is not an emergency service. In an emergency, contact local emergency services."],
+];
+
+function Logo() {
   return (
-    <Image
-      src="/omela-logo-mark.png"
-      alt=""
-      aria-hidden="true"
-      width={17}
-      height={17}
-      className={`omela-mark ${inverted ? "inv" : ""}`}
-    />
-  );
-}
-
-function Overline({
-  children,
-  warm = false,
-}: {
-  children: ReactNode;
-  warm?: boolean;
-}) {
-  return <span className={`overline ${warm ? "warm" : ""}`}>{children}</span>;
-}
-
-function CountUp({
-  target,
-  suffix = "",
-  decimals = 0,
-  prefix = "",
-}: {
-  target: number;
-  suffix?: string;
-  decimals?: number;
-  prefix?: string;
-}) {
-  const ref = useRef<HTMLSpanElement | null>(null);
-  const [started, setStarted] = useState(false);
-  const [value, setValue] = useState(0);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || started) return;
-
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        setStarted(true);
-        obs.disconnect();
-      },
-      { threshold: 0.4 }
-    );
-
-    obs.observe(el);
-
-    return () => obs.disconnect();
-  }, [started]);
-
-  useEffect(() => {
-    if (!started) return;
-
-    let frame = 0;
-    const duration = 1800;
-    const start = performance.now();
-
-    const step = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(target * eased);
-      if (progress < 1) frame = requestAnimationFrame(step);
-    };
-
-    frame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frame);
-  }, [started, target]);
-
-  const shown = decimals > 0 ? value.toFixed(decimals) : String(Math.round(value));
-
-  return (
-    <span ref={ref}>
-      {prefix}
-      {shown}
-      {suffix}
+    <span className="logo" aria-label="Omela">
+      <img src="/omela-logo-mark.png" alt="" className="logo-img" />
+      <span>Omela</span>
     </span>
   );
 }
 
+function SectionPill({ children }: { children: ReactNode }) {
+  return <span className="section-pill">{children}</span>;
+}
+
+function StatusPill({ tone, children }: { tone: Resident["statusTone"]; children: ReactNode }) {
+  return <span className={`status-pill ${tone}`}>{children}</span>;
+}
+
+function ActivityIcon({ icon }: { icon: Resident["activity"][number]["icon"] }) {
+  if (icon === "bell") return <Bell size={13} />;
+  if (icon === "phone") return <PhoneCall size={13} />;
+  return <Check size={13} />;
+}
+
 function SuccessModal({
   open,
-  onClose,
   referralCode,
+  onClose,
 }: {
   open: boolean;
-  onClose: () => void;
   referralCode: string;
+  onClose: () => void;
 }) {
-  const [copied, setCopied] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined" && referralCode) {
       setShareUrl(`${window.location.origin}?ref=${referralCode}`);
-    } else {
-      setShareUrl("");
     }
   }, [referralCode]);
 
-  async function copyLink() {
+  async function copy() {
     if (!shareUrl) return;
     await navigator.clipboard.writeText(shareUrl);
     setCopied(true);
-    window.setTimeout(() => setCopied(false), 1800);
+    window.setTimeout(() => setCopied(false), 1400);
   }
 
   if (!open) return null;
 
   return (
-    <div className="modO" onClick={onClose}>
-      <div className="modB" onClick={(e) => e.stopPropagation()}>
-        <div className="modSeal">
-          <Check size={22} />
-        </div>
+    <div className="modal" onClick={onClose} role="presentation">
+      <div className="modal-card" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
+        <span className="modal-icon">
+          <Check size={19} />
+        </span>
+        <h3>You are on the list.</h3>
+        <p>We will use this to guide your Omela setup and send the next step.</p>
 
-        <h3 className="serif modTi">You are on the list.</h3>
-        <p className="modBd">
-          We will be in touch after your demo request is reviewed.
-        </p>
-
-        {referralCode && shareUrl ? (
-          <div className="modRef">
-            <p className="modRefLbl">Share with a family member or team</p>
-
-            <div className="modRefBox">
-              <span className="modRefUrl">
-                {shareUrl.replace("https://", "").replace("http://", "")}
-              </span>
-              <button onClick={copyLink} className="modRefCp" type="button">
-                {copied ? <Check size={13} /> : <Copy size={13} />}
-              </button>
-            </div>
+        {shareUrl ? (
+          <div className="share">
+            <span>{shareUrl.replace("https://", "").replace("http://", "")}</span>
+            <button type="button" onClick={copy} aria-label="Copy referral link">
+              {copied ? <Check size={15} /> : <Copy size={15} />}
+            </button>
           </div>
         ) : null}
 
-        <button type="button" className="modClose" onClick={onClose}>
+        <button type="button" className="modal-close" onClick={onClose}>
           Close
         </button>
       </div>
@@ -418,45 +392,351 @@ function SuccessModal({
   );
 }
 
-function FAQAccordion() {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+function OperationsDemo({
+  active,
+  setActive,
+}: {
+  active: number;
+  setActive: (index: number) => void;
+}) {
+  const resident = RESIDENTS[active];
+
+  const summaryCounts = {
+    needsAction: RESIDENTS.filter((item) => item.summaryStatus === "Needs action").length,
+    inProgress: RESIDENTS.filter((item) => item.summaryStatus === "In progress").length,
+    ready: RESIDENTS.filter((item) => item.summaryStatus === "Ready").length,
+  };
 
   return (
-    <div className="faq-wrap">
-      {FAQS.map((item, index) => {
-        const open = openIndex === index;
-        return (
-          <div key={item.q} className={`fq-item ${open ? "open" : ""}`}>
-            <button
-              className="fq-btn"
-              type="button"
-              onClick={() => setOpenIndex(open ? null : index)}
-            >
-              {item.q}
-              <span className="fq-icon">
-                <span>
-                  <ChevronDown size={16} />
-                </span>
+    <div className="hero-frame">
+      <div className="hero-frame-inner">
+        <div className="workspace-chrome">
+          <div className="chrome-dots" aria-hidden="true">
+            <span className="dot red" />
+            <span className="dot yellow" />
+            <span className="dot green" />
+          </div>
+          <div className="chrome-url">omela.ai / workspace / care-team</div>
+          <div className="chrome-status">
+            <span />
+            Live workspace
+          </div>
+        </div>
+
+        <div className="ops-room">
+          <div className="ops-glow" />
+
+          <aside className="ops-panel people-panel">
+            <div className="panel-title">
+              <span>People supported</span>
+              <strong>{RESIDENTS.length}</strong>
+            </div>
+
+            <div className="people-list">
+              {RESIDENTS.map((person, index) => (
+                <button
+                  type="button"
+                  key={person.rx}
+                  className={active === index ? "active" : ""}
+                  onClick={() => setActive(index)}
+                >
+                  <span className="avatar small">{person.initials}</span>
+
+                  <span className="person-copy">
+                    <span className="name-line">
+                      <strong>{person.name.split(" ")[0]}</strong>
+                      <em title={`Person we support ${index + 1}`}>{person.psw}</em>
+                    </span>
+                    <small>{person.medicine}</small>
+                    <StatusPill tone={person.statusTone}>{person.status}</StatusPill>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </aside>
+
+          <section className="ops-panel request-panel">
+            <div className="request-head">
+              <div>
+                <span className="micro-label">Current request</span>
+                <h3>{resident.name}</h3>
+                <p>
+                  {resident.medicine} · {resident.rx}
+                </p>
+              </div>
+              <StatusPill tone={resident.statusTone}>{resident.status}</StatusPill>
+            </div>
+
+            <div className="next-action">
+              <span>Next action</span>
+              <strong>{resident.next}</strong>
+            </div>
+
+            <div className="tracking-row">
+              <div>
+                <span>Owner</span>
+                <strong>{resident.owner}</strong>
+              </div>
+              <div>
+                <span>Support worker</span>
+                <strong>{resident.worker}</strong>
+              </div>
+              <div>
+                <span>Supply left</span>
+                <strong>{resident.supply} days</strong>
+              </div>
+            </div>
+
+            <div className="timeline-card">
+              <div className="timeline-top">
+                <span>Timeline</span>
+                <strong>{resident.progress}% complete</strong>
+              </div>
+              <div className="progress">
+                <i style={{ width: `${resident.progress}%` }} />
+              </div>
+
+              <div className="timeline-list">
+                {resident.timeline.map((item) => (
+                  <div key={item.label} className="timeline-item">
+                    <span className={item.done ? "done" : ""}>{item.done ? <Check size={10} /> : null}</span>
+                    <div>
+                      <strong>{item.label}</strong>
+                      <small>{item.meta}</small>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <aside className="ops-panel manager-panel">
+            <div className="laura-status">
+              <span>
+                <RefreshCw size={15} />
               </span>
-            </button>
-            <div className="fq-answer">
-              <div className="fq-answer-inner">{item.a}</div>
+              <div>
+                <strong>Laura</strong>
+                <p>Checking owner, timeline, practice note, and pharmacy status.</p>
+              </div>
+            </div>
+
+            <div className="manager-stats">
+              <div>
+                <strong>{summaryCounts.needsAction}</strong>
+                <span>Needs action</span>
+              </div>
+              <div>
+                <strong>{summaryCounts.inProgress}</strong>
+                <span>In progress</span>
+              </div>
+              <div>
+                <strong>{summaryCounts.ready}</strong>
+                <span>Ready</span>
+              </div>
+            </div>
+
+            <div className="activity-feed">
+              <span>Recent activity</span>
+              {resident.activity.map((item) => (
+                <p key={`${item.text}-${item.time}`}>
+                  <ActivityIcon icon={item.icon} />
+                  {item.text}
+                  <small>{item.time}</small>
+                </p>
+              ))}
+            </div>
+          </aside>
+
+          <div className="room-toolbar">
+            <span>
+              <History size={14} /> Timeline
+            </span>
+            <span>
+              <UsersRound size={14} /> Owner
+            </span>
+            <span>
+              <PhoneCall size={14} /> Practice
+            </span>
+            <button type="button">Follow up</button>
+          </div>
+        </div>
+      </div>
+
+      <div className="resident-tabs">
+        {RESIDENTS.map((person, index) => (
+          <button type="button" key={person.rx} className={active === index ? "active" : ""} onClick={() => setActive(index)}>
+            <span>{person.initials}</span>
+            {person.name.split(" ")[0]}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LogoMarquee() {
+  return (
+    <section className="trust-strip">
+      <p>Built on infrastructure trusted by modern care teams</p>
+      <div className="logo-marquee" aria-label="Trusted infrastructure logos">
+        <div className="logo-track">
+          {LOGO_LOOP.map((logo, index) => (
+            <span key={`${logo.alt}-${index}`} className="brand-logo-cell">
+              <img src={logo.src} alt={logo.alt} />
+            </span>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FeatureShowcase() {
+  const [active, setActive] = useState(0);
+  const feature = FEATURES[active];
+  const Icon = feature.icon;
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setActive((current) => (current + 1) % FEATURES.length), 4200);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  return (
+    <section className="feature-showcase" id="product">
+      <div className="feature-intro">
+        <div>
+          <h2>Inspired by care. Designed for follow-through.</h2>
+        </div>
+        <p>Omela is a calm workspace for care admin that usually gets scattered across calls, messages, notes, and memory.</p>
+      </div>
+
+      <div className="feature-stage">
+        <aside className="feature-tabs" aria-label="Product features">
+          {FEATURES.map((item, index) => {
+            const TabIcon = item.icon;
+            return (
+              <button type="button" key={item.title} className={active === index ? "active" : ""} onClick={() => setActive(index)}>
+                <span>
+                  <TabIcon size={17} />
+                </span>
+                <strong>{item.title}</strong>
+                <small>{item.copy}</small>
+              </button>
+            );
+          })}
+        </aside>
+
+        <div className="feature-visual">
+          <div className="feature-visual-head">
+            <span>
+              <Icon size={18} />
+            </span>
+            <div>
+              <h3>{feature.title}</h3>
+              <p>{feature.copy}</p>
             </div>
           </div>
-        );
-      })}
+
+          <div className="feature-mini-ui">
+            <div className="mini-sidebar">
+              <span />
+              <span />
+              <span />
+            </div>
+
+            <div className="mini-main">
+              <div className="mini-row large-row">
+                <strong>{feature.title}</strong>
+                <em>Live</em>
+              </div>
+
+              {feature.bullets.map((bullet, index) => (
+                <div className="mini-row" key={bullet}>
+                  <span className="mini-check">
+                    <Check size={11} />
+                  </span>
+                  <p>{bullet}</p>
+                  <small>{index === 0 ? "Now" : `${index + 2}m`}</small>
+                </div>
+              ))}
+
+              <div className="mini-note">
+                <MessageCircle size={15} />
+                Laura prepares a clear update for everyone with access.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TypewriterMessages() {
+  const [active, setActive] = useState(0);
+  const [typed, setTyped] = useState("");
+
+  useEffect(() => {
+    const text = PAIN_MESSAGES[active];
+    setTyped("");
+    let index = 0;
+
+    const typing = window.setInterval(() => {
+      index += 1;
+      setTyped(text.slice(0, index));
+      if (index >= text.length) window.clearInterval(typing);
+    }, 38);
+
+    const next = window.setTimeout(() => setActive((current) => (current + 1) % PAIN_MESSAGES.length), 2500);
+
+    return () => {
+      window.clearInterval(typing);
+      window.clearTimeout(next);
+    };
+  }, [active]);
+
+  return (
+    <div className="message-panel">
+      <div className="typing-bubble">
+        <span>{typed}</span>
+        <i />
+      </div>
+
+      {PAIN_MESSAGES.map((message, index) => (
+        <span key={message} className={`static-bubble ${index % 2 ? "right" : ""} ${index <= active ? "show" : ""}`}>
+          {message}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function FAQAccordion() {
+  const [open, setOpen] = useState(0);
+
+  return (
+    <div className="faq-list">
+      {FAQS.map(([question, answer], index) => (
+        <div key={question} className={`faq-item ${open === index ? "open" : ""}`}>
+          <button type="button" onClick={() => setOpen(open === index ? -1 : index)}>
+            <span>{question}</span>
+            <ChevronDown size={18} />
+          </button>
+          <div>
+            <p>{answer}</p>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
 
 export default function Page() {
+  const [activeResident, setActiveResident] = useState(2);
   const [mounted, setMounted] = useState(false);
-  const [selectedResident, setSelectedResident] = useState(0);
-  const [testimonialIndex, setTestimonialIndex] = useState(0);
-  const [visibleBubbles, setVisibleBubbles] = useState([false, false, false, false]);
-
-  const [role, setRole] = useState<Role>("carer");
   const [email, setEmail] = useState("");
+  const [role, setRole] = useState<Role>("carer");
   const [website, setWebsite] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -466,53 +746,21 @@ export default function Page() {
   const [referralCode, setReferralCode] = useState("");
   const [refParam, setRefParam] = useState("");
 
-  const activeResident = RESIDENTS[selectedResident];
-  const testimonial = TESTIMONIALS[testimonialIndex];
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    setMounted(true);
+    if (typeof window === "undefined") return;
+    const ref = new URLSearchParams(window.location.search).get("ref");
+    if (ref) setRefParam(ref);
   }, []);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const p = new URLSearchParams(window.location.search);
-      const r = p.get("ref");
-      if (r) setRefParam(r);
-    }
-  }, []);
-
-  useEffect(() => {
-    const timers = [0, 380, 760, 1140].map((delay, index) =>
-      window.setTimeout(() => {
-        setVisibleBubbles((prev) => {
-          const next = [...prev];
-          next[index] = true;
-          return next;
-        });
-      }, delay + 700)
-    );
-
-    return () => timers.forEach((t) => window.clearTimeout(t));
-  }, []);
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setSelectedResident((prev) => (prev + 1) % RESIDENTS.length);
-    }, 4200);
-
+    const interval = window.setInterval(() => setActiveResident((current) => (current + 1) % RESIDENTS.length), 5200);
     return () => window.clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setTestimonialIndex((prev) => (prev + 1) % TESTIMONIALS.length);
-    }, 5600);
-
-    return () => window.clearInterval(interval);
-  }, []);
-
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     if (!agreed) return;
 
     setSubmitting(true);
@@ -520,22 +768,15 @@ export default function Page() {
     setError("");
 
     try {
-      const res = await fetch("/api/waitlist", {
+      const response = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          role,
-          website,
-          source: "landing-page",
-          marketingOptIn: false,
-          ref: refParam || undefined,
-        }),
+        body: JSON.stringify({ email, role, website, source: "landing-page", marketingOptIn: false, ref: refParam || undefined }),
       });
 
-      const data = await res.json();
+      const data = await response.json();
 
-      if (!res.ok) {
+      if (!response.ok) {
         if (data.referralCode) setReferralCode(data.referralCode);
         setError(data.error || "Something went wrong.");
         return;
@@ -559,993 +800,384 @@ export default function Page() {
     <>
       <style>{CSS}</style>
 
-      <SuccessModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        referralCode={referralCode}
-      />
+      <SuccessModal open={modalOpen} referralCode={referralCode} onClose={() => setModalOpen(false)} />
 
-      <div className={`${dmSans.variable} ${instrumentSerif.variable}`}>
-        <nav>
-          <div className="nav-inner">
-            <a className="nav-logo" href="#">
-              <div className="nav-logo-mark">
-                <LogoMark />
-              </div>
-              <span className="nav-logo-name">Omela</span>
-            </a>
+      <div className={`${inter.variable} page`}>
+        <header className="header">
+          <div className="nav-shell">
+            <Link href="/" className="logo-link" aria-label="Omela home">
+              <Logo />
+            </Link>
 
-            <div className="nav-links">
-              <a className="nav-link" href="#how">
-                Product
-              </a>
-              <a className="nav-link" href="#audiences">
-                Who it&apos;s for
-              </a>
-              <a className="nav-link" href="#pricing">
-                Pricing
-              </a>
-              <a className="nav-link" href="#faq">
-                FAQ
-              </a>
-            </div>
+            <nav aria-label="Primary navigation">
+              <a href="#product">Product</a>
+              <a href="#resources">Resources</a>
+              <a href="#pricing">Pricing</a>
+            </nav>
 
-            <div className="nav-right">
-              <Link className="btn-ghost" href="/login">
+            <div className="nav-actions">
+              <Link href="/login" className="btn secondary">
                 Sign in
               </Link>
-              <a className="btn-primary" href="#onboarding">
-                Book a demo
+              <a href="#waitlist" className="btn primary">
+                Get started
               </a>
             </div>
           </div>
-        </nav>
+        </header>
 
-        <div className="hero">
-          <h1>
-            Stop chasing GPs, pharmacies, and family for <em>repeat prescriptions.</em>
-          </h1>
+        <main>
+          <section className="hero">
+            <h1>
+              The <span className="fancy-underline">care admin</span> workspace for every request that needs follow-through.
+            </h1>
+            <p>
+              Omela starts with repeat prescriptions, giving families, carers, care teams, and pharmacies one shared place to
+              prepare requests, assign ownership, track progress, and follow every update until it is complete.
+            </p>
 
-          <p className="hero-sub">
-            Omela keeps every request owned, tracked, and followed through, so nothing gets missed.
-          </p>
-
-          <p className="hero-pain">
-            No more chasing updates across calls, emails, and memory.
-          </p>
-
-          <div className="hero-btns">
-            <a className="btn-primary" href="#how">
-              See the workflow
-            </a>
-            <a className="btn-secondary" href="#pricing">
-              View pricing
-            </a>
-          </div>
-        </div>
-
-        <div className="workspace-section">
-          <div className="workspace-shell">
-            <div className="ws-titlebar">
-              <div className="ws-dots">
-                <span />
-                <span />
-                <span />
-              </div>
-              <div className="ws-url">omela.ai / workspace / care-team</div>
+            <div className="hero-actions">
+              <a href="#waitlist" className="btn primary hero-btn">
+                Get started
+              </a>
+              <a href="#pricing" className="btn secondary hero-btn">
+                Explore plans <ArrowRight size={17} />
+              </a>
             </div>
 
-            <div className="ws-body">
-              <div className="ws-sb">
-                <div className="ws-sb-head">
-                  <div className="ws-brand">
-                    <div className="ws-brand-mark ws-brand-logo">
-                      <LogoMark />
-                    </div>
-                    <div>
-                      <div className="ws-brand-name">Omela</div>
-                      <div className="ws-live">
-                        <span className="live-dot small-dot" />
-                        Live · Healthcare
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            <OperationsDemo active={activeResident} setActive={setActiveResident} />
+          </section>
 
-                <div className="ws-stats">
-                  <div className="ws-stat">
-                    <div className="ws-stat-n a">5</div>
-                    <div className="ws-stat-l">Due Soon</div>
-                  </div>
-                  <div className="ws-stat">
-                    <div className="ws-stat-n r">1</div>
-                    <div className="ws-stat-l">Delayed</div>
-                  </div>
-                  <div className="ws-stat">
-                    <div className="ws-stat-n g">2</div>
-                    <div className="ws-stat-l">Ready</div>
-                  </div>
-                </div>
+          <LogoMarquee />
 
-                <div className="ws-list-hd">
-                  <span>Residents</span>
-                  <span>4</span>
-                </div>
+          <FeatureShowcase />
 
-                {RESIDENTS.map((resident, index) => (
-                  <button
-                    key={resident.rx}
-                    className={`ws-item ${selectedResident === index ? "sel" : ""}`}
-                    onClick={() => setSelectedResident(index)}
-                    type="button"
-                  >
-                    <div className="ws-item-top">
-                      <div className={`ws-av ${resident.tone}`}>{resident.initials}</div>
-                      <span className="ws-item-name">{resident.shortName}</span>
-                      <span className="ws-item-age"> · {resident.age}</span>
-                    </div>
-
-                    <div className="ws-item-med">{resident.medShort}</div>
-
-                    <div className="ws-item-row">
-                      <span className={`chip ${resident.statusChip}`}>{resident.status}</span>
-                      <span className="ws-item-days">{resident.daysLeft}d left</span>
-                    </div>
-
-                    <div className="supply-bar">
-                      <div className="supply-track">
-                        <div
-                          className={`supply-fill ${
-                            resident.tone === "g" ? "g" : resident.tone === "b" ? "b" : "w"
-                          }`}
-                          style={{ width: `${resident.supplyPercent}%` }}
-                        />
-                      </div>
-                      <span className="supply-lbl">{resident.daysLeft}d</span>
-                    </div>
-                  </button>
-                ))}
-
-                <div className="ws-feed">
-                  <div className="ws-feed-hd">
-                    <RefreshCw size={9} />
-                    Recent activity
-                  </div>
-
-                  <div className="ws-feed-vp">
-                    <div className="ws-feed-track">
-                      {[...FEED_ITEMS, ...FEED_ITEMS].map((item, index) => (
-                        <div key={`${item.who}-${item.what}-${index}`} className="ws-feed-item">
-                          <span className={`ws-feed-dot ${item.dot}`} />
-                          <span className="ws-feed-who">{item.who}</span>
-                          <span className="ws-feed-what"> {item.what}</span>
-                          <span className={`ws-feed-when ${item.fresh ? "fresh" : ""}`}>
-                            {item.when}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="ws-main">
-                <div className="ws-eval">
-                  <div className="ws-eval-copy">
-                    <span className="ws-eval-lbl">Omela is evaluating</span>
-                    <span className="ws-eval-task">{activeResident.evalTask}</span>
-                  </div>
-                  <div className="ws-eval-prog">
-                    <div className="ws-eval-fill" />
-                  </div>
-                </div>
-
-                <div className="ws-main-head">
-                  <div>
-                    <div className="ws-main-title">{activeResident.name}</div>
-                    <div className="ws-main-sub">
-                      {activeResident.med} · {activeResident.rx}
-                    </div>
-                  </div>
-                  <span className={`chip ${activeResident.statusChip}`}>
-                    {activeResident.status}
-                  </span>
-                </div>
-
-                <div className="ws-tl">
-                  <div className="ws-tl-hd">Timeline</div>
-
-                  {activeResident.timeline.map((item, index) => (
-                    <div key={`${item.text}-${index}`}>
-                      {index > 0 ? <div className="ws-connector" /> : null}
-
-                      <div className="ws-tl-item">
-                        <div className={`ws-tl-node ${item.done ? "done" : "wait"}`}>
-                          {item.done ? (
-                            <Check size={9} strokeWidth={2.5} />
-                          ) : (
-                            <svg viewBox="0 0 10 10" width="9" height="9" aria-hidden="true">
-                              <circle cx="5" cy="5" r="2.2" fill={c.warm} />
-                            </svg>
-                          )}
-                        </div>
-
-                        <span className={`ws-tl-text ${item.done ? "" : "p"}`}>{item.text}</span>
-
-                        <span className="ws-tl-time">{item.meta}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="ws-next">
-                  <div className="ws-next-lbl">Next action · Today</div>
-                  <div className="ws-next-text">{activeResident.next}</div>
-                </div>
-              </div>
-
-              <div className="ws-detail">
-                <div className={`ws-detail-av ${activeResident.tone}`}>{activeResident.initials}</div>
-                <div className="ws-detail-name">{activeResident.name}</div>
-                <div className="ws-detail-med">{activeResident.med}</div>
-                <div className="ws-detail-rx">{activeResident.rx}</div>
-
-                <div className="ws-field">
-                  <div className="ws-field-l">Status</div>
-                  <div className={`ws-field-v ${activeResident.statusValueClass}`}>
-                    {activeResident.status}
-                  </div>
-                </div>
-
-                <div className="ws-field">
-                  <div className="ws-field-l">Owner</div>
-                  <div className="ws-field-v">{activeResident.owner}</div>
-                </div>
-
-                <div className="ws-field">
-                  <div className="ws-field-l">Practice</div>
-                  <div className="ws-field-v">{activeResident.practice}</div>
-                </div>
-
-                <div className="ws-field">
-                  <div className="ws-field-l">Pharmacy</div>
-                  <div className="ws-field-v">{activeResident.pharmacy}</div>
-                </div>
-              </div>
+          <section className="section workflow" id="workflow">
+            <div className="section-head center">
+              <SectionPill>Workflow</SectionPill>
+              <h2>From reminder to resolution.</h2>
+              <p>
+                Omela keeps the work visible from the first reminder to the final update, so nobody has to reconstruct what
+                happened from calls, notes, and memory.
+              </p>
             </div>
-          </div>
-        </div>
 
-        <div className="marquee-section">
-          <div className="marquee-label">
-            Built on infrastructure trusted by secure teams worldwide
-          </div>
-
-          <div className="marquee-track-wrap infra-wrap">
-            <div className="marquee-track infra-track">
-              {[...INFRA_LOGOS, ...INFRA_LOGOS].map((logo, index) => (
-                <div key={`${logo.alt}-${index}`} className="infra-logo-card">
-                  <img src={logo.src} alt={logo.alt} className="infra-logo-img" />
-                </div>
+            <div className="workflow-grid">
+              {WORKFLOW.map(([number, title, copy], index) => (
+                <article key={title}>
+                  <span className="step-number">{number}</span>
+                  {index < WORKFLOW.length - 1 ? (
+                    <span className="step-arrow">
+                      <ArrowRight size={18} />
+                    </span>
+                  ) : null}
+                  <h3>{title}</h3>
+                  <p>{copy}</p>
+                </article>
               ))}
             </div>
-          </div>
-        </div>
+          </section>
 
-        <div className="pain-section">
-          <div className="pain-inner">
-            <div className="pain-bubbles">
-              <div className={`bubble ${visibleBubbles[0] ? "show" : ""}`}>Did you call the GP yet?</div>
-              <div className={`bubble right ${visibleBubbles[1] ? "show" : ""}`}>
-                I thought you were handling it
-              </div>
-              <div className={`bubble ${visibleBubbles[2] ? "show" : ""}`}>
-                The pharmacy says they never got the request
-              </div>
-              <div className={`bubble right ${visibleBubbles[3] ? "show" : ""}`}>
-                She has 2 days of tablets left
-              </div>
-            </div>
-
-            <Overline warm>Why this matters</Overline>
-
-            <h2 className="pain-heading">
-              Things get <em>delayed</em> when nobody owns the next step.
-            </h2>
-
-            <p className="pain-body">
-              Requests get dropped. Pharmacies chase practices. Families chase pharmacies. Staff
-              assume someone else handled it. Updates scatter across calls, emails, and memory.
-            </p>
-
-            <p className="pain-punch">
-              Omela removes the chasing with one shared coordination layer.
-            </p>
-          </div>
-        </div>
-
-        <section className="pad white-bg" id="how">
-          <div className="sec-inner">
-            <div className="sh-c">
-              <Overline>How Omela works</Overline>
-              <h2>
-                From due soon to resolved,
-                <br />
-                without the chasing.
-              </h2>
-            </div>
-
-            <div className="how-grid">
-              <div className="how-card">
-                <div className="how-num">01</div>
-                <h3>Omela spots what is due</h3>
-                <p>Repeat cycles, supply timing, and follow-up dates are tracked in one place.</p>
-              </div>
-
-              <div className="how-card">
-                <div className="how-num">02</div>
-                <h3>A request is prepared</h3>
-                <p>
-                  Each request is linked to the person, medication, owner, and next action before
-                  it gets sent.
-                </p>
-              </div>
-
-              <div className="how-card">
-                <div className="how-num">03</div>
-                <h3>Status stays visible</h3>
-                <p>
-                  From sent, to acknowledged, to ready for collection, everyone sees the same
-                  timeline.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="pad bg-main">
-          <div className="sec-inner">
-            <div className="sh-c">
-              <Overline>What Omela gives you</Overline>
-              <h2>
-                One place to see what is due,
-                <br />
-                delayed, and done.
-              </h2>
-              <p className="sec-sub">
-                The shared coordination layer for repeat prescription requests. Keeps ownership,
-                status, and next steps visible without replacing clinical systems.
+          <section className="pain">
+            <TypewriterMessages />
+            <div className="pain-copy">
+              <SectionPill>Real admin stress</SectionPill>
+              <h2>Small gaps become stressful fast.</h2>
+              <p>
+                A missed call, a handover note, or an update nobody shares can turn into avoidable stress. Omela keeps the
+                request, owner, timeline, and next action in one shared place.
               </p>
             </div>
+          </section>
 
-            <div className="benefit-grid">
-              <div className="benefit-card">
-                <div className="benefit-icon warm">
-                  <RefreshCw size={20} />
-                </div>
-                <h3>See what needs attention now</h3>
-                <p>
-                  Know what is due soon, what is delayed, and what needs following up today.
-                </p>
-              </div>
-
-              <div className="benefit-card">
-                <div className="benefit-icon blue">
-                  <Users size={20} />
-                </div>
-                <h3>Keep ownership clear</h3>
-                <p>
-                  See who last handled the request, who owns the next step, and what should happen
-                  next.
-                </p>
-              </div>
-
-              <div className="benefit-card">
-                <div className="benefit-icon green">
-                  <Check size={20} />
-                </div>
-                <h3>Follow every update</h3>
-                <p>
-                  Track progress from draft through acknowledgement to collection in one shared
-                  timeline.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="pad white-bg" id="audiences">
-          <div className="sec-inner">
-            <div className="sh-c">
-              <Overline warm>Built first for</Overline>
-              <h2>
-                The people carrying
-                <br />
-                the follow-through.
-              </h2>
+          <section className="section teams" id="teams">
+            <div className="section-head center">
+              <SectionPill>Who it is for</SectionPill>
+              <h2>Built for the people carrying the follow-through.</h2>
             </div>
 
-            <div className="audience-grid">
-              <div className="audience-card">
-                <div className="audience-card-top">
-                  <div className="audience-icon">
-                    <Users size={20} />
-                  </div>
-                  <div className="live-tag">
-                    <span className="live-tag-dot" />
-                    Live
-                  </div>
-                </div>
-                <h3>Family carers</h3>
-                <p>
-                  Helping a parent, partner, or relative stay on top of repeat prescriptions
-                  without carrying every detail alone.
-                </p>
-                <div className="audience-players">Family · GP · Pharmacy</div>
-              </div>
-
-              <div className="audience-card">
-                <div className="audience-card-top">
-                  <div className="audience-icon">
-                    <Home size={20} />
-                  </div>
-                  <div className="live-tag">
-                    <span className="live-tag-dot" />
-                    Live
-                  </div>
-                </div>
-                <h3>Residential care</h3>
-                <p>
-                  Coordinating repeat prescription workflows across residents, practices, and
-                  pharmacies in one place.
-                </p>
-                <div className="audience-players">Care team · GP · Pharmacy</div>
-              </div>
-
-              <div className="audience-card">
-                <div className="audience-card-top">
-                  <div className="audience-icon">
-                    <Home size={20} />
-                  </div>
-                  <div className="live-tag">
-                    <span className="live-tag-dot" />
-                    Live
-                  </div>
-                </div>
-                <h3>Supported living</h3>
-                <p>
-                  Giving staff and families a shared view of medication follow-up across handovers.
-                </p>
-                <div className="audience-players">Staff · Family · GP</div>
-              </div>
-
-              <div className="audience-card">
-                <div className="audience-card-top">
-                  <div className="audience-icon">
-                    <Stethoscope size={20} />
-                  </div>
-                  <div className="live-tag">
-                    <span className="live-tag-dot" />
-                    Live
-                  </div>
-                </div>
-                <h3>Community pharmacies</h3>
-                <p>
-                  A clearer incoming queue with context on who ordered what, for whom, and what
-                  still needs follow-up.
-                </p>
-                <div className="audience-players">Pharmacy · Patients · GPs</div>
-              </div>
+            <div className="teams-grid">
+              {TEAMS.map(([title, copy]) => (
+                <article key={title}>
+                  <UsersRound size={21} />
+                  <h3>{title}</h3>
+                  <p>{copy}</p>
+                </article>
+              ))}
             </div>
-          </div>
-        </section>
+          </section>
 
-        <div className="dark-section">
-          <div className="dark-inner">
-            <Overline>Why repeat prescriptions first</Overline>
-
-            <h2>Starting with one of the largest unresolved admin workflows in healthcare.</h2>
-
-            <p className="sec-sub dark-sub">
-              Repeat prescriptions are frequent, repetitive, multi-party, and still poorly
-              coordinated across patients, practices, pharmacies, and care teams. That makes them
-              painful enough to matter and common enough to build a serious business around.
-            </p>
-
-            <div className="stats-grid">
-              <div className="stat-card">
-                <div className="stat-val">
-                  <CountUp target={1.1} decimals={1} suffix="B" />
-                </div>
-                <div className="stat-lbl">
-                  prescription items issued each year in England (NHSBSA)
-                </div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-val">
-                  <CountUp target={77} suffix="%" />
-                </div>
-                <div className="stat-lbl">
-                  of all prescription items are repeats (NHS England)
-                </div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-val">
-                  £<CountUp target={300} suffix="M" />
-                </div>
-                <div className="stat-lbl">
-                  estimated medicines waste each year (NHS England)
-                </div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-val multi-party">
-                  Multi-
-                  <br />
-                  party
-                </div>
-                <div className="stat-lbl">
-                  patient, practice, pharmacy, and carer all involved in every cycle
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <section className="pad bg2">
-          <div className="sec-inner">
-            <div className="sh-c testimonial-shell">
-              <Overline>What teams say</Overline>
-              <h2>
-                The first thing they open
-                <br />
-                when the week starts.
-              </h2>
+          <section className="testimonials">
+            <div className="section-head center">
+              <SectionPill>What Omela users are saying</SectionPill>
+              <h2>Clearer handovers. Calmer follow-through.</h2>
             </div>
 
-            <div className="tst-wrap">
-              <div className="tst-icon">
-                <Quote size={20} />
-              </div>
-
-              <div className="tst-quote">{testimonial.quote}</div>
-
-              <div className="tst-attr">
-                <span className="tst-attr-name">{testimonial.name}</span>
-                <span>·</span>
-                <span>{testimonial.domain}</span>
-              </div>
-
-              <div className="tst-dots">
-                {TESTIMONIALS.map((_, index) => (
-                  <button
-                    key={index}
-                    className={`tst-dot ${index === testimonialIndex ? "active" : ""}`}
-                    onClick={() => setTestimonialIndex(index)}
-                    type="button"
-                    aria-label={`Testimonial ${index + 1}`}
-                  />
+            <div className="testimonial-marquee">
+              <div>
+                {[...TESTIMONIALS, ...TESTIMONIALS].map(([roleName, quote], index) => (
+                  <article key={`${roleName}-${index}`}>
+                    <p>
+                      “<em>{quote}</em>”
+                    </p>
+                    <span>{roleName}</span>
+                  </article>
                 ))}
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section className="pad white-bg">
-          <div className="sec-inner">
-            <div className="sh-c">
-              <Overline>Trust and boundaries</Overline>
-              <h2>
-                We take the thin slice.
-                <br />
-                You keep the rest.
-              </h2>
-              <p className="sec-sub">
-                Omela is a coordination layer, not a system of record. We handle ownership, status,
-                and next actions. Clinical records stay where they belong.
+          <section className="safe-section">
+            <div className="safe-bg" />
+            <div className="safe-content">
+              <h2>Safe, clear, and accountable.</h2>
+              <p>
+                Omela coordinates care admin. It does not diagnose, prescribe, replace clinical judgement, or replace GP,
+                pharmacy, or provider systems.
               </p>
-            </div>
-
-            <div className="trust-grid">
-              <div className="trust-card">
-                <div className="trust-top">
-                  <span className="trust-num">01</span>
-                  <div className="trust-icon-wrap">
-                    <Shield size={16} />
-                  </div>
-                </div>
-                <h3>Metadata, not content</h3>
-                <p>
-                  Omela tracks the state of a request, not the underlying clinical record.
-                </p>
-              </div>
-
-              <div className="trust-card">
-                <div className="trust-top">
-                  <span className="trust-num">02</span>
-                  <div className="trust-icon-wrap">
-                    <Eye size={16} />
-                  </div>
-                </div>
-                <h3>Role-based visibility</h3>
-                <p>Each workspace has explicit roles and scoped access.</p>
-              </div>
-
-              <div className="trust-card">
-                <div className="trust-top">
-                  <span className="trust-num">03</span>
-                  <div className="trust-icon-wrap">
-                    <History size={16} />
-                  </div>
-                </div>
-                <h3>Full audit trail</h3>
-                <p>Every status change, ownership transfer, and action is timestamped.</p>
-              </div>
-
-              <div className="trust-card">
-                <div className="trust-top">
-                  <span className="trust-num">04</span>
-                  <div className="trust-icon-wrap">
-                    <Database size={16} />
-                  </div>
-                </div>
-                <h3>Minimum data by design</h3>
-                <p>Only the fields needed to move a request forward.</p>
+              <div className="safe-badges">
+                <span>
+                  <ShieldCheck size={18} /> Role-based visibility
+                </span>
+                <span>
+                  <History size={18} /> Activity trail
+                </span>
+                <span>
+                  <LockKeyhole size={18} /> Minimum data
+                </span>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section className="pad bg-main" id="pricing">
-          <div className="sec-inner">
-            <div className="sh-c">
-              <Overline warm>Simple pricing</Overline>
-              <h2>
-                Pay for the people you coordinate,
-                <br />
-                not the seats.
-              </h2>
-              <p className="sec-sub">
-                Built for carers, care teams, and growing providers. Transparent monthly pricing
-                for early teams.
-              </p>
+          <section className="section trust-boundaries">
+            <div className="section-head center">
+              <SectionPill>Trust and boundaries</SectionPill>
+              <h2>Built on trust. Designed with limits.</h2>
+              <p>Omela is a coordination layer, not a clinical record, triage tool, diagnosis tool, or prescribing system.</p>
+            </div>
+
+            <div className="boundary-grid">
+              {[
+                ["Coordination layer", "Ownership, status, and follow-up stay visible without becoming the clinical system of record."],
+                ["Role-based visibility", "Families, carers, teams, and pharmacies only see workflow details relevant to their role."],
+                ["Clear audit trail", "Every status change, owner change, and follow-up action is recorded with context."],
+                ["Minimum data", "Omela asks only for information needed to move the request forward."],
+              ].map(([title, copy], index) => (
+                <article key={title}>
+                  <span>0{index + 1}</span>
+                  <h3>{title}</h3>
+                  <p>{copy}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="section pricing" id="pricing">
+            <div className="section-head center">
+              <SectionPill>Pricing</SectionPill>
+              <h2>Simple plans for families and care teams.</h2>
+              <p>Start with the level of coordination you need. Every plan is designed around care admin follow-through.</p>
             </div>
 
             <div className="pricing-grid">
-              <div className="p-card">
-                <div className="p-tier">Family</div>
-                <div className="p-price">
-                  <span className="p-amount">£9</span>
-                  <span className="p-per">/ month</span>
-                </div>
-                <p className="p-desc">
-                  For one person coordinating repeat prescriptions for a relative or household.
-                </p>
-                <ul className="p-features">
-                  <li>
-                    <span className="p-check">
-                      <Check size={9} />
-                    </span>
-                    Up to 3 people
-                  </li>
-                  <li>
-                    <span className="p-check">
-                      <Check size={9} />
-                    </span>
-                    Unlimited requests
-                  </li>
-                  <li>
-                    <span className="p-check">
-                      <Check size={9} />
-                    </span>
-                    Email reminders
-                  </li>
-                  <li>
-                    <span className="p-check">
-                      <Check size={9} />
-                    </span>
-                    Activity history
-                  </li>
-                </ul>
-                <a href="#onboarding" className="btn-secondary p-btn">
-                  Book a demo
-                </a>
-              </div>
-
-              <div className="p-card feat">
-                <div className="p-badge">
-                  <span className="p-badge-dot" />
-                  Most popular
-                </div>
-                <div className="p-tier">Team</div>
-                <div className="p-price">
-                  <span className="p-amount">£49</span>
-                  <span className="p-per">/ month</span>
-                </div>
-                <p className="p-desc">
-                  For care teams and pharmacies managing ongoing prescription workflows.
-                </p>
-                <ul className="p-features">
-                  <li>
-                    <span className="p-check">
-                      <Check size={9} />
-                    </span>
-                    Up to 25 active people
-                  </li>
-                  <li>
-                    <span className="p-check">
-                      <Check size={9} />
-                    </span>
-                    Shared workspace
-                  </li>
-                  <li>
-                    <span className="p-check">
-                      <Check size={9} />
-                    </span>
-                    Role permissions
-                  </li>
-                  <li>
-                    <span className="p-check">
-                      <Check size={9} />
-                    </span>
-                    Email support
-                  </li>
-                  <li>
-                    <span className="p-check">
-                      <Check size={9} />
-                    </span>
-                    Audit trail
-                  </li>
-                </ul>
-                <a href="#onboarding" className="btn-primary p-btn">
-                  Book a demo
-                </a>
-              </div>
-
-              <div className="p-card">
-                <div className="p-tier">Organisation</div>
-                <div className="p-custom">Custom</div>
-                <div className="p-custom-note">Annual contract</div>
-                <p className="p-desc">
-                  For multi-site providers with onboarding, controls, and structured rollout.
-                </p>
-                <ul className="p-features">
-                  <li>
-                    <span className="p-check">
-                      <Check size={9} />
-                    </span>
-                    Unlimited items
-                  </li>
-                  <li>
-                    <span className="p-check">
-                      <Check size={9} />
-                    </span>
-                    SSO and Microsoft Entra
-                  </li>
-                  <li>
-                    <span className="p-check">
-                      <Check size={9} />
-                    </span>
-                    Onboarding support
-                  </li>
-                  <li>
-                    <span className="p-check">
-                      <Check size={9} />
-                    </span>
-                    Data processing agreement
-                  </li>
-                </ul>
-                <a href="mailto:hello@omela.ai" className="btn-secondary p-btn">
-                  Talk to us
-                </a>
-              </div>
+              {PRICING.map((plan) => (
+                <article className={`price-card ${plan.featured ? "featured" : ""}`} key={plan.name}>
+                  {plan.featured ? <em>Most common</em> : null}
+                  <h3>{plan.name}</h3>
+                  <div className="price-line">
+                    <strong>{plan.price}</strong>
+                    {plan.suffix ? <span>{plan.suffix}</span> : null}
+                  </div>
+                  <p>{plan.copy}</p>
+                  <ul>
+                    {plan.features.map((feature) => (
+                      <li key={feature}>
+                        <Check size={14} />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  <a href={plan.href} className={`btn ${plan.featured ? "primary" : "secondary"}`}>
+                    {plan.cta}
+                  </a>
+                </article>
+              ))}
             </div>
+          </section>
 
-            <p className="pricing-note">
-              All plans include role-based access and full audit history. Questions?{" "}
-              <a href="mailto:hello@omela.ai">Contact us.</a>
-            </p>
-          </div>
-        </section>
+          <section className="waitlist" id="waitlist">
+            <div className="waitlist-card">
+              <div className="waitlist-copy">
+                <SectionPill>Get started</SectionPill>
+                <h2>Start with one care admin workflow.</h2>
+                <p>Tell us who you coordinate for. We will use this to guide your setup and show the most relevant plan.</p>
+                <div className="waitlist-steps">
+                  <span>1. Choose your role</span>
+                  <span>2. Join the pilot list</span>
+                  <span>3. Get setup guidance</span>
+                </div>
+              </div>
 
-        <section className="pad white-bg" id="onboarding">
-          <div className="sec-inner">
-            <div className="ob-box">
-              <Overline>Book a demo</Overline>
-              <h2>See whether Omela fits your workflow.</h2>
-              <p>
-                Tell us how you currently manage repeat prescriptions and we will show you the
-                cleanest way Omela would work for you.
-              </p>
+              <form onSubmit={handleSubmit}>
+                <label>
+                  <span>Email</span>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                    required
+                  />
+                </label>
 
-              <form className="ob-form" onSubmit={handleSubmit}>
+                <label>
+                  <span>Your role</span>
+                  <select value={role} onChange={(event) => setRole(event.target.value as Role)}>
+                    <option value="self">I manage my own care admin</option>
+                    <option value="carer">I manage for a family member</option>
+                    <option value="household">I manage across my household</option>
+                    <option value="care_team">I work in a care team</option>
+                    <option value="pharmacy">I work in a pharmacy</option>
+                    <option value="other">Something else</option>
+                  </select>
+                </label>
+
                 <input
-                  className="ob-input"
-                  type="email"
-                  placeholder="Your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                />
-
-                <select
-                  className="ob-select"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as Role)}
-                >
-                  <option value="carer">I manage for a family member</option>
-                  <option value="household">I manage across my household</option>
-                  <option value="care_team">I work in a care team</option>
-                  <option value="pharmacy">I work in a pharmacy</option>
-                  <option value="other">Something else</option>
-                </select>
-
-                <input
+                  className="honeypot"
                   type="text"
                   name="website"
                   value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
+                  onChange={(event) => setWebsite(event.target.value)}
                   tabIndex={-1}
                   autoComplete="off"
                   aria-hidden="true"
-                  style={{
-                    position: "absolute",
-                    left: "-9999px",
-                    opacity: 0,
-                    pointerEvents: "none",
-                    height: 0,
-                    width: 0,
-                  }}
                 />
 
-                <button
-                  className="btn-primary ob-submit"
-                  type="submit"
-                  disabled={!mounted || submitting || !agreed}
-                >
-                  {submitting ? "Submitting..." : "Request a demo"}
+                <label className="checkbox">
+                  <input type="checkbox" checked={agreed} onChange={(event) => setAgreed(event.target.checked)} required />
+                  <span>
+                    I agree to Omela’s <Link href="/privacy">Privacy</Link> and <Link href="/terms">Terms</Link>.
+                  </span>
+                </label>
+
+                <button className="btn primary" type="submit" disabled={!mounted || submitting || !agreed}>
+                  {submitting ? "Submitting..." : "Get started"}
                 </button>
+
+                {success ? <p className="ok">{success}</p> : null}
+                {error ? <p className="err">{error}</p> : null}
               </form>
-
-              <label className="agree-row">
-                <input
-                  type="checkbox"
-                  checked={agreed}
-                  onChange={(e) => setAgreed(e.target.checked)}
-                  required
-                />
-                <span>
-                  By submitting you agree to our <Link href="/privacy">Privacy Notice</Link> and{" "}
-                  <Link href="/terms">Terms</Link>.
-                </span>
-              </label>
-
-              {success ? <div className="form-ok">{success}</div> : null}
-              {error ? <div className="form-er">{error}</div> : null}
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section className="pad bg-main" id="faq">
-          <div className="sec-inner">
-            <div className="sh-c faq-head">
-              <Overline>Questions</Overline>
-              <h2>Answers to what most people ask.</h2>
-              <p className="sec-sub">
-                If your question is not here, send a note to{" "}
-                <a href="mailto:hello@omela.ai">hello@omela.ai</a> and a real person will reply.
-              </p>
+          <section className="section resources" id="resources">
+            <div className="section-head split">
+              <div>
+                <SectionPill>Resources</SectionPill>
+                <h2>Resources for safer follow-through.</h2>
+              </div>
+              <p>Practical guides for families, care teams, and pharmacies who want cleaner care admin coordination.</p>
             </div>
 
+            <div className="resource-grid">
+              {RESOURCES.map(([title, copy]) => (
+                <a href="#waitlist" key={title}>
+                  <Mail size={18} />
+                  <h3>{title}</h3>
+                  <p>{copy}</p>
+                </a>
+              ))}
+            </div>
+          </section>
+
+          <section className="section faq" id="faq">
+            <div className="section-head center">
+              <SectionPill>FAQ</SectionPill>
+              <h2>Questions before using Omela.</h2>
+            </div>
             <FAQAccordion />
-          </div>
-        </section>
+          </section>
 
-        <section className="pad white-bg future-section">
-          <div className="sec-inner">
-            <div className="future-block">
-              <Overline warm>Focused first</Overline>
-              <h2>
-                One workflow,
-                <br />
-                done properly.
-              </h2>
-              <p className="sec-sub">
-                Omela is focused on making repeat prescription coordination clear, calm, and
-                visible across the people involved.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <div className="final-cta">
-          <h2>
-            Still managing repeat prescriptions
-            <br />
-            across calls, notes, and memory?
-          </h2>
-
-          <p>
-            See how Omela keeps repeat prescription requests visible from first draft to final
-            collection.
-          </p>
-
-          <div className="final-btns">
-            <a href="#onboarding" className="btn-white">
-              Book a demo
+          <section className="final-cta">
+            <h2>Ready to stop chasing every update?</h2>
+            <p>Start with repeat prescriptions, then build toward the wider care admin work your team already manages.</p>
+            <a href="#waitlist" className="btn primary hero-btn">
+              Get started
             </a>
-            <a href="#how" className="btn-outline-white">
-              See the workflow
-            </a>
-          </div>
-        </div>
+          </section>
+        </main>
 
-        <footer>
-          <div className="ft-inner">
-            <div className="ft-top">
-              <div>
-                <div className="ft-brand-logo">
-                  <div className="ft-lm">
-                    <LogoMark />
-                  </div>
-                  <span className="ft-ln">Omela</span>
+        <footer className="site-footer">
+          <div className="footer-shell">
+            <h2>The care admin workspace for every request that needs follow-through.</h2>
+
+            <div className="footer-main">
+              <div className="footer-brand">
+                <Logo />
+
+                <div className="footer-address">
+                  <p>United Kingdom</p>
+                  <p>San Francisco, CA</p>
                 </div>
-                <p className="ft-tagline">
-                  The coordination layer for repeat prescription workflows. Built for the people
-                  carrying the follow-through.
-                </p>
+
+                <a className="footer-email" href="mailto:hello@omela.ai">
+                  hello@omela.ai
+                </a>
+
+                <div className="social-links" aria-label="Social links">
+                  <a href="https://x.com/joinomela" target="_blank" rel="noreferrer" aria-label="Follow Omela on X">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M13.8 10.47 21.14 2h-1.74l-6.37 7.35L7.94 2H2.07l7.7 11.12L2.07 22h1.74l6.73-7.76L15.92 22h5.87l-7.99-11.53Zm-2.38 2.74-.78-1.11L4.44 3.3h2.66l5.01 7.11.78 1.11 6.51 9.25h-2.66l-5.32-7.56Z" />
+                    </svg>
+                    <span>X</span>
+                  </a>
+
+                  <a
+                    href="https://www.linkedin.com/company/joinomela"
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Follow Omela on LinkedIn"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M4.98 3.5a2.5 2.5 0 1 1 0 5.001 2.5 2.5 0 0 1 0-5ZM3 9.5h3.96V21H3V9.5Zm6.23 0h3.79v1.57h.05c.53-.95 1.82-1.95 3.74-1.95 4 0 4.74 2.63 4.74 6.05V21h-3.96v-5.17c0-1.23-.02-2.82-1.72-2.82-1.72 0-1.98 1.34-1.98 2.73V21H9.23V9.5Z" />
+                    </svg>
+                    <span>LinkedIn</span>
+                  </a>
+                </div>
               </div>
 
-              <div>
-                <div className="ft-col-title">Product</div>
-                <a className="ft-link" href="#how">
-                  How it works
-                </a>
-                <a className="ft-link" href="#audiences">
-                  Who it&apos;s for
-                </a>
-                <a className="ft-link" href="#pricing">
-                  Pricing
-                </a>
-                <a className="ft-link" href="#onboarding">
-                  Book a demo
-                </a>
-              </div>
-
-              <div>
-                <div className="ft-col-title">Company</div>
-                <span className="ft-link">Omela Ltd.</span>
-                <a className="ft-link" href="mailto:hello@omela.ai">
-                  Contact
-                </a>
-                <a className="ft-link" href="#onboarding">
-                  Book a demo
-                </a>
-              </div>
-
-              <div>
-                <div className="ft-col-title">Legal</div>
-                <Link className="ft-link" href="/privacy">
-                  Privacy
-                </Link>
-                <Link className="ft-link" href="/terms">
-                  Terms
-                </Link>
-                <a className="ft-link" href="mailto:notice@omela.ai">
-                  Notices
-                </a>
+              <div className="footer-links">
+                <div>
+                  <strong>Product</strong>
+                  <a href="#product">Product</a>
+                  <a href="#workflow">Workflow</a>
+                  <a href="#pricing">Pricing</a>
+                  <a href="#waitlist">Get started</a>
+                </div>
+                <div>
+                  <strong>Company</strong>
+                  <a href="#teams">About</a>
+                  <a href="mailto:hello@omela.ai">Contact</a>
+                  <Link href="/login">Sign in</Link>
+                </div>
+                <div>
+                  <strong>Resources</strong>
+                  <a href="#resources">Repeat prescription checklist</a>
+                  <a href="#resources">Care-team guide</a>
+                  <a href="#faq">FAQ</a>
+                </div>
+                <div>
+                  <strong>Legal</strong>
+                  <Link href="/privacy">Privacy</Link>
+                  <Link href="/terms">Terms</Link>
+                </div>
               </div>
             </div>
 
-            <div className="ft-bottom">
-              <p className="ft-copy">© 2026 Omela Ltd.</p>
-              <p className="ft-disc">
-                Omela is a coordination layer, not a clinical system of record, and does not make
-                medical decisions. In a healthcare emergency, contact local emergency services.
-              </p>
+            <div className="footer-bottom">
+              <p>© 2026 Omela Ltd. All rights reserved.</p>
+              <p>Omela does not diagnose, prescribe, or make medical decisions. In an emergency, contact local emergency services.</p>
             </div>
           </div>
         </footer>
@@ -1555,851 +1187,614 @@ export default function Page() {
 }
 
 const CSS = `
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+:root{
+  --bg:#faf9f3;
+  --soft:#f3f1e9;
+  --card:#fffefa;
+  --line:#e8e2d8;
+  --ink:#171717;
+  --muted:#565b62;
+  --muted2:#81868d;
+  --teal:#59d0c3;
+  --teal2:#40c2b4;
+  --tealSoft:#e9f8f6;
+  --dark:#111827;
+  --shadow:0 18px 60px rgba(17,24,39,.07);
+  --softShadow:0 10px 34px rgba(17,24,39,.04);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 body{
-  font-family:var(--font-dm-sans),-apple-system,sans-serif;
-  background:${c.bg};
-  color:${c.ink};
-  font-size:16px;
-  line-height:1.6;
-  overflow-x:hidden
+  margin:0;
+  color:var(--ink);
+  font-family:var(--font-inter),Inter,Arial,sans-serif;
+  overflow-x:hidden;
+  background:
+    radial-gradient(circle at 8% 8%,rgba(89,208,195,.10),transparent 28%),
+    radial-gradient(circle at 88% 10%,rgba(215,235,255,.20),transparent 30%),
+    linear-gradient(180deg,#faf9f3 0%,#f7f5ee 100%);
 }
-a{color:inherit;text-decoration:none}
-button,input,select{font-family:inherit}
-::selection{background:${c.warm};color:#fff}
-.serif{font-family:var(--font-instrument-serif),Georgia,serif}
+a{text-decoration:none;color:inherit}
+button,input,select{font:inherit}
+button{cursor:pointer}
+img{display:block;max-width:100%}
+p,h1,h2,h3,h4{margin:0}
 
-/* ---- NAV ---- */
-nav{
-  position:sticky;top:0;z-index:200;
-  background:rgba(248,246,241,.94);
-  backdrop-filter:blur(20px);
-  border-bottom:1px solid rgba(227,221,210,.6);
-  height:68px;
-}
-.nav-inner{
-  max-width:1200px;margin:0 auto;padding:0 32px;
-  height:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;
-}
-.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-.nav-logo-mark{
-  width:32px;height:32px;background:${c.white};border-radius:8px;
-  border:1px solid ${c.border};
-  box-shadow:0 2px 10px rgba(0,0,0,.05);
-  display:flex;align-items:center;justify-content:center;
-}
-.nav-logo-name{
-  font-family:var(--font-instrument-serif),Georgia,serif;
-  font-size:21px;color:${c.ink};letter-spacing:-.01em
-}
-.omela-mark{
-  width:17px;
-  height:17px;
-  object-fit:contain;
-  display:block;
-}
-.omela-mark.inv{
-  filter:brightness(0) invert(1);
-}
-.nav-links{display:flex;align-items:center;gap:2px}
-.nav-link{
-  font-size:14.5px;font-weight:500;color:${c.sub};
-  padding:7px 14px;border-radius:8px;transition:color .15s,background .15s
-}
-.nav-link:hover{color:${c.ink};background:rgba(0,0,0,.04)}
-.nav-right{display:flex;align-items:center;gap:10px}
-.btn-ghost{
-  font-size:14.5px;font-weight:500;color:${c.sub};background:none;border:none;cursor:pointer;
-  padding:7px 14px;border-radius:8px;transition:color .15s,background .15s
-}
-.btn-ghost:hover{color:${c.ink};background:rgba(0,0,0,.04)}
-.btn-primary{
-  display:inline-flex;align-items:center;gap:7px;
-  background:${c.warm};color:#fff;
-  font-size:14.5px;font-weight:700;padding:10px 22px;border-radius:100px;border:none;
-  cursor:pointer;transition:all .2s;white-space:nowrap;letter-spacing:-.01em;
-}
-.btn-primary:hover:not(:disabled){
-  background:${c.warmDk};
-  transform:translateY(-1px);
-  box-shadow:0 6px 20px rgba(160,117,69,.3)
-}
-.btn-primary:disabled{opacity:.6;cursor:not-allowed}
-.btn-secondary{
-  display:inline-flex;align-items:center;gap:7px;
-  background:${c.white};color:${c.ink};
-  font-size:14.5px;font-weight:700;padding:10px 22px;border-radius:100px;
-  border:1.5px solid ${c.border};cursor:pointer;transition:all .2s;letter-spacing:-.01em;
-}
-.btn-secondary:hover{border-color:${c.ink};transform:translateY(-1px)}
-
-/* ---- HERO ---- */
-.hero{padding:88px 32px 72px;max-width:1200px;margin:0 auto;text-align:center}
-.live-dot{width:7px;height:7px;background:${c.green};border-radius:50%;animation:livePulse 2s infinite}
-.small-dot{width:5px!important;height:5px!important}
-@keyframes livePulse{
-  0%,100%{box-shadow:0 0 0 0 rgba(21,128,61,.4)}
-  60%{box-shadow:0 0 0 6px rgba(21,128,61,0)}
-}
-h1{
-  font-family:var(--font-instrument-serif),Georgia,serif;
-  font-size:clamp(42px,6.5vw,80px);
-  line-height:.98;letter-spacing:-.025em;color:${c.ink};
-  margin-bottom:24px;
-  animation:fadeUp .6s .08s both;
-}
-h1 em{font-style:italic;color:${c.warmDk}}
-.hero-sub{
-  font-size:19px;color:${c.sub};line-height:1.65;max-width:540px;margin:0 auto 10px;
-  animation:fadeUp .6s .14s both;
-}
-.hero-pain{
-  font-size:14px;color:${c.ink};font-weight:700;margin-bottom:36px;
-  animation:fadeUp .6s .18s both
-}
-.hero-btns{
-  display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:0;
-  animation:fadeUp .6s .22s both;
-}
-.hero-btns .btn-primary{font-size:16px;padding:14px 30px}
-.hero-btns .btn-secondary{font-size:16px;padding:13px 30px}
-@keyframes fadeUp{
-  from{opacity:0;transform:translateY(20px)}
-  to{opacity:1;transform:none}
-}
-
-/* ---- WORKSPACE MOCKUP ---- */
-.workspace-section{padding:0 32px 100px;animation:fadeUp .8s .3s both}
-.workspace-shell{
-  max-width:1040px;margin:0 auto;
-  background:${c.white};border:1px solid rgba(227,221,210,.9);
-  border-radius:24px;
-  box-shadow:0 1px 0 rgba(255,255,255,.8) inset, 0 2px 8px rgba(0,0,0,.04), 0 24px 60px rgba(15,24,41,.1);
+.page{
+  min-height:100vh;
   overflow:hidden;
-}
-.ws-titlebar{
-  background:${c.bg2};border-bottom:1px solid ${c.border};
-  padding:12px 18px;display:flex;align-items:center;gap:10px;
-}
-.ws-dots{display:flex;gap:6px}
-.ws-dots span{width:12px;height:12px;border-radius:50%;display:block}
-.ws-dots span:nth-child(1){background:#FF5F57}
-.ws-dots span:nth-child(2){background:#FEBC2E}
-.ws-dots span:nth-child(3){background:#28C840}
-.ws-url{
-  flex:1;background:${c.white};border:1px solid ${c.border};
-  border-radius:6px;padding:5px 12px;font-size:12px;color:${c.muted};
-  text-align:center;max-width:280px;margin:0 auto;
-}
-.ws-body{display:grid;grid-template-columns:240px 1fr 250px;min-height:420px}
-
-/* sidebar */
-.ws-sb{background:${c.bg};border-right:1px solid ${c.border}}
-.ws-sb-head{padding:16px;border-bottom:1px solid ${c.border}}
-.ws-brand{display:flex;align-items:center;gap:9px;margin-bottom:5px}
-.ws-brand-mark{
-  width:26px;height:26px;background:${c.white};border-radius:7px;
-  border:1px solid rgba(227,221,210,.9);
-  color:transparent;
-  box-shadow:0 2px 8px rgba(0,0,0,.04);
-  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800
-}
-.ws-brand-logo .omela-mark{
-  width:14px;
-  height:14px;
-}
-.ws-brand-name{
-  font-family:var(--font-instrument-serif),Georgia,serif;
-  font-size:15px;color:${c.ink}
-}
-.ws-live{
-  display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:${c.green};
-  text-transform:uppercase;letter-spacing:.06em
-}
-.ws-stats{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid ${c.border}}
-.ws-stat{padding:11px 13px;border-right:1px solid ${c.border}}
-.ws-stat:last-child{border-right:none}
-.ws-stat-n{
-  font-family:var(--font-instrument-serif),Georgia,serif;
-  font-size:24px;line-height:1;letter-spacing:-.02em
-}
-.ws-stat-n.a{color:${c.warmDk}}
-.ws-stat-n.r{color:${c.red}}
-.ws-stat-n.g{color:${c.green}}
-.ws-stat-l{
-  font-size:9.5px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.08em;color:${c.muted};margin-top:3px
-}
-.ws-list-hd{
-  padding:9px 14px;font-size:9.5px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.1em;color:${c.muted};border-bottom:1px solid ${c.border};
-  display:flex;justify-content:space-between
-}
-.ws-item{
-  width:100%;
-  background:none;
-  border:none;
-  padding:11px 14px;border-bottom:1px solid rgba(227,221,210,.5);
-  cursor:pointer;transition:background .15s;position:relative;text-align:left
-}
-.ws-item:hover{background:rgba(255,255,255,.7)}
-.ws-item.sel{background:${c.white};border-left:2.5px solid ${c.warm}}
-.ws-item-top{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-.ws-av{
-  width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  font-size:9.5px;font-weight:800;flex-shrink:0
-}
-.ws-av.w{background:linear-gradient(135deg,#F7E7D2,#F0D5B6);color:${c.warmDk}}
-.ws-av.b{background:linear-gradient(135deg,#E0EDFB,#C6D9F5);color:#1E40AF}
-.ws-av.g{background:linear-gradient(135deg,#DCF2E4,#C4E8CF);color:${c.green}}
-.ws-item-name{font-size:12px;font-weight:700;color:${c.ink};letter-spacing:-.01em}
-.ws-item-age{font-size:10px;color:${c.muted}}
-.ws-item-med{font-size:10.5px;color:${c.sub};margin-left:34px;margin-bottom:4px}
-.ws-item-row{display:flex;align-items:center;justify-content:space-between;margin-left:34px}
-.chip{
-  display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;
-  padding:2px 8px;border-radius:100px;letter-spacing:.02em
-}
-.chip.fo{background:${c.warmBg};color:${c.warmDk}}
-.chip.se{background:${c.blueBg};color:${c.blue}}
-.chip.re{background:${c.greenBg};color:${c.green}}
-.chip.du{background:#FEF9EC;color:#92400E}
-.ws-item-days{font-size:10px;color:${c.muted}}
-.supply-bar{margin:5px 0 0 34px;display:flex;align-items:center;gap:7px}
-.supply-track{flex:1;height:2.5px;background:rgba(0,0,0,.07);border-radius:99px;overflow:hidden}
-.supply-fill{height:100%;border-radius:99px}
-.supply-fill.w{background:linear-gradient(90deg,${c.red},${c.warm})}
-.supply-fill.b{background:${c.blue}}
-.supply-fill.g{background:${c.green}}
-.supply-lbl{
-  font-size:9.5px;font-weight:700;color:${c.muted};white-space:nowrap
+  background:
+    radial-gradient(circle at 8% 8%,rgba(89,208,195,.10),transparent 28%),
+    radial-gradient(circle at 88% 10%,rgba(215,235,255,.20),transparent 30%),
+    linear-gradient(180deg,#faf9f3 0%,#f7f5ee 100%);
 }
 
-/* main panel */
-.ws-main{border-right:1px solid ${c.border}}
-.ws-eval{
-  background:${c.warmBg};border-bottom:1px solid rgba(201,149,107,.3);
-  padding:9px 18px;display:flex;align-items:center;gap:12px;font-size:12px;
-  min-height:44px;transition:opacity .3s;
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(250,249,243,.9);
+  backdrop-filter:blur(18px);
+  border-bottom:1px solid rgba(232,226,216,.78);
 }
-.ws-eval-copy{flex:1}
-.ws-eval-lbl{
-  font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
-  color:${c.warmDk};display:block;margin-bottom:2px
+.nav-shell{
+  max-width:1320px;
+  height:86px;
+  margin:0 auto;
+  padding:0 42px;
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:center;
+  gap:34px;
 }
-.ws-eval-task{font-weight:600;color:${c.ink}}
-.ws-eval-prog{
-  flex:1;height:3px;background:rgba(201,149,107,.2);border-radius:99px;
-  margin-left:auto;max-width:80px;overflow:hidden
-}
-.ws-eval-fill{
-  height:100%;background:linear-gradient(90deg,${c.warm},${c.warmDk});
-  border-radius:99px;animation:evalFill 3.2s ease-in-out infinite alternate
-}
-@keyframes evalFill{0%{width:10%}100%{width:90%}}
-.ws-main-head{
-  padding:14px 18px;border-bottom:1px solid ${c.border};
-  display:flex;align-items:center;justify-content:space-between;gap:16px
-}
-.ws-main-title{font-size:14px;font-weight:800;letter-spacing:-.02em}
-.ws-main-sub{font-size:10.5px;color:${c.muted};margin-top:1px}
-.ws-tl{padding:16px 18px}
-.ws-tl-hd{
-  font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
-  color:${c.muted};margin-bottom:14px
-}
-.ws-tl-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:11px}
-.ws-tl-node{
-  width:18px;height:18px;border-radius:50%;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;margin-top:1px
-}
-.ws-tl-node.done{background:${c.greenBg};border:1px solid rgba(21,128,61,.25)}
-.ws-tl-node.wait{
-  background:${c.warmBg};border:1px solid rgba(201,149,107,.3);
-  animation:nodePulse 2s infinite
-}
-.ws-tl-node svg{width:9px;height:9px}
-@keyframes nodePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
-.ws-tl-text{font-size:12px;font-weight:500;color:${c.ink};flex:1}
-.ws-tl-text.p{color:${c.warmDk};font-style:italic}
-.ws-tl-time{font-size:10px;color:${c.muted}}
-.ws-connector{width:2px;height:9px;background:${c.border};margin:1px 0 1px 8px}
-.ws-next{
-  margin:2px 16px 16px;background:${c.white};border:1px solid ${c.border};
-  border-radius:10px;padding:10px 14px
-}
-.ws-next-lbl{
-  font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
-  color:${c.muted};margin-bottom:4px
-}
-.ws-next-text{font-size:12px;font-weight:600;color:${c.ink};line-height:1.5}
+.logo-link{width:max-content}
+.logo{display:inline-flex;align-items:center;gap:10px;font-weight:650;letter-spacing:-.035em}
+.logo span:last-child{font-size:24px;line-height:1}
+.logo-img{width:38px;height:38px;object-fit:contain}
+.nav-shell nav{display:flex;gap:38px;font-size:15px;font-weight:500}
+.nav-shell nav a{transition:.18s}
+.nav-shell nav a:hover{color:var(--teal2)}
+.nav-actions{display:flex;justify-content:flex-end;gap:10px}
 
-/* detail */
-.ws-detail{padding:16px}
-.ws-detail-av{
-  width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  font-size:13px;font-weight:800;margin-bottom:10px;transition:all .4s
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  border-radius:12px;
+  border:1px solid transparent;
+  padding:13px 21px;
+  font-weight:500;
+  font-size:15px;
+  line-height:1;
+  white-space:nowrap;
+  transition:.18s;
 }
-.ws-detail-av.w{background:linear-gradient(135deg,#F7E7D2,#F0D5B6);color:${c.warmDk}}
-.ws-detail-av.b{background:linear-gradient(135deg,#E0EDFB,#C6D9F5);color:#1E40AF}
-.ws-detail-av.g{background:linear-gradient(135deg,#DCF2E4,#C4E8CF);color:${c.green}}
-.ws-detail-name{
-  font-size:14px;font-weight:800;letter-spacing:-.02em;margin-bottom:2px;transition:all .3s
-}
-.ws-detail-med{font-size:11.5px;color:${c.sub};margin-bottom:1px}
-.ws-detail-rx{
-  font-size:10px;color:${c.muted};padding-bottom:12px;border-bottom:1px solid ${c.border};
-  margin-bottom:12px
-}
-.ws-field{margin-bottom:9px}
-.ws-field-l{
-  font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
-  color:${c.muted};margin-bottom:2px
-}
-.ws-field-v{font-size:12px;font-weight:700;color:${c.ink}}
-.ws-field-v.bad{color:${c.red}}
-.ws-field-v.ok{color:${c.green}}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.primary{background:var(--teal);border-color:rgba(0,0,0,.06);color:#092c29;box-shadow:0 12px 28px rgba(63,193,179,.2)}
+.primary:hover:not(:disabled){background:var(--teal2)}
+.secondary{background:#fff;border-color:var(--line);box-shadow:0 6px 18px rgba(17,24,39,.04)}
 
-/* activity feed */
-.ws-feed{border-top:1px solid ${c.border};padding:10px 14px}
-.ws-feed-hd{
-  font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
-  color:${c.muted};margin-bottom:8px;display:flex;align-items:center;gap:5px
+.hero{
+  max-width:1320px;
+  margin:0 auto;
+  text-align:center;
+  padding:112px 42px 58px;
 }
-.ws-feed-vp{
-  height:74px;
-  overflow:hidden;
-  position:relative;
-  mask-image:linear-gradient(180deg,transparent,#000 14%,#000 86%,transparent);
+.hero h1{
+  max-width:820px;
+  margin:0 auto;
+  font-size:clamp(38px,4.1vw,56px);
+  line-height:1.12;
+  letter-spacing:-.052em;
+  font-weight:400;
+  text-wrap:balance;
 }
-.ws-feed-track{
+.fancy-underline{position:relative;display:inline-block;white-space:nowrap}
+.fancy-underline:after{
+  content:"";
+  position:absolute;
+  left:1px;
+  right:1px;
+  bottom:.06em;
+  height:.16em;
+  background:linear-gradient(90deg,rgba(89,208,195,.18),rgba(89,208,195,.82),rgba(89,208,195,.25));
+  border-radius:999px;
+  z-index:-1;
+  transform:rotate(-1.2deg);
+}
+.hero>p{
+  max-width:720px;
+  margin:22px auto 28px;
+  color:var(--muted);
+  font-size:17px;
+  line-height:1.5;
+  letter-spacing:-.02em;
+}
+.hero-actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:58px}
+.hero-btn{padding:15px 24px;border-radius:13px}
+
+.hero-frame{max-width:1160px;margin:0 auto}
+.hero-frame-inner{background:#fff;border-radius:28px;padding:10px;border:1px solid var(--line);box-shadow:var(--shadow);overflow:hidden}
+.workspace-chrome{
+  height:54px;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  gap:16px;
+  padding:0 18px;
+  background:rgba(255,255,255,.76);
+  border-bottom:1px solid rgba(232,226,216,.74);
+}
+.chrome-dots{display:flex;gap:8px;align-items:center}
+.dot{width:10px;height:10px;border-radius:999px;display:block}
+.dot.red{background:#ff5f57}
+.dot.yellow{background:#febc2e}
+.dot.green{background:#28c840}
+.chrome-url{
+  justify-self:center;
+  min-width:310px;
+  max-width:420px;
+  width:42%;
+  border:1px solid rgba(17,24,39,.08);
+  background:#fff;
+  border-radius:999px;
+  padding:9px 16px;
+  color:#646a73;
+  font-size:13px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  box-shadow:0 6px 18px rgba(17,24,39,.04);
+}
+.chrome-status{
+  justify-self:end;
   display:flex;
-  flex-direction:column;
-  gap:0;
-  animation:feedScroll 12s linear infinite;
+  align-items:center;
+  gap:8px;
+  color:#26534f;
+  font-size:13px;
+  font-weight:600;
 }
-.ws-feed:hover .ws-feed-track{
-  animation-play-state:paused;
-}
-@keyframes feedScroll{
-  from{transform:translateY(0)}
-  to{transform:translateY(-50%)}
-}
-.ws-feed-item{display:flex;align-items:center;gap:7px;font-size:10.5px;padding:3px 0}
-.ws-feed-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
-.ws-feed-dot.w{background:${c.warm}}
-.ws-feed-dot.b{background:${c.blue}}
-.ws-feed-dot.g{background:${c.green}}
-.ws-feed-who{font-weight:700;flex-shrink:0}
-.ws-feed-what{
-  flex:1;color:${c.sub};overflow:hidden;text-overflow:ellipsis;white-space:nowrap
-}
-.ws-feed-when{
-  color:${c.muted};font-size:9.5px;font-weight:600;flex-shrink:0
-}
-.ws-feed-when.fresh{
-  color:${c.blue};font-weight:800;text-transform:uppercase;letter-spacing:.04em
+.chrome-status span{
+  width:8px;
+  height:8px;
+  border-radius:999px;
+  background:var(--teal);
+  box-shadow:0 0 0 6px rgba(89,208,195,.14);
 }
 
-/* ---- LOGO MARQUEE ---- */
-.marquee-section{
-  border-top:1px solid ${c.border};border-bottom:1px solid ${c.border};
-  padding:34px 0;overflow:hidden;
-  background:rgba(255,255,255,.42);
+.ops-room{
+  position:relative;
+  min-height:600px;
+  overflow:hidden;
+  background:radial-gradient(circle at 27% 26%,#f4eadb 0,#d9d0c2 28%,#403832 58%,#101216 100%);
+  display:grid;
+  grid-template-columns:255px minmax(0,1fr)260px;
+  gap:16px;
+  padding:24px 24px 86px;
+  font-family:var(--font-inter),Inter,Arial,sans-serif;
 }
-.marquee-label{
-  text-align:center;font-size:11px;font-weight:700;letter-spacing:.16em;
-  text-transform:uppercase;color:${c.muted};margin-bottom:22px
+.ops-glow{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(0,0,0,.18));pointer-events:none}
+.ops-panel{
+  position:relative;
+  z-index:1;
+  background:rgba(255,255,255,.92);
+  border:1px solid rgba(255,255,255,.58);
+  box-shadow:0 18px 56px rgba(0,0,0,.16);
+  backdrop-filter:blur(16px);
+  border-radius:21px;
 }
-.marquee-track-wrap{
-  overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)
+.people-panel{padding:18px}
+.panel-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.panel-title span,.micro-label,.timeline-top span,.activity-feed>span{
+  display:block;
+  color:var(--muted2);
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  font-size:10px;
+  font-weight:700;
 }
-.infra-wrap{
-  mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);
-}
-.marquee-track{
-  display:flex;align-items:center;gap:56px;width:max-content;animation:marquee 28s linear infinite
-}
-.infra-track{
-  gap:18px;
-}
-.marquee-track:hover{animation-play-state:paused}
-@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.infra-logo-card{
-  height:76px;
-  min-width:184px;
-  padding:0 24px;
-  border-radius:20px;
-  border:1px solid rgba(227,221,210,.9);
-  background:rgba(255,255,255,.72);
+.panel-title strong{
+  width:32px;
+  height:32px;
+  border-radius:999px;
+  background:var(--tealSoft);
   display:flex;
   align-items:center;
   justify-content:center;
-  box-shadow:0 8px 22px rgba(15,24,41,.04);
+  font-size:13px;
+  color:#08766e;
 }
-.infra-logo-img{
-  height:28px;
-  width:auto;
-  max-width:130px;
-  object-fit:contain;
-  display:block;
-  opacity:.96;
+.people-list{display:grid;gap:9px}
+.people-list button{
+  width:100%;
+  border:1px solid var(--line);
+  background:#fff;
+  border-radius:16px;
+  padding:10px;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  align-items:center;
+  gap:10px;
+  text-align:left;
+  transition:.18s;
+}
+.people-list button:hover,.people-list button.active{border-color:rgba(63,193,179,.75);box-shadow:0 10px 24px rgba(17,24,39,.055)}
+.avatar{width:40px;height:40px;border-radius:999px;background:var(--tealSoft);color:#08766e;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+.avatar.small{width:34px;height:34px;font-size:11px}
+.person-copy{min-width:0}
+.name-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:2px}
+.name-line strong{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.name-line em{
+  display:inline-flex;
+  align-items:center;
+  padding:3px 7px;
+  border-radius:999px;
+  border:1px solid #e3e8ef;
+  background:#f4f6f8;
+  color:#69717e;
+  font-style:normal;
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:.04em;
+}
+.person-copy small{display:block;color:var(--muted);font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status-pill{
+  display:inline-flex;
+  width:max-content;
+  border-radius:999px;
+  padding:6px 9px;
+  font-size:11px;
+  line-height:1;
+  font-weight:700;
+}
+.status-pill.danger{background:#fbebeb;color:#a33a3a}
+.status-pill.info{background:#edf4ff;color:#2457c5}
+.status-pill.success{background:#eaf9f0;color:#14764f}
+.status-pill.warning{background:#f7f0dd;color:#8a6a25}
+
+.request-panel{padding:24px}
+.request-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}
+.request-head h3{font-size:28px;line-height:1.08;letter-spacing:-.045em;font-weight:500;margin-top:8px}
+.request-head p{margin-top:7px;color:var(--muted);font-size:14px}
+.next-action{background:var(--dark);color:#fff;border-radius:17px;padding:17px 18px;margin-bottom:14px;text-align:center}
+.next-action span{display:block;color:rgba(255,255,255,.56);text-transform:uppercase;letter-spacing:.12em;font-size:10px;font-weight:700;margin-bottom:8px}
+.next-action strong{font-size:16px;line-height:1.38;font-weight:600;letter-spacing:-.02em}
+.tracking-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.tracking-row div{border:1px solid var(--line);background:#fbfaf7;border-radius:16px;padding:13px;text-align:center}
+.tracking-row span{display:block;color:var(--muted2);text-transform:uppercase;letter-spacing:.12em;font-size:10px;font-weight:700;margin-bottom:7px}
+.tracking-row strong{font-size:14px;font-weight:600}
+.timeline-card{background:#fff;border:1px solid var(--line);border-radius:17px;padding:16px}
+.timeline-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.timeline-top strong{font-size:12px;color:var(--muted);font-weight:600}
+.progress{height:8px;border-radius:999px;background:var(--soft);overflow:hidden;margin-bottom:14px}
+.progress i{display:block;height:100%;background:var(--teal);border-radius:inherit;transition:.4s}
+.timeline-list{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+.timeline-item{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start}
+.timeline-item>span{width:22px;height:22px;border-radius:999px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+.timeline-item>span.done{background:var(--teal);border-color:var(--teal);color:#063f39}
+.timeline-item strong{display:block;font-size:13px;font-weight:600}
+.timeline-item small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+
+.manager-panel{padding:18px;display:grid;gap:12px;align-content:start}
+.laura-status{display:flex;gap:10px;border:1px solid var(--line);background:#fff;border-radius:17px;padding:14px}
+.laura-status>span{width:34px;height:34px;border-radius:999px;background:var(--tealSoft);color:#08766e;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.laura-status strong{font-size:15px;font-weight:600}
+.laura-status p{font-size:13px;line-height:1.45;color:var(--muted);margin-top:3px}
+.manager-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.manager-stats div{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px;text-align:center}
+.manager-stats strong{display:block;font-size:24px;font-weight:600;letter-spacing:-.04em}
+.manager-stats span{display:block;margin-top:4px;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;line-height:1.2}
+.activity-feed{background:#fff;border:1px solid var(--line);border-radius:17px;padding:15px}
+.activity-feed>span{margin-bottom:8px}
+.activity-feed p{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start;border-top:1px solid var(--line);padding:10px 0;font-size:12px;line-height:1.35}
+.activity-feed svg{color:#08766e;margin-top:1px}
+.activity-feed small{font-weight:600;color:var(--muted)}
+.room-toolbar{
+  position:absolute;
+  z-index:2;
+  left:50%;
+  bottom:24px;
+  transform:translateX(-50%);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:rgba(17,24,39,.92);
+  backdrop-filter:blur(14px);
+  border-radius:16px;
+  padding:9px;
+  box-shadow:0 14px 40px rgba(0,0,0,.22);
+}
+.room-toolbar span,.room-toolbar button{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  border:0;
+  border-radius:10px;
+  padding:11px 14px;
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  font-weight:600;
+  font-size:13px;
+}
+.room-toolbar button{background:var(--teal);color:#082c29}
+.resident-tabs{display:flex;justify-content:center;gap:10px;margin-top:16px;flex-wrap:wrap}
+.resident-tabs button{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  border:1px solid var(--line);
+  background:#fff;
+  border-radius:999px;
+  padding:9px 13px;
+  box-shadow:0 5px 14px rgba(17,24,39,.04);
+  color:var(--muted);
+  font-weight:600;
+}
+.resident-tabs button span{width:28px;height:28px;border-radius:99px;background:var(--tealSoft);color:#08766e;display:flex;align-items:center;justify-content:center;font-size:11px}
+.resident-tabs .active{border-color:rgba(63,193,179,.75);color:var(--ink)}
+
+.trust-strip{padding:38px 0;background:#fffefa;border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden}
+.trust-strip p{text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:.14em;font-weight:700;color:var(--muted);margin-bottom:24px}
+.logo-marquee{overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.logo-track{display:flex;width:max-content;gap:54px;align-items:center;animation:logoScroll 38s linear infinite}
+.logo-marquee:hover .logo-track{animation-play-state:paused}
+.brand-logo-cell{width:150px;height:58px;display:flex;align-items:center;justify-content:center;opacity:.56;filter:grayscale(1);transition:.18s}
+.brand-logo-cell:hover{opacity:.78}
+.brand-logo-cell img{width:122px;height:36px;object-fit:contain}
+@keyframes logoScroll{from{transform:translateX(0)}to{transform:translateX(-33.333%)}}
+
+.feature-showcase{max-width:1240px;margin:0 auto;padding:82px 42px}
+.feature-intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,.78fr);gap:84px;align-items:start;margin-bottom:56px}
+.feature-intro h2,.section h2,.pain h2,.trust-boundaries h2,.waitlist h2,.final-cta h2{
+  font-size:clamp(31px,3.55vw,48px);
+  line-height:1.1;
+  letter-spacing:-.052em;
+  font-weight:400;
+  text-wrap:balance;
+}
+.feature-intro p{padding-top:9px}
+.feature-intro p,.section-head p,.pain p,.waitlist p,.final-cta p{color:var(--muted);font-size:16px;line-height:1.6;letter-spacing:-.02em}
+.feature-stage{display:grid;grid-template-columns:370px 1fr;gap:20px;background:#fff;border:1px solid var(--line);border-radius:30px;padding:20px;box-shadow:var(--softShadow)}
+.feature-tabs{display:grid;gap:10px}
+.feature-tabs button{border:1px solid var(--line);background:#fbfaf7;border-radius:20px;padding:15px;text-align:left;transition:.18s}
+.feature-tabs button:hover,.feature-tabs button.active{background:#fff;border-color:rgba(63,193,179,.65);box-shadow:0 10px 28px rgba(17,24,39,.045)}
+.feature-tabs button span{width:36px;height:36px;border-radius:999px;background:var(--tealSoft);color:#08766e;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.feature-tabs strong{display:block;font-size:16px;font-weight:500;letter-spacing:-.03em;margin-bottom:5px}
+.feature-tabs small{display:block;color:var(--muted);font-size:12px;line-height:1.43}
+.feature-visual{background:var(--soft);border-radius:24px;padding:30px;display:grid;align-content:center}
+.feature-visual-head{display:flex;gap:14px;margin-bottom:22px}
+.feature-visual-head>span{width:44px;height:44px;border-radius:999px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:#08766e;flex:0 0 auto}
+.feature-visual h3{font-size:28px;font-weight:400;letter-spacing:-.045em;margin-bottom:8px}
+.feature-visual p{font-size:15px;color:var(--muted);line-height:1.55}
+.feature-mini-ui{display:grid;grid-template-columns:76px 1fr;min-height:320px;background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:0 14px 42px rgba(17,24,39,.07);overflow:hidden}
+.mini-sidebar{background:#fbfaf7;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:12px;align-items:center;padding-top:28px}
+.mini-sidebar span{width:34px;height:34px;border-radius:12px;background:var(--tealSoft)}
+.mini-main{padding:26px;display:grid;align-content:start;gap:11px}
+.mini-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;background:#fbfaf7;border:1px solid var(--line);border-radius:16px;padding:12px}
+.mini-row.large-row{grid-template-columns:1fr auto;background:var(--dark);color:#fff}
+.mini-row strong{font-weight:500}
+.mini-row em{font-style:normal;color:var(--teal);font-size:12px;font-weight:700}
+.mini-check{width:23px;height:23px;border-radius:999px;background:var(--teal);display:flex;align-items:center;justify-content:center;color:#073d38}
+.mini-row p{font-size:14px;color:var(--ink)}
+.mini-row small{font-size:12px;color:var(--muted);font-weight:600}
+.mini-note{display:flex;align-items:center;gap:9px;margin-top:8px;color:#08766e;background:var(--tealSoft);border:1px solid rgba(63,193,179,.25);border-radius:16px;padding:12px;font-size:13px;font-weight:600}
+
+.section{max-width:1240px;margin:0 auto;padding:82px 42px}
+.section-head{margin-bottom:44px}
+.section-head.center{text-align:center;max-width:740px;margin-left:auto;margin-right:auto}
+.section-head.split{display:grid;grid-template-columns:1fr .8fr;gap:78px;align-items:end}
+.section-pill{display:inline-flex;margin-bottom:16px;color:#08766e;background:var(--tealSoft);border:1px solid rgba(63,193,179,.24);border-radius:999px;padding:8px 11px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.13em}
+
+.workflow-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.workflow-grid article{position:relative;background:#fff;border:1px solid var(--line);border-radius:28px;padding:26px;box-shadow:var(--softShadow);min-height:244px}
+.step-number{width:52px;height:52px;border-radius:999px;background:var(--dark);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;margin-bottom:32px}
+.step-arrow{position:absolute;right:-19px;top:48px;width:38px;height:38px;border-radius:999px;background:var(--teal);color:#073d38;display:flex;align-items:center;justify-content:center;z-index:2;box-shadow:0 10px 24px rgba(63,193,179,.24)}
+.workflow-grid h3,.teams-grid h3,.resource-grid h3{font-size:21px;letter-spacing:-.04em;font-weight:400;margin-bottom:10px}
+.workflow-grid p,.teams-grid p,.resource-grid p{color:var(--muted);font-size:15px;line-height:1.56}
+
+.pain{max-width:1240px;margin:0 auto;padding:8px 42px 90px;display:grid;grid-template-columns:.88fr 1fr;gap:76px;align-items:center}
+.message-panel{background:#fff;border:1px solid var(--line);border-radius:30px;padding:32px;min-height:320px;box-shadow:var(--softShadow);display:flex;flex-direction:column;gap:12px}
+.typing-bubble{width:max-content;max-width:90%;padding:14px 17px;border-radius:18px 18px 18px 6px;background:var(--dark);color:#fff;font-size:15px;font-weight:500;min-height:50px;display:flex;align-items:center}
+.typing-bubble i{width:7px;height:18px;background:var(--teal);display:inline-block;margin-left:5px;animation:blink .9s steps(2,start) infinite}
+@keyframes blink{50%{opacity:0}}
+.static-bubble{width:max-content;max-width:86%;padding:12px 16px;border-radius:18px 18px 18px 6px;background:var(--soft);border:1px solid var(--line);font-size:14px;font-weight:500;opacity:0;transform:translateY(8px);transition:.35s}
+.static-bubble.right{align-self:flex-end;background:var(--tealSoft);border-color:rgba(63,193,179,.24);border-radius:18px 18px 6px 18px}
+.static-bubble.show{opacity:.82;transform:translateY(0)}
+.pain h2{margin-bottom:18px}
+
+.teams-grid,.pricing-grid,.boundary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.teams-grid article,.resource-grid a{background:#fff;border:1px solid var(--line);border-radius:28px;padding:26px;box-shadow:var(--softShadow)}
+.teams-grid svg{width:50px;height:50px;padding:14px;border-radius:999px;background:var(--soft);border:1px solid var(--line);margin-bottom:62px}
+
+.testimonials{padding:90px 0;background:var(--soft);overflow:hidden}
+.testimonial-marquee{overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
+.testimonial-marquee div{display:flex;gap:18px;width:max-content;animation:comments 36s linear infinite}
+.testimonial-marquee article{width:380px;min-height:200px;background:#fff;border:1px solid var(--line);border-radius:28px;padding:28px;box-shadow:var(--softShadow)}
+.testimonial-marquee p{font-size:18px;line-height:1.45;letter-spacing:-.03em;margin-bottom:24px}
+.testimonial-marquee em{font-style:italic}
+.testimonial-marquee span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-weight:700}
+@keyframes comments{to{transform:translateX(-50%)}}
+
+.safe-section{position:relative;min-height:460px;background:linear-gradient(180deg,rgba(20,22,24,.18),rgba(9,13,18,.94)),radial-gradient(circle at 35% 10%,#746d63 0,#2f2924 42%,#080c0f 100%);display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;overflow:hidden}
+.safe-bg{position:absolute;inset:0;background:radial-gradient(circle at 50% 0,rgba(255,255,255,.15),transparent 38%)}
+.safe-content{position:relative;max-width:840px;padding:70px 32px}
+.safe-content h2{font-size:clamp(34px,4.2vw,56px);line-height:1.08;letter-spacing:-.055em;font-weight:400;margin-bottom:18px}
+.safe-content p{max-width:640px;margin:0 auto;color:rgba(255,255,255,.8);font-size:18px;line-height:1.55}
+.safe-badges{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:32px}
+.safe-badges span{display:flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);border-radius:999px;padding:10px 13px;color:rgba(255,255,255,.86);font-size:13px;font-weight:600}
+
+.trust-boundaries{background:#fffefa;max-width:none;padding-left:max(42px,calc((100vw - 1240px)/2 + 42px));padding-right:max(42px,calc((100vw - 1240px)/2 + 42px))}
+.boundary-grid article{background:#fbfaf7;border:1px solid var(--line);border-radius:26px;padding:24px;box-shadow:var(--softShadow)}
+.boundary-grid span{color:#08766e;font-size:12px;font-weight:700}
+.boundary-grid h3{font-size:20px;font-weight:400;letter-spacing:-.04em;margin:32px 0 10px}
+.boundary-grid p{color:var(--muted);font-size:14px;line-height:1.56}
+
+.price-card{position:relative;background:#fff;border:1px solid var(--line);border-radius:28px;padding:26px;box-shadow:var(--softShadow);min-height:510px;display:flex;flex-direction:column}
+.price-card.featured{border-color:rgba(63,193,179,.75)}
+.price-card em{position:absolute;right:18px;top:18px;font-style:normal;background:var(--tealSoft);color:#08766e;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:700}
+.price-card h3{font-size:22px;font-weight:400;letter-spacing:-.04em;margin-bottom:22px}
+.price-line{display:flex;align-items:flex-end;gap:8px;margin-bottom:18px}
+.price-line strong{font-size:40px;line-height:.9;letter-spacing:-.06em;font-weight:600}
+.price-line span{color:var(--muted);font-weight:500}
+.price-card>p{color:var(--muted);font-size:14px;line-height:1.56;min-height:84px}
+.price-card ul{list-style:none;margin:22px 0 28px;padding:0;display:grid;gap:12px}
+.price-card li{display:flex;align-items:flex-start;gap:9px;font-size:14px;line-height:1.4}
+.price-card li svg{color:#178256;margin-top:2px;flex:0 0 auto}
+.price-card .btn{width:100%;margin-top:auto}
+
+.waitlist{max-width:1240px;margin:0 auto;padding:0 42px 96px}
+.waitlist-card{background:#fff;border:1px solid var(--line);border-radius:32px;padding:46px;box-shadow:var(--shadow);display:grid;grid-template-columns:.9fr 1fr;gap:68px;align-items:center}
+.waitlist h2{margin-bottom:18px}
+.waitlist-steps{display:grid;gap:10px;margin-top:26px}
+.waitlist-steps span{width:max-content;border:1px solid var(--line);background:#fbfaf7;border-radius:999px;padding:9px 12px;color:var(--muted);font-size:13px;font-weight:600}
+form{display:grid;gap:15px}
+form label:not(.checkbox){display:grid;gap:8px}
+form label>span{font-size:13px;font-weight:600;color:var(--muted)}
+input,select{height:54px;width:100%;border:1px solid var(--line);border-radius:14px;background:#fbfaf7;padding:0 15px;outline:none;color:var(--ink);transition:.18s}
+input:focus,select:focus{background:#fff;border-color:var(--teal2);box-shadow:0 0 0 4px rgba(89,208,195,.16)}
+.honeypot{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;opacity:0!important}
+.checkbox{display:flex;gap:10px;align-items:flex-start;color:var(--muted);font-size:13px;line-height:1.5}
+.checkbox input{width:16px;height:16px;margin-top:2px;accent-color:var(--teal);flex:0 0 auto}
+.checkbox a{text-decoration:underline;text-underline-offset:3px;color:var(--ink)}
+form .btn{width:100%;height:54px}
+.ok,.err{border-radius:14px;padding:12px 14px;font-size:13px!important;font-weight:600}
+.ok{background:#eaf9f0;color:#14764f}
+.err{background:#fbebeb;color:#a33a3a}
+
+.resources{padding-top:82px}
+.resource-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.resource-grid svg{width:48px;height:48px;padding:14px;border-radius:999px;background:var(--soft);border:1px solid var(--line);margin-bottom:48px}
+
+.faq-list{max-width:900px;margin:0 auto;display:grid;gap:12px}
+.faq-item{background:#fff;border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 8px 22px rgba(17,24,39,.035)}
+.faq-item button{width:100%;border:0;background:transparent;padding:21px 24px;display:flex;align-items:center;justify-content:space-between;text-align:left;font-weight:600;color:var(--ink)}
+.faq-item svg{transition:.18s}
+.faq-item.open svg{transform:rotate(180deg)}
+.faq-item>div{display:grid;grid-template-rows:0fr;transition:.2s}
+.faq-item.open>div{grid-template-rows:1fr}
+.faq-item p{overflow:hidden;padding:0 24px;color:var(--muted);font-size:15px;line-height:1.65}
+.faq-item.open p{padding-bottom:22px}
+
+.final-cta{max-width:960px;margin:0 auto;text-align:center;padding:10px 42px 104px}
+.final-cta h2{margin-bottom:18px}
+.final-cta p{max-width:620px;margin:0 auto 28px}
+
+.site-footer{background:#fffefa;border-top:1px solid var(--line);padding:68px 42px 28px}
+.footer-shell{max-width:1240px;margin:0 auto}
+.footer-shell h2{max-width:820px;margin:0 0 84px;font-size:clamp(28px,3vw,42px);line-height:1.12;letter-spacing:-.055em;font-weight:400}
+.footer-main{display:grid;grid-template-columns:.85fr 1.15fr;gap:90px;align-items:start}
+.footer-brand p{color:var(--muted);font-size:15px;line-height:1.55}
+.footer-address{display:grid;gap:6px;margin-top:34px}
+.footer-email{display:inline-block;margin-top:22px;color:var(--ink);font-size:15px;font-weight:500}
+.social-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.social-links a{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fbfaf7;border-radius:999px;padding:10px 13px;color:var(--ink);font-size:13px;font-weight:600;transition:.18s}
+.social-links a:hover{transform:translateY(-1px);border-color:rgba(63,193,179,.65);box-shadow:0 8px 20px rgba(17,24,39,.05)}
+.social-links svg{width:16px;height:16px;fill:currentColor;flex:0 0 auto}
+.footer-links{display:grid;grid-template-columns:repeat(4,1fr);gap:46px}
+.footer-links strong{display:block;margin-bottom:18px;font-size:15px;font-weight:600}
+.footer-links a{display:block;width:max-content;max-width:100%;margin-bottom:13px;color:var(--muted);font-size:15px;line-height:1.35}
+.footer-links a:hover{color:var(--ink)}
+.footer-bottom{margin-top:80px;padding-top:28px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:28px;color:var(--muted);font-size:13px;line-height:1.55}
+.footer-bottom p:last-child{max-width:660px;text-align:right}
+
+.modal{position:fixed;inset:0;z-index:100;background:rgba(17,24,39,.48);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-card{width:min(430px,100%);background:#fff;border:1px solid var(--line);border-radius:28px;padding:30px;text-align:center;box-shadow:0 28px 90px rgba(17,24,39,.28)}
+.modal-icon{width:54px;height:54px;border-radius:18px;background:var(--tealSoft);color:#08766e;display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+.modal-card h3{font-size:27px;letter-spacing:-.04em;font-weight:500;margin-bottom:10px}
+.modal-card p{color:var(--muted);line-height:1.58}
+.share{margin-top:20px;border:1px solid var(--line);background:#fbfaf7;border-radius:15px;padding:10px;display:flex;gap:10px;align-items:center}
+.share span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;color:var(--muted);font-size:13px}
+.share button{width:38px;height:38px;border:0;border-radius:12px;background:var(--teal);display:flex;align-items:center;justify-content:center;color:#073d38}
+.modal-close{margin-top:18px;width:100%;height:48px;border:1px solid var(--line);border-radius:14px;background:#fff;font-weight:600;color:var(--ink)}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
 
-/* ---- PAIN SECTION ---- */
-.pain-section{
-  background:${c.warmBg};
-  border-top:1px solid rgba(201,149,107,.2);
-  border-bottom:1px solid rgba(201,149,107,.2);
-  padding:96px 32px;
-}
-.pain-inner{max-width:680px;margin:0 auto;text-align:center}
-.pain-bubbles{
-  margin-bottom:40px;position:relative;min-height:120px;display:flex;
-  flex-direction:column;gap:10px;align-items:flex-start
-}
-.bubble{
-  background:rgba(255,255,255,.9);border:1px solid ${c.border};
-  border-radius:18px 18px 18px 4px;
-  padding:10px 16px;font-size:14px;color:${c.sub};font-weight:500;
-  display:inline-block;max-width:80%;box-shadow:0 2px 8px rgba(0,0,0,.06);
-  opacity:0;transform:translateX(-16px);transition:all .5s ease;
-}
-.bubble.right{
-  align-self:flex-end;border-radius:18px 18px 4px 18px;transform:translateX(16px)
-}
-.bubble.show{opacity:1;transform:none;animation:bobLeft 5.2s ease-in-out infinite}
-.bubble.right.show{animation:bobRight 5.8s ease-in-out infinite}
-@keyframes bobLeft{
-  0%,100%{transform:translateY(0)}
-  50%{transform:translateY(-6px)}
-}
-@keyframes bobRight{
-  0%,100%{transform:translateY(0)}
-  50%{transform:translateY(-6px)}
-}
-.pain-heading{
-  font-family:var(--font-instrument-serif),Georgia,serif;
-  font-size:clamp(32px,5vw,54px);line-height:1.05;letter-spacing:-.03em;
-  margin-bottom:20px;color:${c.ink}
-}
-.pain-heading em{font-style:italic}
-.pain-body{font-size:17px;color:${c.sub};line-height:1.72;margin-bottom:14px}
-.pain-punch{font-size:17px;font-weight:700;color:${c.ink}}
-
-/* ---- GENERIC SECTION ---- */
-section.pad{padding:96px 32px}
-.sec-inner{max-width:1100px;margin:0 auto}
-.overline{
-  display:block;font-size:11px;font-weight:700;letter-spacing:.14em;
-  text-transform:uppercase;color:${c.muted};margin-bottom:16px
-}
-.overline.warm{color:${c.warmDk}}
-h2{
-  font-family:var(--font-instrument-serif),Georgia,serif;
-  font-size:clamp(30px,4.5vw,52px);line-height:1.08;letter-spacing:-.03em;
-  margin-bottom:18px;color:${c.ink}
-}
-h2 em{font-style:italic;color:${c.warmDk}}
-.sec-sub{font-size:17px;color:${c.sub};line-height:1.7;max-width:580px}
-.sh-c{text-align:center;max-width:760px;margin:0 auto 56px}
-.sh-c .sec-sub{margin:0 auto}
-.white-bg{background:${c.white}}
-.bg-main{background:${c.bg}}
-.bg2{background:${c.bg2}}
-
-/* ---- HOW IT WORKS ---- */
-.how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:16px}
-.how-card{
-  background:${c.white};border:1px solid ${c.border};border-radius:20px;padding:32px 28px;
-  transition:transform .25s,box-shadow .25s,border-color .25s;
-}
-.how-card:hover{
-  transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.07);
-  border-color:rgba(201,149,107,.4)
-}
-.how-num{
-  font-family:var(--font-instrument-serif),Georgia,serif;
-  font-size:52px;color:${c.warm};opacity:.35;line-height:1;margin-bottom:18px;
-  letter-spacing:-.02em
-}
-.how-card h3{font-size:17px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px}
-.how-card p{font-size:14.5px;color:${c.sub};line-height:1.7}
-
-/* ---- BENEFIT CARDS ---- */
-.benefit-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-.benefit-card{
-  background:${c.white};border:1px solid ${c.border};border-radius:20px;padding:32px 28px;
-  transition:transform .25s,box-shadow .25s
-}
-.benefit-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.07)}
-.benefit-icon{
-  width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;
-  margin-bottom:20px
-}
-.benefit-icon.warm{background:${c.warmBg};color:${c.warm}}
-.benefit-icon.blue{background:${c.blueBg};color:${c.blue}}
-.benefit-icon.green{background:${c.greenBg};color:${c.green}}
-.benefit-card h3{font-size:17px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px}
-.benefit-card p{font-size:14.5px;color:${c.sub};line-height:1.7}
-
-/* ---- AUDIENCE GRID ---- */
-.audience-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
-.audience-card{
-  background:${c.white};border:1px solid ${c.border};border-radius:20px;padding:28px 24px;
-  display:flex;flex-direction:column;transition:transform .25s,border-color .25s,box-shadow .25s;
-}
-.audience-card:hover{
-  transform:translateY(-3px);border-color:rgba(201,149,107,.4);
-  box-shadow:0 12px 32px rgba(0,0,0,.06)
-}
-.audience-card-top{
-  display:flex;align-items:center;justify-content:space-between;margin-bottom:16px
-}
-.audience-icon{
-  width:42px;height:42px;border-radius:11px;background:${c.warmBg};
-  border:1px solid rgba(201,149,107,.2);display:flex;align-items:center;justify-content:center;
-  color:${c.warmDk}
-}
-.live-tag{
-  display:inline-flex;align-items:center;gap:5px;background:${c.greenBg};
-  border:1px solid rgba(21,128,61,.2);border-radius:100px;padding:3px 9px;
-  font-size:10px;font-weight:700;color:${c.green}
-}
-.live-tag-dot{
-  width:5px;height:5px;background:${c.green};border-radius:50%;animation:livePulse 2s infinite
-}
-.audience-card h3{font-size:16px;font-weight:800;letter-spacing:-.02em;margin-bottom:9px}
-.audience-card p{font-size:14px;color:${c.sub};line-height:1.68;flex:1}
-.audience-players{
-  margin-top:14px;padding-top:12px;border-top:1px solid ${c.border};
-  font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:${c.muted}
+@media (max-width:1180px){
+  .ops-room{grid-template-columns:240px 1fr}
+  .manager-panel{display:none}
+  .feature-intro,.pain,.waitlist-card,.section-head.split{grid-template-columns:1fr;gap:36px}
+  .feature-stage{grid-template-columns:1fr}
+  .feature-tabs{grid-template-columns:repeat(2,1fr)}
+  .workflow-grid,.teams-grid,.pricing-grid,.boundary-grid{grid-template-columns:repeat(2,1fr)}
+  .step-arrow{display:none}
+  .footer-main{grid-template-columns:1fr;gap:54px}
+  .footer-links{grid-template-columns:repeat(2,1fr)}
 }
 
-/* ---- DARK STATS ---- */
-.dark-section{background:${c.dark};padding:96px 32px}
-.dark-inner{max-width:1100px;margin:0 auto}
-.dark-inner .overline{color:rgba(255,255,255,.35)}
-.dark-inner h2{color:#fff;max-width:680px;margin-bottom:20px}
-.dark-inner .dark-sub{color:rgba(255,255,255,.55);margin-bottom:56px}
-.stats-grid{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:2px;
-  border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden
-}
-.stat-card{
-  padding:36px 28px;background:rgba(255,255,255,.03);
-  border-right:1px solid rgba(255,255,255,.06);transition:background .2s
-}
-.stat-card:hover{background:rgba(255,255,255,.06)}
-.stat-card:last-child{border-right:none}
-.stat-val{
-  font-family:var(--font-instrument-serif),Georgia,serif;
-  font-size:52px;line-height:1;letter-spacing:-.03em;color:#fff;margin-bottom:12px
-}
-.stat-lbl{font-size:13px;color:rgba(255,255,255,.45);line-height:1.55}
-.multi-party{font-size:32px!important;line-height:1.3!important}
-
-/* ---- TESTIMONIALS ---- */
-.testimonial-shell{margin-bottom:40px}
-.tst-wrap{
-  max-width:700px;margin:0 auto;text-align:center;min-height:220px;
-  display:flex;flex-direction:column;align-items:center;justify-content:center
-}
-.tst-icon{
-  width:44px;height:44px;background:${c.warmBg};
-  border:1px solid rgba(201,149,107,.2);border-radius:12px;
-  display:flex;align-items:center;justify-content:center;margin:0 auto 28px;color:${c.warm}
-}
-.tst-quote{
-  font-family:var(--font-instrument-serif),Georgia,serif;
-  font-size:clamp(22px,3vw,30px);line-height:1.38;letter-spacing:-.02em;
-  color:${c.ink};margin-bottom:24px;transition:opacity .25s,transform .25s
-}
-.tst-attr{
-  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;
-  color:${c.muted};display:flex;align-items:center;justify-content:center;gap:8px
-}
-.tst-attr-name{color:${c.warmDk}}
-.tst-dots{display:flex;gap:6px;margin-top:28px;justify-content:center}
-.tst-dot{
-  width:7px;height:7px;border-radius:50%;background:rgba(0,0,0,.15);
-  border:none;cursor:pointer;padding:0;transition:all .3s
-}
-.tst-dot.active{width:24px;border-radius:100px;background:${c.warmDk}}
-
-/* ---- TRUST ---- */
-.trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
-.trust-card{
-  background:${c.white};border:1px solid ${c.border};border-radius:20px;padding:28px 24px;
-  transition:transform .25s,border-color .25s
-}
-.trust-card:hover{transform:translateY(-3px);border-color:rgba(201,149,107,.35)}
-.trust-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-.trust-num{
-  font-family:var(--font-instrument-serif),Georgia,serif;
-  font-size:26px;color:${c.warm};opacity:.6;line-height:1
-}
-.trust-icon-wrap{
-  width:34px;height:34px;background:${c.warmBg};border-radius:9px;
-  border:1px solid rgba(201,149,107,.2);display:flex;align-items:center;justify-content:center;
-  color:${c.warmDk}
-}
-.trust-card h3{font-size:15px;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
-.trust-card p{font-size:14px;color:${c.sub};line-height:1.68}
-
-/* ---- PRICING ---- */
-.pricing-grid{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1000px;margin:0 auto
-}
-.p-card{
-  background:${c.white};border:1.5px solid ${c.border};border-radius:22px;padding:32px 28px;
-  position:relative;display:flex;flex-direction:column;transition:transform .25s,box-shadow .25s
-}
-.p-card:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,.07)}
-.p-card.feat{border-color:${c.warm};box-shadow:0 0 0 1px ${c.warm}}
-.p-badge{
-  position:absolute;top:-13px;left:50%;transform:translateX(-50%);
-  background:${c.ink};color:#fff;font-size:11px;font-weight:700;letter-spacing:.06em;
-  text-transform:uppercase;padding:4px 14px;border-radius:100px;display:flex;
-  align-items:center;gap:5px;white-space:nowrap
-}
-.p-badge-dot{
-  width:5px;height:5px;background:${c.warm};border-radius:50%;
-  box-shadow:0 0 0 3px rgba(201,149,107,.3)
-}
-.p-tier{
-  font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
-  color:${c.warmDk};margin-bottom:12px
-}
-.p-price{display:flex;align-items:baseline;gap:5px;margin-bottom:6px}
-.p-amount{
-  font-family:var(--font-instrument-serif),Georgia,serif;
-  font-size:52px;line-height:1;letter-spacing:-.03em
-}
-.p-per{font-size:14px;color:${c.muted}}
-.p-custom{
-  font-family:var(--font-instrument-serif),Georgia,serif;
-  font-size:42px;line-height:1;letter-spacing:-.02em;margin-bottom:4px
-}
-.p-custom-note{font-size:12px;color:${c.muted};margin-bottom:6px}
-.p-desc{
-  font-size:14px;color:${c.sub};line-height:1.6;padding-bottom:20px;
-  border-bottom:1px solid ${c.border};margin-bottom:20px
-}
-.p-features{list-style:none;margin-bottom:28px;flex:1}
-.p-features li{display:flex;align-items:center;gap:9px;font-size:14px;color:${c.sub};padding:5.5px 0}
-.p-check{
-  width:16px;height:16px;background:${c.greenBg};border-radius:50%;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${c.green}
-}
-.p-btn{width:100%;text-align:center;justify-content:center;display:flex}
-.pricing-note{
-  text-align:center;margin-top:24px;font-size:13px;color:${c.muted}
-}
-.pricing-note a{
-  color:${c.ink};font-weight:700;text-decoration:underline;text-underline-offset:2px
+@media (max-width:820px){
+  .nav-shell{height:74px;padding:0 18px;grid-template-columns:auto 1fr}
+  .nav-shell nav{display:none}
+  .logo-img{width:32px;height:32px}
+  .logo span:last-child{font-size:22px}
+  .nav-actions{gap:8px}
+  .btn{padding:12px 13px;font-size:14px}
+  .hero{padding:62px 18px 50px}
+  .hero h1{font-size:clamp(36px,9.2vw,48px);letter-spacing:-.05em}
+  .hero>p{font-size:16px}
+  .hero-actions{display:grid;max-width:340px;margin-left:auto;margin-right:auto;margin-bottom:40px}
+  .hero-btn{width:100%;padding:15px 18px}
+  .hero-frame-inner{border-radius:22px;padding:8px}
+  .workspace-chrome{height:auto;grid-template-columns:1fr;justify-items:start;padding:14px}
+  .chrome-url{width:100%;min-width:0;max-width:none;text-align:center}
+  .chrome-status{justify-self:start}
+  .ops-room{grid-template-columns:1fr;min-height:auto;padding:16px 16px 84px}
+  .people-panel{display:none}
+  .request-panel{padding:18px}
+  .request-head{flex-direction:column}
+  .tracking-row,.timeline-list{grid-template-columns:1fr}
+  .room-toolbar{left:16px;right:16px;transform:none;overflow:auto;justify-content:flex-start}
+  .resident-tabs{display:none}
+  .trust-strip{padding:34px 0}
+  .trust-strip p{line-height:1.5;padding:0 18px}
+  .logo-track{gap:34px}
+  .brand-logo-cell{width:128px;height:52px}
+  .brand-logo-cell img{width:108px;height:32px}
+  .feature-showcase,.section,.trust-boundaries{padding:72px 18px}
+  .feature-intro{margin-bottom:34px}
+  .feature-intro h2,.section h2,.pain h2,.trust-boundaries h2,.waitlist h2,.final-cta h2{font-size:clamp(31px,8.4vw,42px)}
+  .feature-intro p,.section-head p,.pain p,.waitlist p,.final-cta p{font-size:16px}
+  .feature-stage{padding:14px;border-radius:24px}
+  .feature-tabs{grid-template-columns:1fr}
+  .feature-visual{padding:22px}
+  .feature-mini-ui{grid-template-columns:1fr}
+  .mini-sidebar{display:none}
+  .workflow-grid,.teams-grid,.pricing-grid,.resource-grid,.boundary-grid{grid-template-columns:1fr}
+  .pain{padding:0 18px 74px;grid-template-columns:1fr}
+  .message-panel{padding:20px;border-radius:24px;min-height:280px}
+  .typing-bubble,.static-bubble{font-size:14px;max-width:92%}
+  .testimonials{padding:72px 0}
+  .testimonial-marquee article{width:310px;padding:24px}
+  .testimonial-marquee p{font-size:18px}
+  .safe-section{min-height:420px}
+  .safe-content{padding:68px 18px}
+  .waitlist{padding:0 18px 74px}
+  .waitlist-card{padding:24px;border-radius:24px;grid-template-columns:1fr}
+  .final-cta{padding:10px 18px 74px}
+  .site-footer{padding:52px 18px 24px}
+  .footer-shell h2{margin-bottom:48px}
+  .footer-main{grid-template-columns:1fr;gap:42px}
+  .footer-links{grid-template-columns:1fr 1fr;gap:28px}
+  .footer-bottom{margin-top:52px;flex-direction:column}
+  .footer-bottom p:last-child{text-align:left}
 }
 
-/* ---- ONBOARDING ---- */
-.ob-box{
-  max-width:640px;margin:0 auto;
-  background:${c.white};border:1px solid ${c.border};border-radius:24px;padding:48px 44px;text-align:center;
-  box-shadow:0 4px 24px rgba(0,0,0,.05);
-}
-.ob-box h2{font-size:clamp(24px,3.5vw,38px);margin-bottom:14px}
-.ob-box>p{font-size:16px;color:${c.sub};margin-bottom:28px;line-height:1.65}
-.ob-form{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;position:relative}
-.ob-input{
-  flex:1;min-width:180px;padding:13px 18px;border-radius:100px;
-  border:1.5px solid ${c.border};font-size:14px;background:${c.bg};
-  color:${c.ink};outline:none;transition:border-color .15s;
-}
-.ob-input:focus{border-color:${c.warm}}
-.ob-select{
-  padding:13px 36px 13px 18px;border-radius:100px;border:1.5px solid ${c.border};
-  font-size:14px;
-  background:${c.bg};
-  appearance:none;color:${c.ink};outline:none;cursor:pointer;transition:border-color .15s;
-}
-.ob-select:focus{border-color:${c.warm}}
-.ob-submit{padding:13px 24px;border-radius:100px}
-.agree-row{
-  display:flex;align-items:flex-start;justify-content:center;gap:8px;
-  margin-top:14px;font-size:12px;color:${c.muted};line-height:1.6
-}
-.agree-row input{margin-top:2px}
-.agree-row a{color:${c.sub};text-decoration:underline;text-underline-offset:2px}
-.form-ok{
-  margin-top:14px;background:${c.greenBg};color:${c.green};
-  border-radius:12px;padding:13px;font-size:13.5px;font-weight:600
-}
-.form-er{
-  margin-top:14px;background:${c.redBg};color:${c.red};
-  border-radius:12px;padding:13px;font-size:13.5px;font-weight:600
+@media (max-width:540px){
+  .footer-links{grid-template-columns:1fr}
+  .footer-shell h2{font-size:30px}
+  .social-links a{width:100%;justify-content:center}
 }
 
-/* ---- FAQ ---- */
-.faq-head a{color:${c.ink};font-weight:700;text-decoration:underline;text-underline-offset:2px}
-.faq-wrap{max-width:720px;margin:0 auto}
-.fq-item{border-bottom:1px solid ${c.border}}
-.fq-btn{
-  width:100%;background:none;border:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:space-between;gap:16px;
-  padding:22px 0;text-align:left;font-family:inherit;font-size:16px;font-weight:700;
-  color:${c.ink};letter-spacing:-.015em;transition:color .15s;
-}
-.fq-btn:hover{color:${c.warmDk}}
-.fq-icon{
-  width:28px;height:28px;border-radius:8px;background:${c.bg2};border:1px solid ${c.border};
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;
-}
-.fq-icon span{
-  font-size:18px;font-weight:300;color:${c.sub};line-height:1;display:flex;
-  align-items:center;justify-content:center;transition:transform .28s
-}
-.fq-item.open .fq-icon{background:${c.ink};border-color:${c.ink}}
-.fq-item.open .fq-icon span{color:#fff;transform:rotate(180deg)}
-.fq-answer{max-height:0;overflow:hidden;transition:max-height .35s ease}
-.fq-answer-inner{padding-bottom:22px;font-size:15px;color:${c.sub};line-height:1.75}
-.fq-item.open .fq-answer{max-height:220px}
-
-/* ---- FUTURE ---- */
-.future-section{padding-bottom:48px}
-.future-block{max-width:600px}
-
-/* ---- FINAL CTA ---- */
-.final-cta{background:${c.dark};padding:96px 32px;text-align:center}
-.final-cta h2{
-  color:#fff;max-width:640px;margin:0 auto 18px;
-  font-family:var(--font-instrument-serif),Georgia,serif;
-  font-size:clamp(30px,4.5vw,52px);line-height:1.08;letter-spacing:-.03em
-}
-.final-cta p{
-  font-size:17px;color:rgba(255,255,255,.5);max-width:480px;margin:0 auto 36px;line-height:1.7
-}
-.final-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-.btn-white{
-  display:inline-flex;align-items:center;gap:7px;background:#fff;color:${c.ink};
-  font-size:16px;font-weight:700;padding:14px 30px;border-radius:100px;border:none;
-  cursor:pointer;transition:all .2s;letter-spacing:-.01em
-}
-.btn-white:hover{background:${c.bg2};transform:translateY(-1px)}
-.btn-outline-white{
-  display:inline-flex;align-items:center;gap:7px;background:transparent;color:rgba(255,255,255,.8);
-  font-size:16px;font-weight:700;padding:13px 30px;border-radius:100px;
-  border:1.5px solid rgba(255,255,255,.2);cursor:pointer;transition:all .2s;letter-spacing:-.01em
-}
-.btn-outline-white:hover{border-color:rgba(255,255,255,.5);transform:translateY(-1px)}
-
-/* ---- FOOTER ---- */
-footer{background:${c.dark};border-top:1px solid rgba(255,255,255,.06);padding:60px 32px 36px}
-.ft-inner{max-width:1100px;margin:0 auto}
-.ft-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px}
-.ft-brand-logo{display:flex;align-items:center;gap:9px;margin-bottom:16px}
-.ft-lm{
-  width:28px;height:28px;background:rgba(255,255,255,.92);border-radius:7px;
-  border:1px solid rgba(255,255,255,.12);
-  display:flex;align-items:center;justify-content:center
-}
-.ft-ln{
-  font-family:var(--font-instrument-serif),Georgia,serif;
-  font-size:18px;color:rgba(255,255,255,.85)
-}
-.ft-tagline{font-size:13.5px;color:rgba(255,255,255,.35);line-height:1.7}
-.ft-col-title{
-  font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
-  color:rgba(255,255,255,.35);margin-bottom:14px
-}
-.ft-link{display:block;font-size:14px;color:rgba(255,255,255,.45);padding:4px 0;transition:color .15s}
-.ft-link:hover{color:rgba(255,255,255,.85)}
-.ft-bottom{
-  border-top:1px solid rgba(255,255,255,.07);padding-top:24px;
-  display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap
-}
-.ft-copy{font-size:12px;color:rgba(255,255,255,.3)}
-.ft-disc{
-  font-size:12px;color:rgba(255,255,255,.2);max-width:540px;text-align:right;line-height:1.6
-}
-
-/* ---- MODAL ---- */
-.modO{
-  position:fixed;inset:0;z-index:220;background:rgba(9,10,13,.55);
-  backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;padding:14px
-}
-.modB{
-  width:100%;max-width:420px;background:#fff;border:1px solid ${c.border};border-radius:24px;
-  padding:30px;box-shadow:0 20px 50px rgba(0,0,0,.18);text-align:center
-}
-.modSeal{
-  width:54px;height:54px;border-radius:999px;background:linear-gradient(135deg,#FFF8F0,#ECFDF3);
-  border:1px solid rgba(34,197,94,.14);display:flex;align-items:center;justify-content:center;
-  margin:0 auto 16px;color:${c.green}
-}
-.modTi{
-  font-family:var(--font-instrument-serif),Georgia,serif;
-  font-size:clamp(24px,4.5vw,30px);letter-spacing:-.045em
-}
-.modBd{margin-top:8px;color:${c.sub};font-size:14px;line-height:1.68}
-.modRef{
-  margin-top:20px;padding:15px;border-radius:14px;background:rgba(29,78,216,.03);
-  border:1px solid rgba(29,78,216,.08)
-}
-.modRefLbl{
-  font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
-  color:${c.muted};margin-bottom:8px
-}
-.modRefBox{
-  display:flex;align-items:center;gap:6px;background:#fff;border:1px solid ${c.border};
-  border-radius:8px;padding:7px 9px
-}
-.modRefUrl{
-  flex:1;font-size:12px;color:${c.sub};font-weight:500;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left
-}
-.modRefCp{
-  width:32px;height:32px;border-radius:7px;background:${c.blueBg};
-  border:1px solid rgba(29,78,216,.1);color:${c.blue};display:flex;
-  align-items:center;justify-content:center;cursor:pointer;flex-shrink:0
-}
-.modClose{
-  margin-top:14px;background:none;border:none;color:${c.muted};
-  font-size:12px;font-weight:600;cursor:pointer
-}
-
-/* ---- RESPONSIVE ---- */
-@media(max-width:1024px){
-  .ws-body{grid-template-columns:220px 1fr}
-  .ws-detail{display:none}
-  .audience-grid{grid-template-columns:repeat(2,1fr)}
-  .trust-grid{grid-template-columns:repeat(2,1fr)}
-  .stats-grid{grid-template-columns:repeat(2,1fr)}
-  .ft-top{grid-template-columns:1fr 1fr}
-}
-@media(max-width:720px){
-  nav .nav-inner{padding:0 16px}
-  .nav-links{display:none}
-  .hero,.workspace-section,.dark-section,section.pad,.pain-section,.final-cta,footer{padding-left:20px;padding-right:20px}
-  h1{font-size:clamp(36px,12vw,54px);line-height:1.02}
-  .how-grid,.benefit-grid,.pricing-grid{grid-template-columns:1fr}
-  .audience-grid,.trust-grid{grid-template-columns:1fr}
-  .stats-grid{grid-template-columns:repeat(2,1fr)}
-  .ws-body{grid-template-columns:1fr}
-  .ws-sb{display:none}
-  .ft-top{grid-template-columns:1fr;gap:28px}
-  .ft-disc{text-align:left}
-  .ob-box{padding:32px 22px}
-  .ob-form{flex-direction:column}
-  .agree-row{align-items:flex-start;text-align:left}
-  .ob-submit{width:100%}
-  .infra-logo-card{
-    min-width:150px;
-    height:66px;
-    padding:0 18px;
-  }
-  .infra-logo-img{
-    height:24px;
-    max-width:108px;
-  }
+@media (max-width:460px){
+  .header .secondary{display:none}
+  .hero{padding-top:54px}
+  .logo span:last-child{font-size:21px}
+  .hero h1{font-size:36px}
+  .request-head h3{font-size:25px}
+  .next-action strong{font-size:15px}
+  .price-card em{position:static;width:max-content;margin-bottom:16px}
 }
 `;
