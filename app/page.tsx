@@ -13,7 +13,6 @@ import {
   History,
   LockKeyhole,
   Mail,
-  MessageCircle,
   PhoneCall,
   RefreshCw,
   ShieldCheck,
@@ -63,6 +62,14 @@ type Feature = {
 type BrandLogo = {
   src: string;
   alt: string;
+};
+
+type Audience = {
+  title: string;
+  label: string;
+  image: string;
+  copy: string;
+  track: string;
 };
 
 type PainMessage = {
@@ -125,7 +132,7 @@ const RESIDENTS: Resident[] = [
       { done: false, label: "Awaiting approval", meta: "Now" },
     ],
     activity: [
-      { text: "Ben sent the request", time: "Now", icon: "check" },
+      { text: "Ben sent David’s request", time: "Now", icon: "check" },
       { text: "Practice note added", time: "19m", icon: "phone" },
       { text: "Timeline reviewed", time: "44m", icon: "bell" },
     ],
@@ -247,33 +254,41 @@ const WORKFLOW = [
 ];
 
 const PAIN_MESSAGES: PainMessage[] = [
-  {
-    speaker: "Family carer",
-    text: "Did you call the GP yet?",
-    side: "left",
-  },
-  {
-    speaker: "Support worker",
-    text: "I thought you were handling it.",
-    side: "right",
-  },
-  {
-    speaker: "Pharmacy",
-    text: "We have not received the request.",
-    side: "left",
-  },
-  {
-    speaker: "Family carer",
-    text: "She only has two days left.",
-    side: "right",
-  },
+  { speaker: "Family carer", text: "Did you call the GP yet?", side: "left" },
+  { speaker: "Support worker", text: "I thought you were handling it.", side: "right" },
+  { speaker: "Pharmacy", text: "We have not received the request.", side: "left" },
+  { speaker: "Family carer", text: "She only has two days left.", side: "right" },
 ];
 
-const TEAMS = [
-  ["Family carers", "Coordinate repeat prescriptions and care admin for a parent, partner, or relative without carrying every detail alone."],
-  ["Residential care", "Track requests across residents, GP practices, pharmacies, staff handovers, and managers."],
-  ["Supported living", "Keep support workers, families, and service managers aligned around what is due, delayed, or ready."],
-  ["Community pharmacies", "Understand incoming repeat-prescription work with clearer context and fewer chasing calls."],
+const TEAMS: Audience[] = [
+  {
+    title: "Family carers",
+    label: "For families",
+    image: "/audiences/family-carers.png",
+    copy: "Coordinate care admin for a parent, partner, or relative without carrying every reminder alone.",
+    track: "Reminders, ownership, status, collection",
+  },
+  {
+    title: "Residential care",
+    label: "For care homes",
+    image: "/audiences/residential-care.png",
+    copy: "Give managers and staff one shared view of what is due, ready, waiting, or needs follow-up.",
+    track: "Residents, handovers, staff notes, timelines",
+  },
+  {
+    title: "Supported living",
+    label: "For support teams",
+    image: "/audiences/supported-living.png",
+    copy: "Keep support workers, families, and service managers aligned around each person’s next action.",
+    track: "People supported, PSWs, next actions, updates",
+  },
+  {
+    title: "Community pharmacies",
+    label: "For pharmacies",
+    image: "/audiences/community-pharmacy.png",
+    copy: "Understand incoming prescription work with clearer context and fewer chasing calls.",
+    track: "Collection status, request context, follow-up",
+  },
 ];
 
 const TESTIMONIALS = [
@@ -322,12 +337,6 @@ const PRICING = [
     cta: "Talk to us",
     href: "mailto:hello@omela.ai?subject=Omela%20organisation%20demo",
   },
-];
-
-const RESOURCES = [
-  ["Repeat prescription checklist", "A simple checklist for what is due, who owns it, and what needs follow-up."],
-  ["Care-team handover guide", "A cleaner structure for passing care admin updates between staff."],
-  ["Pharmacy coordination notes", "A practical way to keep collection, delays, and next actions clear."],
 ];
 
 const FAQS = [
@@ -482,18 +491,12 @@ function OperationsDemo({
 
             <div className="people-list">
               {RESIDENTS.map((person, index) => (
-                <button
-                  type="button"
-                  key={person.rx}
-                  className={active === index ? "active" : ""}
-                  onClick={() => setActive(index)}
-                >
+                <button type="button" key={person.rx} className={active === index ? "active" : ""} onClick={() => setActive(index)}>
                   <PersonAvatar initials={person.initials} />
-
                   <span className="person-copy">
                     <span className="name-line">
                       <strong>{person.name.split(" ")[0]}</strong>
-                      <em title={`Person we support ${index + 1}`}>{person.psw}</em>
+                      <em>{person.psw}</em>
                     </span>
                     <small>{person.medicine}</small>
                     <StatusPill tone={person.statusTone}>{person.status}</StatusPill>
@@ -595,19 +598,6 @@ function OperationsDemo({
               ))}
             </div>
           </aside>
-
-          <div className="room-toolbar">
-            <span>
-              <History size={14} /> Timeline
-            </span>
-            <span>
-              <UsersRound size={14} /> Owner
-            </span>
-            <span>
-              <PhoneCall size={14} /> Practice
-            </span>
-            <button type="button">Follow up</button>
-          </div>
         </div>
       </div>
 
@@ -714,10 +704,7 @@ function FeatureShowcase() {
                 </div>
               ))}
 
-              <div className="mini-note">
-                <MessageCircle size={15} />
-                Laura prepares a clear update for everyone with access.
-              </div>
+              <div className="mini-note">Laura prepares a clear update for everyone with access.</div>
             </div>
           </div>
         </div>
@@ -739,9 +726,9 @@ function TypewriterMessages() {
       index += 1;
       setTyped(text.slice(0, index));
       if (index >= text.length) window.clearInterval(typing);
-    }, 34);
+    }, 32);
 
-    const next = window.setTimeout(() => setActive((current) => (current + 1) % PAIN_MESSAGES.length), 2500);
+    const next = window.setTimeout(() => setActive((current) => (current + 1) % PAIN_MESSAGES.length), 2450);
 
     return () => {
       window.clearInterval(typing);
@@ -760,8 +747,7 @@ function TypewriterMessages() {
           <div key={message.text} className={`chat-slot ${message.side} ${isPast ? "past" : ""} ${isActive ? "active" : ""}`}>
             <div className="chat-bubble">
               <small>{message.speaker}</small>
-              <span>{content || message.text}</span>
-              {isActive ? <i aria-hidden="true" /> : null}
+              <span>{content || "\u00A0"}</span>
             </div>
           </div>
         );
@@ -869,7 +855,7 @@ export default function Page() {
 
             <nav aria-label="Primary navigation">
               <a href="#product">Product</a>
-              <a href="#resources">Resources</a>
+              <a href="#teams">Resources</a>
               <a href="#pricing">Pricing</a>
             </nav>
 
@@ -938,18 +924,20 @@ export default function Page() {
             </div>
           </section>
 
-          <section className="pain">
-            <TypewriterMessages />
-            <div className="pain-copy">
+          <section className="admin-stress">
+            <div className="section-head center">
               <SectionPill>Real admin stress</SectionPill>
               <h2>
                 Small gaps become <DoubleUnderline>stressful fast</DoubleUnderline>.
               </h2>
-              <p>
-                A missed call, a handover note, or an update nobody shares can turn into avoidable stress. Omela keeps the
-                request, owner, timeline, and next action in one shared place.
-              </p>
             </div>
+
+            <TypewriterMessages />
+
+            <p className="admin-stress-copy">
+              A missed call, a handover note, or an update nobody shares can turn into avoidable stress. Omela keeps the
+              request, owner, timeline, and next action in one shared place.
+            </p>
           </section>
 
           <section className="section teams" id="teams">
@@ -961,11 +949,22 @@ export default function Page() {
             </div>
 
             <div className="teams-grid">
-              {TEAMS.map(([title, copy]) => (
-                <article key={title}>
-                  <UsersRound size={21} />
-                  <h3>{title}</h3>
-                  <p>{copy}</p>
+              {TEAMS.map((team) => (
+                <article className="team-card" key={team.title}>
+                  <div className="team-image">
+                    <img src={team.image} alt={team.title} loading="lazy" />
+                    <span>{team.label}</span>
+                  </div>
+
+                  <div className="team-copy">
+                    <h3>{team.title}</h3>
+                    <p>{team.copy}</p>
+
+                    <div className="team-track">
+                      <span>What they track</span>
+                      <strong>{team.track}</strong>
+                    </div>
+                  </div>
                 </article>
               ))}
             </div>
@@ -1143,28 +1142,6 @@ export default function Page() {
             </div>
           </section>
 
-          <section className="section resources" id="resources">
-            <div className="section-head split">
-              <div>
-                <SectionPill>Resources</SectionPill>
-                <h2>
-                  Resources for safer <DoubleUnderline>follow-through</DoubleUnderline>.
-                </h2>
-              </div>
-              <p>Practical guides for families, care teams, and pharmacies who want cleaner care admin coordination.</p>
-            </div>
-
-            <div className="resource-grid">
-              {RESOURCES.map(([title, copy]) => (
-                <a href="#waitlist" key={title}>
-                  <Mail size={18} />
-                  <h3>{title}</h3>
-                  <p>{copy}</p>
-                </a>
-              ))}
-            </div>
-          </section>
-
           <section className="section faq" id="faq">
             <div className="section-head center">
               <SectionPill>FAQ</SectionPill>
@@ -1206,7 +1183,7 @@ export default function Page() {
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M13.8 10.47 21.14 2h-1.74l-6.37 7.35L7.94 2H2.07l7.7 11.12L2.07 22h1.74l6.73-7.76L15.92 22h5.87l-7.99-11.53Zm-2.38 2.74-.78-1.11L4.44 3.3h2.66l5.01 7.11.78 1.11 6.51 9.25h-2.66l-5.32-7.56Z" />
                     </svg>
-                    <span>X</span>
+                    <span>Follow us on X</span>
                   </a>
 
                   <a
@@ -1228,20 +1205,14 @@ export default function Page() {
                   <strong>Product</strong>
                   <a href="#product">Product</a>
                   <a href="#workflow">Workflow</a>
+                  <a href="#teams">Who it is for</a>
                   <a href="#pricing">Pricing</a>
-                  <a href="#waitlist">Get started</a>
                 </div>
                 <div>
                   <strong>Company</strong>
-                  <a href="#teams">About</a>
                   <a href="mailto:hello@omela.ai">Contact</a>
                   <Link href="/login">Sign in</Link>
-                </div>
-                <div>
-                  <strong>Resources</strong>
-                  <a href="#resources">Repeat prescription checklist</a>
-                  <a href="#resources">Care-team guide</a>
-                  <a href="#faq">FAQ</a>
+                  <a href="#waitlist">Get started</a>
                 </div>
                 <div>
                   <strong>Legal</strong>
@@ -1324,15 +1295,8 @@ p,h1,h2,h3,h4{margin:0}
   background:linear-gradient(90deg,rgba(89,208,195,.12),rgba(89,208,195,.82),rgba(89,208,195,.18));
   pointer-events:none;
 }
-.double-underline:before{
-  bottom:.01em;
-  transform:rotate(-1.2deg);
-}
-.double-underline:after{
-  bottom:-.11em;
-  opacity:.55;
-  transform:rotate(.8deg);
-}
+.double-underline:before{bottom:.01em;transform:rotate(-1.2deg)}
+.double-underline:after{bottom:-.11em;opacity:.55;transform:rotate(.8deg)}
 
 .header{
   position:sticky;
@@ -1344,7 +1308,7 @@ p,h1,h2,h3,h4{margin:0}
 }
 .nav-shell{
   max-width:1320px;
-  height:86px;
+  height:84px;
   margin:0 auto;
   padding:0 42px;
   display:grid;
@@ -1386,26 +1350,26 @@ p,h1,h2,h3,h4{margin:0}
   max-width:1320px;
   margin:0 auto;
   text-align:center;
-  padding:108px 42px 58px;
+  padding:96px 42px 58px;
 }
 .hero h1{
   max-width:850px;
   margin:0 auto;
-  font-size:clamp(38px,4.1vw,56px);
+  font-size:clamp(37px,4vw,55px);
   line-height:1.12;
   letter-spacing:-.052em;
   font-weight:400;
   text-wrap:balance;
 }
 .hero>p{
-  max-width:720px;
+  max-width:740px;
   margin:22px auto 28px;
   color:var(--muted);
   font-size:17px;
   line-height:1.5;
   letter-spacing:-.02em;
 }
-.hero-actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:58px}
+.hero-actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:54px}
 .hero-btn{padding:15px 24px;border-radius:13px}
 
 .hero-frame{width:100%;max-width:1160px;margin:0 auto}
@@ -1440,34 +1404,20 @@ p,h1,h2,h3,h4{margin:0}
   letter-spacing:-.01em;
   box-shadow:0 6px 18px rgba(17,24,39,.04);
 }
-.chrome-status{
-  justify-self:end;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  color:#26534f;
-  font-size:13px;
-  font-weight:600;
-}
-.chrome-status span{
-  width:8px;
-  height:8px;
-  border-radius:999px;
-  background:var(--teal);
-  box-shadow:0 0 0 6px rgba(89,208,195,.14);
-}
+.chrome-status{justify-self:end;display:flex;align-items:center;gap:8px;color:#26534f;font-size:13px;font-weight:600}
+.chrome-status span{width:8px;height:8px;border-radius:999px;background:var(--teal);box-shadow:0 0 0 6px rgba(89,208,195,.14)}
 
 .mobile-resident-strip{display:none}
 
 .ops-room{
   position:relative;
-  min-height:600px;
+  min-height:560px;
   overflow:hidden;
   background:radial-gradient(circle at 27% 26%,#f4eadb 0,#d9d0c2 28%,#403832 58%,#101216 100%);
   display:grid;
   grid-template-columns:255px minmax(0,1fr)260px;
   gap:16px;
-  padding:24px 24px 86px;
+  padding:24px;
   font-family:var(--font-inter),Inter,Arial,sans-serif;
 }
 .ops-glow{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(0,0,0,.18));pointer-events:none}
@@ -1483,83 +1433,30 @@ p,h1,h2,h3,h4{margin:0}
 .people-panel{padding:18px}
 .panel-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .panel-title span,.micro-label,.timeline-top span,.activity-feed>span{
-  display:block;
-  color:var(--muted2);
-  text-transform:uppercase;
-  letter-spacing:.12em;
-  font-size:10px;
-  font-weight:700;
+  display:block;color:var(--muted2);text-transform:uppercase;letter-spacing:.12em;font-size:10px;font-weight:700;
 }
 .panel-title strong{
-  width:32px;
-  height:32px;
-  border-radius:999px;
-  background:var(--tealSoft);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:13px;
-  color:#08766e;
+  width:32px;height:32px;border-radius:999px;background:var(--tealSoft);display:flex;align-items:center;justify-content:center;font-size:13px;color:#08766e;
 }
 .people-list{display:grid;gap:9px}
 .people-list button{
-  width:100%;
-  border:1px solid var(--line);
-  background:#fff;
-  border-radius:16px;
-  padding:10px;
-  display:grid;
-  grid-template-columns:auto minmax(0,1fr);
-  align-items:center;
-  gap:10px;
-  text-align:left;
-  transition:.18s;
+  width:100%;border:1px solid var(--line);background:#fff;border-radius:16px;padding:10px;display:grid;
+  grid-template-columns:auto minmax(0,1fr);align-items:center;gap:10px;text-align:left;transition:.18s;
 }
 .people-list button:hover,.people-list button.active{border-color:rgba(63,193,179,.75);box-shadow:0 10px 24px rgba(17,24,39,.055)}
 .person-avatar{
-  width:40px;
-  height:40px;
-  border-radius:999px;
-  background:linear-gradient(180deg,#eafeF9,#def5f1);
-  color:#08766e;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:1px;
-  flex:0 0 auto;
-  border:1px solid rgba(63,193,179,.18);
+  width:40px;height:40px;border-radius:999px;background:linear-gradient(180deg,#eafeF9,#def5f1);color:#08766e;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;flex:0 0 auto;border:1px solid rgba(63,193,179,.18);
 }
-.person-avatar svg{stroke-width:2.1}
 .person-avatar strong{font-size:9px;line-height:1;font-weight:700}
-.person-copy{min-width:0}
 .name-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:2px}
 .name-line strong{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .name-line em{
-  display:inline-flex;
-  align-items:center;
-  padding:3px 7px;
-  border-radius:999px;
-  border:1px solid #e3e8ef;
-  background:#f4f6f8;
-  color:#69717e;
-  font-style:normal;
-  font-size:9px;
-  font-weight:700;
-  letter-spacing:.04em;
+  display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;border:1px solid #e3e8ef;background:#f4f6f8;
+  color:#69717e;font-style:normal;font-size:9px;font-weight:700;letter-spacing:.04em;
 }
 .person-copy small{display:block;color:var(--muted);font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.status-pill{
-  display:inline-flex;
-  width:max-content;
-  max-width:100%;
-  border-radius:999px;
-  padding:6px 9px;
-  font-size:11px;
-  line-height:1;
-  font-weight:700;
-  white-space:nowrap;
-}
+.status-pill{display:inline-flex;width:max-content;max-width:100%;border-radius:999px;padding:6px 9px;font-size:11px;line-height:1;font-weight:700;white-space:nowrap}
 .status-pill.danger{background:#fbebeb;color:#a33a3a}
 .status-pill.info{background:#edf4ff;color:#2457c5}
 .status-pill.success{background:#eaf9f0;color:#14764f}
@@ -1602,47 +1499,11 @@ p,h1,h2,h3,h4{margin:0}
 .activity-feed p{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start;border-top:1px solid var(--line);padding:10px 0;font-size:12px;line-height:1.35}
 .activity-feed svg{color:#08766e;margin-top:1px}
 .activity-feed small{font-weight:600;color:var(--muted)}
-.room-toolbar{
-  position:absolute;
-  z-index:2;
-  left:50%;
-  bottom:24px;
-  transform:translateX(-50%);
-  display:flex;
-  align-items:center;
-  gap:8px;
-  background:rgba(17,24,39,.92);
-  backdrop-filter:blur(14px);
-  border-radius:16px;
-  padding:9px;
-  box-shadow:0 14px 40px rgba(0,0,0,.22);
-}
-.room-toolbar span,.room-toolbar button{
-  display:flex;
-  align-items:center;
-  gap:7px;
-  border:0;
-  border-radius:10px;
-  padding:11px 14px;
-  background:rgba(255,255,255,.08);
-  color:#fff;
-  font-weight:600;
-  font-size:13px;
-  white-space:nowrap;
-}
-.room-toolbar button{background:var(--teal);color:#082c29}
+
 .resident-tabs{display:flex;justify-content:center;gap:10px;margin-top:16px;flex-wrap:wrap}
 .resident-tabs button{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  border:1px solid var(--line);
-  background:#fff;
-  border-radius:999px;
-  padding:8px 12px 8px 8px;
-  box-shadow:0 5px 14px rgba(17,24,39,.04);
-  color:var(--muted);
-  font-weight:600;
+  display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px 8px 8px;
+  box-shadow:0 5px 14px rgba(17,24,39,.04);color:var(--muted);font-weight:600;
 }
 .resident-tabs button span:last-child{display:flex;align-items:center;gap:6px}
 .resident-tabs strong{font-size:14px;font-weight:600}
@@ -1656,21 +1517,16 @@ p,h1,h2,h3,h4{margin:0}
 .logo-track{display:flex;width:max-content;gap:54px;align-items:center;animation:logoScroll 38s linear infinite}
 .logo-marquee:hover .logo-track{animation-play-state:paused}
 .brand-logo-cell{width:150px;height:58px;display:flex;align-items:center;justify-content:center;opacity:.56;filter:grayscale(1);transition:.18s}
-.brand-logo-cell:hover{opacity:.78}
 .brand-logo-cell img{width:122px;height:36px;object-fit:contain}
 @keyframes logoScroll{from{transform:translateX(0)}to{transform:translateX(-33.333%)}}
 
 .feature-showcase{max-width:1240px;margin:0 auto;padding:82px 42px}
 .feature-intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,.78fr);gap:84px;align-items:start;margin-bottom:56px}
-.feature-intro h2,.section h2,.pain h2,.trust-boundaries h2,.waitlist h2,.final-cta h2{
-  font-size:clamp(31px,3.55vw,48px);
-  line-height:1.1;
-  letter-spacing:-.052em;
-  font-weight:400;
-  text-wrap:balance;
+.feature-intro h2,.section h2,.admin-stress h2,.trust-boundaries h2,.waitlist h2,.final-cta h2{
+  font-size:clamp(31px,3.55vw,48px);line-height:1.1;letter-spacing:-.052em;font-weight:400;text-wrap:balance;
 }
 .feature-intro p{padding-top:9px}
-.feature-intro p,.section-head p,.pain p,.waitlist p,.final-cta p{color:var(--muted);font-size:16px;line-height:1.6;letter-spacing:-.02em}
+.feature-intro p,.section-head p,.admin-stress-copy,.waitlist p,.final-cta p{color:var(--muted);font-size:16px;line-height:1.6;letter-spacing:-.02em}
 .feature-stage{display:grid;grid-template-columns:370px 1fr;gap:20px;background:#fff;border:1px solid var(--line);border-radius:30px;padding:20px;box-shadow:var(--softShadow)}
 .feature-tabs{display:grid;gap:10px}
 .feature-tabs button{border:1px solid var(--line);background:#fbfaf7;border-radius:20px;padding:15px;text-align:left;transition:.18s}
@@ -1694,7 +1550,7 @@ p,h1,h2,h3,h4{margin:0}
 .mini-check{width:23px;height:23px;border-radius:999px;background:var(--teal);display:flex;align-items:center;justify-content:center;color:#073d38}
 .mini-row p{font-size:14px;color:var(--ink)}
 .mini-row small{font-size:12px;color:var(--muted);font-weight:600}
-.mini-note{display:flex;align-items:center;gap:9px;margin-top:8px;color:#08766e;background:var(--tealSoft);border:1px solid rgba(63,193,179,.25);border-radius:16px;padding:12px;font-size:13px;font-weight:600}
+.mini-note{margin-top:8px;color:#08766e;background:var(--tealSoft);border:1px solid rgba(63,193,179,.25);border-radius:16px;padding:12px;font-size:13px;font-weight:600}
 
 .section{max-width:1240px;margin:0 auto;padding:82px 42px}
 .section-head{margin-bottom:44px}
@@ -1706,90 +1562,65 @@ p,h1,h2,h3,h4{margin:0}
 .workflow-grid article{position:relative;background:#fff;border:1px solid var(--line);border-radius:28px;padding:26px;box-shadow:var(--softShadow);min-height:244px}
 .step-number{width:52px;height:52px;border-radius:999px;background:var(--dark);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;margin-bottom:32px}
 .step-arrow{position:absolute;right:-19px;top:48px;width:38px;height:38px;border-radius:999px;background:var(--teal);color:#073d38;display:flex;align-items:center;justify-content:center;z-index:2;box-shadow:0 10px 24px rgba(63,193,179,.24)}
-.workflow-grid h3,.teams-grid h3,.resource-grid h3{font-size:21px;letter-spacing:-.04em;font-weight:400;margin-bottom:10px}
-.workflow-grid p,.teams-grid p,.resource-grid p{color:var(--muted);font-size:15px;line-height:1.56}
+.workflow-grid h3,.team-copy h3{font-size:21px;letter-spacing:-.04em;font-weight:500;margin-bottom:10px}
+.workflow-grid p,.team-copy p{color:var(--muted);font-size:15px;line-height:1.56}
 
-.pain{max-width:1240px;margin:0 auto;padding:8px 42px 90px;display:grid;grid-template-columns:.88fr 1fr;gap:76px;align-items:center}
+.admin-stress{max-width:980px;margin:0 auto;padding:18px 42px 90px;text-align:center}
+.admin-stress .section-head{margin-bottom:30px}
+.admin-stress-copy{max-width:720px;margin:30px auto 0}
+
 .message-panel{
   background:#fff;
   border:1px solid var(--line);
   border-radius:30px;
   padding:28px;
-  height:396px;
-  min-height:396px;
-  box-shadow:var(--softShadow);
+  height:388px;
+  min-height:388px;
+  box-shadow:0 18px 60px rgba(17,24,39,.06);
   display:grid;
   grid-template-rows:repeat(4,1fr);
   gap:12px;
   overflow:hidden;
 }
-.chat-slot{
-  display:flex;
-  align-items:center;
-  opacity:.18;
-  transform:translateY(3px);
-  transition:opacity .25s ease, transform .25s ease;
-}
+.chat-slot{display:flex;align-items:center;opacity:.2;transition:opacity .25s ease, transform .25s ease}
 .chat-slot.left{justify-content:flex-start}
 .chat-slot.right{justify-content:flex-end}
-.chat-slot.past,.chat-slot.active{opacity:1;transform:translateY(0)}
+.chat-slot.past,.chat-slot.active{opacity:1}
 .chat-bubble{
   width:fit-content;
-  max-width:min(86%,360px);
-  min-height:58px;
+  max-width:min(86%,410px);
+  min-height:62px;
   display:flex;
   flex-direction:column;
   justify-content:center;
   border:1px solid var(--line);
-  border-radius:18px 18px 18px 8px;
+  border-radius:20px 20px 20px 9px;
   background:#f8f6ef;
-  padding:10px 14px;
+  padding:12px 16px;
   color:var(--ink);
   box-shadow:0 7px 18px rgba(17,24,39,.035);
   overflow-wrap:anywhere;
+  text-align:left;
 }
-.chat-slot.right .chat-bubble{
-  background:var(--tealSoft);
-  border-color:rgba(63,193,179,.25);
-  border-radius:18px 18px 8px 18px;
-}
-.chat-slot.active .chat-bubble{
-  background:var(--dark);
-  border-color:var(--dark);
-  color:#fff;
-}
-.chat-bubble small{
-  display:block;
-  margin-bottom:4px;
-  color:inherit;
-  opacity:.58;
-  font-size:10px;
-  font-weight:700;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-}
-.chat-bubble span{
-  display:inline;
-  font-size:14px;
-  line-height:1.38;
-  font-weight:500;
-}
-.chat-bubble i{
-  display:inline-block;
-  width:6px;
-  height:15px;
-  margin-left:4px;
-  vertical-align:-2px;
-  border-radius:999px;
-  background:var(--teal);
-  animation:blink .9s steps(2,start) infinite;
-}
-@keyframes blink{50%{opacity:0}}
-.pain h2{margin-bottom:18px}
+.chat-slot.right .chat-bubble{background:var(--tealSoft);border-color:rgba(63,193,179,.25);border-radius:20px 20px 9px 20px}
+.chat-slot.active .chat-bubble{background:var(--dark);border-color:var(--dark);color:#fff}
+.chat-bubble small{display:block;margin-bottom:5px;color:inherit;opacity:.58;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.chat-bubble span{display:inline;font-size:15px;line-height:1.38;font-weight:500}
 
 .teams-grid,.pricing-grid,.boundary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-.teams-grid article,.resource-grid a{background:#fff;border:1px solid var(--line);border-radius:28px;padding:26px;box-shadow:var(--softShadow)}
-.teams-grid svg{width:50px;height:50px;padding:14px;border-radius:999px;background:var(--soft);border:1px solid var(--line);margin-bottom:62px}
+.team-card{background:#fff;border:1px solid var(--line);border-radius:30px;padding:12px;box-shadow:var(--softShadow);overflow:hidden;transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease}
+.team-card:hover{transform:translateY(-3px);border-color:rgba(89,208,195,.55);box-shadow:0 20px 60px rgba(17,24,39,.08)}
+.team-image{position:relative;aspect-ratio:4/3;border-radius:24px;overflow:hidden;background:var(--soft);border:1px solid rgba(232,226,216,.8)}
+.team-image img{width:100%;height:100%;object-fit:cover;object-position:center;filter:saturate(.96) contrast(.98);transform:scale(1.015)}
+.team-image:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,0) 45%,rgba(17,17,17,.28) 100%);pointer-events:none}
+.team-image span{
+  position:absolute;left:14px;bottom:14px;z-index:2;display:inline-flex;align-items:center;border-radius:999px;padding:8px 10px;
+  background:rgba(255,255,255,.88);backdrop-filter:blur(12px);color:#08766e;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;border:1px solid rgba(255,255,255,.7);
+}
+.team-copy{padding:20px 8px 10px}
+.team-track{margin-top:18px;border:1px solid var(--line);background:#fbfaf7;border-radius:18px;padding:13px}
+.team-track span{display:block;color:var(--muted2);text-transform:uppercase;letter-spacing:.12em;font-size:10px;font-weight:700;margin-bottom:7px}
+.team-track strong{display:block;font-size:13px;line-height:1.45;font-weight:600;color:var(--ink)}
 
 .testimonials{padding:90px 0;background:var(--soft);overflow:hidden}
 .testimonial-marquee{overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
@@ -1846,10 +1677,6 @@ form .btn{width:100%;height:54px}
 .ok{background:#eaf9f0;color:#14764f}
 .err{background:#fbebeb;color:#a33a3a}
 
-.resources{padding-top:82px}
-.resource-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.resource-grid svg{width:48px;height:48px;padding:14px;border-radius:999px;background:var(--soft);border:1px solid var(--line);margin-bottom:48px}
-
 .faq-list{max-width:900px;margin:0 auto;display:grid;gap:12px}
 .faq-item{background:#fff;border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 8px 22px rgba(17,24,39,.035)}
 .faq-item button{width:100%;border:0;background:transparent;padding:21px 24px;display:flex;align-items:center;justify-content:space-between;text-align:left;font-weight:600;color:var(--ink)}
@@ -1875,7 +1702,7 @@ form .btn{width:100%;height:54px}
 .social-links a{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fbfaf7;border-radius:999px;padding:10px 13px;color:var(--ink);font-size:13px;font-weight:600;transition:.18s}
 .social-links a:hover{transform:translateY(-1px);border-color:rgba(63,193,179,.65);box-shadow:0 8px 20px rgba(17,24,39,.05)}
 .social-links svg{width:16px;height:16px;fill:currentColor;flex:0 0 auto}
-.footer-links{display:grid;grid-template-columns:repeat(4,1fr);gap:46px}
+.footer-links{display:grid;grid-template-columns:repeat(3,1fr);gap:46px}
 .footer-links strong{display:block;margin-bottom:18px;font-size:15px;font-weight:600}
 .footer-links a{display:block;width:max-content;max-width:100%;margin-bottom:13px;color:var(--muted);font-size:15px;line-height:1.35}
 .footer-links a:hover{color:var(--ink)}
@@ -1899,13 +1726,13 @@ form .btn{width:100%;height:54px}
 @media (max-width:1180px){
   .ops-room{grid-template-columns:240px 1fr}
   .manager-panel{display:none}
-  .feature-intro,.pain,.waitlist-card,.section-head.split{grid-template-columns:1fr;gap:36px}
+  .feature-intro,.waitlist-card,.section-head.split{grid-template-columns:1fr;gap:36px}
   .feature-stage{grid-template-columns:1fr}
   .feature-tabs{grid-template-columns:repeat(2,1fr)}
   .workflow-grid,.teams-grid,.pricing-grid,.boundary-grid{grid-template-columns:repeat(2,1fr)}
   .step-arrow{display:none}
   .footer-main{grid-template-columns:1fr;gap:54px}
-  .footer-links{grid-template-columns:repeat(2,1fr)}
+  .footer-links{grid-template-columns:repeat(3,1fr)}
 }
 
 @media (max-width:820px){
@@ -1915,19 +1742,9 @@ form .btn{width:100%;height:54px}
   .logo span:last-child{font-size:22px}
   .nav-actions{gap:8px}
   .btn{padding:12px 13px;font-size:14px}
-  .hero{padding:54px 18px 46px}
-  .hero h1{
-    max-width:100%;
-    font-size:clamp(31px,8.7vw,40px);
-    line-height:1.16;
-    letter-spacing:-.052em;
-  }
-  .hero>p{
-    max-width:100%;
-    font-size:15px;
-    line-height:1.58;
-    margin-top:18px;
-  }
+  .hero{padding:48px 18px 42px}
+  .hero h1{max-width:100%;font-size:clamp(30px,8vw,38px);line-height:1.16;letter-spacing:-.052em}
+  .hero>p{max-width:100%;font-size:15px;line-height:1.58;margin-top:18px}
   .hero-actions{display:grid;max-width:340px;margin-left:auto;margin-right:auto;margin-bottom:34px}
   .hero-btn{width:100%;padding:15px 18px}
   .hero-frame{max-width:100%}
@@ -1936,33 +1753,15 @@ form .btn{width:100%;height:54px}
   .chrome-dots{display:none}
   .chrome-url{width:100%;min-width:0;max-width:none;text-align:center;font-size:12px;padding:8px 12px}
   .chrome-status{display:none}
-  .mobile-resident-strip{
-    display:flex;
-    gap:8px;
-    overflow-x:auto;
-    padding:12px 8px;
-    background:#fffefa;
-    border-bottom:1px solid var(--line);
-    scrollbar-width:none;
-  }
+  .mobile-resident-strip{display:flex;gap:8px;overflow-x:auto;padding:12px 8px;background:#fffefa;border-bottom:1px solid var(--line);scrollbar-width:none}
   .mobile-resident-strip::-webkit-scrollbar{display:none}
-  .mobile-resident-strip button{
-    flex:0 0 auto;
-    border:1px solid var(--line);
-    background:#fff;
-    border-radius:999px;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    padding:7px 10px 7px 7px;
-    box-shadow:0 5px 14px rgba(17,24,39,.04);
-  }
+  .mobile-resident-strip button{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;display:flex;align-items:center;gap:8px;padding:7px 10px 7px 7px;box-shadow:0 5px 14px rgba(17,24,39,.04)}
   .mobile-resident-strip button.active{border-color:rgba(63,193,179,.75)}
   .mobile-resident-strip .person-avatar{width:30px;height:30px}
   .mobile-resident-strip span:last-child{display:flex;align-items:center;gap:6px}
   .mobile-resident-strip strong{font-size:13px;font-weight:600}
   .mobile-resident-strip em{font-style:normal;font-size:9px;color:#69717e;background:#f4f6f8;border:1px solid #e3e8ef;border-radius:999px;padding:3px 6px}
-  .ops-room{grid-template-columns:1fr;min-height:auto;padding:14px 14px 78px}
+  .ops-room{grid-template-columns:1fr;min-height:auto;padding:14px}
   .people-panel{display:none}
   .request-panel{padding:16px;border-radius:18px}
   .request-head{flex-direction:column;gap:12px;margin-bottom:14px}
@@ -1972,17 +1771,6 @@ form .btn{width:100%;height:54px}
   .next-action strong{font-size:14px;line-height:1.42}
   .tracking-row,.timeline-list{grid-template-columns:1fr}
   .tracking-row div{padding:12px}
-  .room-toolbar{
-    left:14px;
-    right:14px;
-    bottom:14px;
-    transform:none;
-    overflow-x:auto;
-    justify-content:flex-start;
-    scrollbar-width:none;
-  }
-  .room-toolbar::-webkit-scrollbar{display:none}
-  .room-toolbar span,.room-toolbar button{padding:10px 12px;font-size:12px}
   .resident-tabs{display:none}
   .trust-strip{padding:34px 0}
   .trust-strip p{line-height:1.5;padding:0 18px}
@@ -1991,32 +1779,19 @@ form .btn{width:100%;height:54px}
   .brand-logo-cell img{width:108px;height:32px}
   .feature-showcase,.section,.trust-boundaries{padding:72px 18px}
   .feature-intro{margin-bottom:34px}
-  .feature-intro h2,.section h2,.pain h2,.trust-boundaries h2,.waitlist h2,.final-cta h2{font-size:clamp(31px,8.4vw,42px)}
-  .feature-intro p,.section-head p,.pain p,.waitlist p,.final-cta p{font-size:16px}
+  .feature-intro h2,.section h2,.admin-stress h2,.trust-boundaries h2,.waitlist h2,.final-cta h2{font-size:clamp(30px,8vw,40px)}
+  .feature-intro p,.section-head p,.admin-stress-copy,.waitlist p,.final-cta p{font-size:16px}
   .feature-stage{padding:14px;border-radius:24px}
   .feature-tabs{grid-template-columns:1fr}
   .feature-visual{padding:22px}
   .feature-mini-ui{grid-template-columns:1fr}
   .mini-sidebar{display:none}
-  .workflow-grid,.teams-grid,.pricing-grid,.resource-grid,.boundary-grid{grid-template-columns:1fr}
-  .pain{
-    padding:0 18px 74px;
-    grid-template-columns:1fr;
-    gap:34px;
-  }
-  .message-panel{
-    height:380px;
-    min-height:380px;
-    padding:20px;
-    border-radius:24px;
-    gap:10px;
-  }
-  .chat-bubble{
-    max-width:86%;
-    min-height:56px;
-    padding:10px 13px;
-  }
+  .workflow-grid,.teams-grid,.pricing-grid,.boundary-grid{grid-template-columns:1fr}
+  .admin-stress{padding:0 18px 74px}
+  .message-panel{height:380px;min-height:380px;padding:20px;border-radius:24px;gap:10px}
+  .chat-bubble{max-width:86%;min-height:56px;padding:10px 13px}
   .chat-bubble span{font-size:13px;line-height:1.38}
+  .team-image{border-radius:22px}
   .testimonials{padding:72px 0}
   .testimonial-marquee article{width:310px;padding:24px}
   .testimonial-marquee p{font-size:18px}
@@ -2042,19 +1817,15 @@ form .btn{width:100%;height:54px}
 @media (max-width:460px){
   .header .secondary{display:none}
   .nav-shell{padding:0 14px}
-  .hero{padding:48px 14px 42px}
+  .hero{padding:44px 14px 40px}
   .logo span:last-child{font-size:21px}
-  .hero h1{font-size:31px;line-height:1.18}
+  .hero h1{font-size:30px;line-height:1.18}
   .hero>p{font-size:14px}
   .hero-frame-inner{border-radius:20px;padding:6px}
-  .ops-room{padding:12px 12px 76px}
+  .ops-room{padding:12px}
   .request-head h3{font-size:22px}
   .next-action strong{font-size:13px}
-  .message-panel{
-    height:372px;
-    min-height:372px;
-    padding:16px;
-  }
+  .message-panel{height:368px;min-height:368px;padding:16px}
   .chat-bubble{max-width:90%}
   .price-card em{position:static;width:max-content;margin-bottom:16px}
 }
