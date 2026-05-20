@@ -17,6 +17,7 @@ import {
   PhoneCall,
   RefreshCw,
   ShieldCheck,
+  UserRound,
   UserRoundCheck,
   UsersRound,
   type LucideIcon,
@@ -62,6 +63,12 @@ type Feature = {
 type BrandLogo = {
   src: string;
   alt: string;
+};
+
+type PainMessage = {
+  speaker: string;
+  text: string;
+  side: "left" | "right";
 };
 
 const RESIDENTS: Resident[] = [
@@ -239,11 +246,27 @@ const WORKFLOW = [
   ["04", "Track until complete", "The request stays visible until the work is done."],
 ];
 
-const PAIN_MESSAGES = [
-  "Did you call the GP yet?",
-  "I thought you were handling it",
-  "The pharmacy says they never got the request",
-  "She only has two days left",
+const PAIN_MESSAGES: PainMessage[] = [
+  {
+    speaker: "Family carer",
+    text: "Did you call the GP yet?",
+    side: "left",
+  },
+  {
+    speaker: "Support worker",
+    text: "I thought you were handling it.",
+    side: "right",
+  },
+  {
+    speaker: "Pharmacy",
+    text: "We have not received the request.",
+    side: "left",
+  },
+  {
+    speaker: "Family carer",
+    text: "She only has two days left.",
+    side: "right",
+  },
 ];
 
 const TEAMS = [
@@ -329,8 +352,21 @@ function SectionPill({ children }: { children: ReactNode }) {
   return <span className="section-pill">{children}</span>;
 }
 
+function DoubleUnderline({ children }: { children: ReactNode }) {
+  return <span className="double-underline">{children}</span>;
+}
+
 function StatusPill({ tone, children }: { tone: Resident["statusTone"]; children: ReactNode }) {
   return <span className={`status-pill ${tone}`}>{children}</span>;
+}
+
+function PersonAvatar({ initials }: { initials: string }) {
+  return (
+    <span className="person-avatar">
+      <UserRound size={13} />
+      <strong>{initials}</strong>
+    </span>
+  );
 }
 
 function ActivityIcon({ icon }: { icon: Resident["activity"][number]["icon"] }) {
@@ -423,6 +459,18 @@ function OperationsDemo({
           </div>
         </div>
 
+        <div className="mobile-resident-strip">
+          {RESIDENTS.map((person, index) => (
+            <button type="button" key={person.rx} className={active === index ? "active" : ""} onClick={() => setActive(index)}>
+              <PersonAvatar initials={person.initials} />
+              <span>
+                <strong>{person.name.split(" ")[0]}</strong>
+                <em>{person.psw}</em>
+              </span>
+            </button>
+          ))}
+        </div>
+
         <div className="ops-room">
           <div className="ops-glow" />
 
@@ -440,7 +488,7 @@ function OperationsDemo({
                   className={active === index ? "active" : ""}
                   onClick={() => setActive(index)}
                 >
-                  <span className="avatar small">{person.initials}</span>
+                  <PersonAvatar initials={person.initials} />
 
                   <span className="person-copy">
                     <span className="name-line">
@@ -566,8 +614,11 @@ function OperationsDemo({
       <div className="resident-tabs">
         {RESIDENTS.map((person, index) => (
           <button type="button" key={person.rx} className={active === index ? "active" : ""} onClick={() => setActive(index)}>
-            <span>{person.initials}</span>
-            {person.name.split(" ")[0]}
+            <PersonAvatar initials={person.initials} />
+            <span>
+              <strong>{person.name.split(" ")[0]}</strong>
+              <em>{person.psw}</em>
+            </span>
           </button>
         ))}
       </div>
@@ -606,7 +657,9 @@ function FeatureShowcase() {
     <section className="feature-showcase" id="product">
       <div className="feature-intro">
         <div>
-          <h2>Inspired by care. Designed for follow-through.</h2>
+          <h2>
+            Inspired by care. Designed for <DoubleUnderline>follow-through</DoubleUnderline>.
+          </h2>
         </div>
         <p>Omela is a calm workspace for care admin that usually gets scattered across calls, messages, notes, and memory.</p>
       </div>
@@ -678,7 +731,7 @@ function TypewriterMessages() {
   const [typed, setTyped] = useState("");
 
   useEffect(() => {
-    const text = PAIN_MESSAGES[active];
+    const text = PAIN_MESSAGES[active].text;
     setTyped("");
     let index = 0;
 
@@ -686,7 +739,7 @@ function TypewriterMessages() {
       index += 1;
       setTyped(text.slice(0, index));
       if (index >= text.length) window.clearInterval(typing);
-    }, 38);
+    }, 34);
 
     const next = window.setTimeout(() => setActive((current) => (current + 1) % PAIN_MESSAGES.length), 2500);
 
@@ -697,17 +750,22 @@ function TypewriterMessages() {
   }, [active]);
 
   return (
-    <div className="message-panel">
-      <div className="typing-bubble">
-        <span>{typed}</span>
-        <i />
-      </div>
+    <div className="message-panel" aria-label="Care admin conversation preview">
+      {PAIN_MESSAGES.map((message, index) => {
+        const isPast = index < active;
+        const isActive = index === active;
+        const content = isPast ? message.text : isActive ? typed : "";
 
-      {PAIN_MESSAGES.map((message, index) => (
-        <span key={message} className={`static-bubble ${index % 2 ? "right" : ""} ${index <= active ? "show" : ""}`}>
-          {message}
-        </span>
-      ))}
+        return (
+          <div key={message.text} className={`chat-slot ${message.side} ${isPast ? "past" : ""} ${isActive ? "active" : ""}`}>
+            <div className="chat-bubble">
+              <small>{message.speaker}</small>
+              <span>{content || message.text}</span>
+              {isActive ? <i aria-hidden="true" /> : null}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -829,7 +887,7 @@ export default function Page() {
         <main>
           <section className="hero">
             <h1>
-              The <span className="fancy-underline">care admin</span> workspace for every request that needs follow-through.
+              The care admin workspace for <DoubleUnderline>every request</DoubleUnderline> that needs follow-through.
             </h1>
             <p>
               Omela starts with repeat prescriptions, giving families, carers, care teams, and pharmacies one shared place to
@@ -855,7 +913,9 @@ export default function Page() {
           <section className="section workflow" id="workflow">
             <div className="section-head center">
               <SectionPill>Workflow</SectionPill>
-              <h2>From reminder to resolution.</h2>
+              <h2>
+                From reminder to <DoubleUnderline>resolution</DoubleUnderline>.
+              </h2>
               <p>
                 Omela keeps the work visible from the first reminder to the final update, so nobody has to reconstruct what
                 happened from calls, notes, and memory.
@@ -882,7 +942,9 @@ export default function Page() {
             <TypewriterMessages />
             <div className="pain-copy">
               <SectionPill>Real admin stress</SectionPill>
-              <h2>Small gaps become stressful fast.</h2>
+              <h2>
+                Small gaps become <DoubleUnderline>stressful fast</DoubleUnderline>.
+              </h2>
               <p>
                 A missed call, a handover note, or an update nobody shares can turn into avoidable stress. Omela keeps the
                 request, owner, timeline, and next action in one shared place.
@@ -893,7 +955,9 @@ export default function Page() {
           <section className="section teams" id="teams">
             <div className="section-head center">
               <SectionPill>Who it is for</SectionPill>
-              <h2>Built for the people carrying the follow-through.</h2>
+              <h2>
+                Built for the people carrying the <DoubleUnderline>follow-through</DoubleUnderline>.
+              </h2>
             </div>
 
             <div className="teams-grid">
@@ -910,7 +974,9 @@ export default function Page() {
           <section className="testimonials">
             <div className="section-head center">
               <SectionPill>What Omela users are saying</SectionPill>
-              <h2>Clearer handovers. Calmer follow-through.</h2>
+              <h2>
+                Clearer handovers. Calmer <DoubleUnderline>follow-through</DoubleUnderline>.
+              </h2>
             </div>
 
             <div className="testimonial-marquee">
@@ -952,7 +1018,9 @@ export default function Page() {
           <section className="section trust-boundaries">
             <div className="section-head center">
               <SectionPill>Trust and boundaries</SectionPill>
-              <h2>Built on trust. Designed with limits.</h2>
+              <h2>
+                Built on trust. Designed with <DoubleUnderline>limits</DoubleUnderline>.
+              </h2>
               <p>Omela is a coordination layer, not a clinical record, triage tool, diagnosis tool, or prescribing system.</p>
             </div>
 
@@ -975,7 +1043,9 @@ export default function Page() {
           <section className="section pricing" id="pricing">
             <div className="section-head center">
               <SectionPill>Pricing</SectionPill>
-              <h2>Simple plans for families and care teams.</h2>
+              <h2>
+                Simple plans for families and <DoubleUnderline>care teams</DoubleUnderline>.
+              </h2>
               <p>Start with the level of coordination you need. Every plan is designed around care admin follow-through.</p>
             </div>
 
@@ -1009,7 +1079,9 @@ export default function Page() {
             <div className="waitlist-card">
               <div className="waitlist-copy">
                 <SectionPill>Get started</SectionPill>
-                <h2>Start with one care admin workflow.</h2>
+                <h2>
+                  Start with one <DoubleUnderline>care admin</DoubleUnderline> workflow.
+                </h2>
                 <p>Tell us who you coordinate for. We will use this to guide your setup and show the most relevant plan.</p>
                 <div className="waitlist-steps">
                   <span>1. Choose your role</span>
@@ -1075,7 +1147,9 @@ export default function Page() {
             <div className="section-head split">
               <div>
                 <SectionPill>Resources</SectionPill>
-                <h2>Resources for safer follow-through.</h2>
+                <h2>
+                  Resources for safer <DoubleUnderline>follow-through</DoubleUnderline>.
+                </h2>
               </div>
               <p>Practical guides for families, care teams, and pharmacies who want cleaner care admin coordination.</p>
             </div>
@@ -1100,7 +1174,9 @@ export default function Page() {
           </section>
 
           <section className="final-cta">
-            <h2>Ready to stop chasing every update?</h2>
+            <h2>
+              Ready to stop chasing <DoubleUnderline>every update</DoubleUnderline>?
+            </h2>
             <p>Start with repeat prescriptions, then build toward the wider care admin work your team already manages.</p>
             <a href="#waitlist" className="btn primary hero-btn">
               Get started
@@ -1202,10 +1278,12 @@ const CSS = `
   --shadow:0 18px 60px rgba(17,24,39,.07);
   --softShadow:0 10px 34px rgba(17,24,39,.04);
 }
-*{box-sizing:border-box}
-html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+*{box-sizing:border-box;min-width:0}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden}
 body{
   margin:0;
+  width:100%;
+  max-width:100vw;
   color:var(--ink);
   font-family:var(--font-inter),Inter,Arial,sans-serif;
   overflow-x:hidden;
@@ -1221,12 +1299,39 @@ img{display:block;max-width:100%}
 p,h1,h2,h3,h4{margin:0}
 
 .page{
+  width:100%;
   min-height:100vh;
   overflow:hidden;
   background:
     radial-gradient(circle at 8% 8%,rgba(89,208,195,.10),transparent 28%),
     radial-gradient(circle at 88% 10%,rgba(215,235,255,.20),transparent 30%),
     linear-gradient(180deg,#faf9f3 0%,#f7f5ee 100%);
+}
+
+.double-underline{
+  position:relative;
+  display:inline-block;
+  white-space:normal;
+}
+.double-underline:before,
+.double-underline:after{
+  content:"";
+  position:absolute;
+  left:.02em;
+  right:.02em;
+  height:.07em;
+  border-radius:999px;
+  background:linear-gradient(90deg,rgba(89,208,195,.12),rgba(89,208,195,.82),rgba(89,208,195,.18));
+  pointer-events:none;
+}
+.double-underline:before{
+  bottom:.01em;
+  transform:rotate(-1.2deg);
+}
+.double-underline:after{
+  bottom:-.11em;
+  opacity:.55;
+  transform:rotate(.8deg);
 }
 
 .header{
@@ -1277,32 +1382,20 @@ p,h1,h2,h3,h4{margin:0}
 .secondary{background:#fff;border-color:var(--line);box-shadow:0 6px 18px rgba(17,24,39,.04)}
 
 .hero{
+  width:100%;
   max-width:1320px;
   margin:0 auto;
   text-align:center;
-  padding:112px 42px 58px;
+  padding:108px 42px 58px;
 }
 .hero h1{
-  max-width:820px;
+  max-width:850px;
   margin:0 auto;
   font-size:clamp(38px,4.1vw,56px);
   line-height:1.12;
   letter-spacing:-.052em;
   font-weight:400;
   text-wrap:balance;
-}
-.fancy-underline{position:relative;display:inline-block;white-space:nowrap}
-.fancy-underline:after{
-  content:"";
-  position:absolute;
-  left:1px;
-  right:1px;
-  bottom:.06em;
-  height:.16em;
-  background:linear-gradient(90deg,rgba(89,208,195,.18),rgba(89,208,195,.82),rgba(89,208,195,.25));
-  border-radius:999px;
-  z-index:-1;
-  transform:rotate(-1.2deg);
 }
 .hero>p{
   max-width:720px;
@@ -1315,7 +1408,7 @@ p,h1,h2,h3,h4{margin:0}
 .hero-actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:58px}
 .hero-btn{padding:15px 24px;border-radius:13px}
 
-.hero-frame{max-width:1160px;margin:0 auto}
+.hero-frame{width:100%;max-width:1160px;margin:0 auto}
 .hero-frame-inner{background:#fff;border-radius:28px;padding:10px;border:1px solid var(--line);box-shadow:var(--shadow);overflow:hidden}
 .workspace-chrome{
   height:54px;
@@ -1363,6 +1456,8 @@ p,h1,h2,h3,h4{margin:0}
   background:var(--teal);
   box-shadow:0 0 0 6px rgba(89,208,195,.14);
 }
+
+.mobile-resident-strip{display:none}
 
 .ops-room{
   position:relative;
@@ -1421,8 +1516,22 @@ p,h1,h2,h3,h4{margin:0}
   transition:.18s;
 }
 .people-list button:hover,.people-list button.active{border-color:rgba(63,193,179,.75);box-shadow:0 10px 24px rgba(17,24,39,.055)}
-.avatar{width:40px;height:40px;border-radius:999px;background:var(--tealSoft);color:#08766e;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
-.avatar.small{width:34px;height:34px;font-size:11px}
+.person-avatar{
+  width:40px;
+  height:40px;
+  border-radius:999px;
+  background:linear-gradient(180deg,#eafeF9,#def5f1);
+  color:#08766e;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:1px;
+  flex:0 0 auto;
+  border:1px solid rgba(63,193,179,.18);
+}
+.person-avatar svg{stroke-width:2.1}
+.person-avatar strong{font-size:9px;line-height:1;font-weight:700}
 .person-copy{min-width:0}
 .name-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:2px}
 .name-line strong{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1443,11 +1552,13 @@ p,h1,h2,h3,h4{margin:0}
 .status-pill{
   display:inline-flex;
   width:max-content;
+  max-width:100%;
   border-radius:999px;
   padding:6px 9px;
   font-size:11px;
   line-height:1;
   font-weight:700;
+  white-space:nowrap;
 }
 .status-pill.danger{background:#fbebeb;color:#a33a3a}
 .status-pill.info{background:#edf4ff;color:#2457c5}
@@ -1517,6 +1628,7 @@ p,h1,h2,h3,h4{margin:0}
   color:#fff;
   font-weight:600;
   font-size:13px;
+  white-space:nowrap;
 }
 .room-toolbar button{background:var(--teal);color:#082c29}
 .resident-tabs{display:flex;justify-content:center;gap:10px;margin-top:16px;flex-wrap:wrap}
@@ -1527,12 +1639,15 @@ p,h1,h2,h3,h4{margin:0}
   border:1px solid var(--line);
   background:#fff;
   border-radius:999px;
-  padding:9px 13px;
+  padding:8px 12px 8px 8px;
   box-shadow:0 5px 14px rgba(17,24,39,.04);
   color:var(--muted);
   font-weight:600;
 }
-.resident-tabs button span{width:28px;height:28px;border-radius:99px;background:var(--tealSoft);color:#08766e;display:flex;align-items:center;justify-content:center;font-size:11px}
+.resident-tabs button span:last-child{display:flex;align-items:center;gap:6px}
+.resident-tabs strong{font-size:14px;font-weight:600}
+.resident-tabs em{font-style:normal;font-size:9px;color:#69717e;background:#f4f6f8;border:1px solid #e3e8ef;border-radius:999px;padding:3px 7px}
+.resident-tabs .person-avatar{width:30px;height:30px}
 .resident-tabs .active{border-color:rgba(63,193,179,.75);color:var(--ink)}
 
 .trust-strip{padding:38px 0;background:#fffefa;border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden}
@@ -1595,13 +1710,81 @@ p,h1,h2,h3,h4{margin:0}
 .workflow-grid p,.teams-grid p,.resource-grid p{color:var(--muted);font-size:15px;line-height:1.56}
 
 .pain{max-width:1240px;margin:0 auto;padding:8px 42px 90px;display:grid;grid-template-columns:.88fr 1fr;gap:76px;align-items:center}
-.message-panel{background:#fff;border:1px solid var(--line);border-radius:30px;padding:32px;min-height:320px;box-shadow:var(--softShadow);display:flex;flex-direction:column;gap:12px}
-.typing-bubble{width:max-content;max-width:90%;padding:14px 17px;border-radius:18px 18px 18px 6px;background:var(--dark);color:#fff;font-size:15px;font-weight:500;min-height:50px;display:flex;align-items:center}
-.typing-bubble i{width:7px;height:18px;background:var(--teal);display:inline-block;margin-left:5px;animation:blink .9s steps(2,start) infinite}
+.message-panel{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:30px;
+  padding:28px;
+  height:396px;
+  min-height:396px;
+  box-shadow:var(--softShadow);
+  display:grid;
+  grid-template-rows:repeat(4,1fr);
+  gap:12px;
+  overflow:hidden;
+}
+.chat-slot{
+  display:flex;
+  align-items:center;
+  opacity:.18;
+  transform:translateY(3px);
+  transition:opacity .25s ease, transform .25s ease;
+}
+.chat-slot.left{justify-content:flex-start}
+.chat-slot.right{justify-content:flex-end}
+.chat-slot.past,.chat-slot.active{opacity:1;transform:translateY(0)}
+.chat-bubble{
+  width:fit-content;
+  max-width:min(86%,360px);
+  min-height:58px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  border:1px solid var(--line);
+  border-radius:18px 18px 18px 8px;
+  background:#f8f6ef;
+  padding:10px 14px;
+  color:var(--ink);
+  box-shadow:0 7px 18px rgba(17,24,39,.035);
+  overflow-wrap:anywhere;
+}
+.chat-slot.right .chat-bubble{
+  background:var(--tealSoft);
+  border-color:rgba(63,193,179,.25);
+  border-radius:18px 18px 8px 18px;
+}
+.chat-slot.active .chat-bubble{
+  background:var(--dark);
+  border-color:var(--dark);
+  color:#fff;
+}
+.chat-bubble small{
+  display:block;
+  margin-bottom:4px;
+  color:inherit;
+  opacity:.58;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.chat-bubble span{
+  display:inline;
+  font-size:14px;
+  line-height:1.38;
+  font-weight:500;
+}
+.chat-bubble i{
+  display:inline-block;
+  width:6px;
+  height:15px;
+  margin-left:4px;
+  vertical-align:-2px;
+  border-radius:999px;
+  background:var(--teal);
+  animation:blink .9s steps(2,start) infinite;
+}
 @keyframes blink{50%{opacity:0}}
-.static-bubble{width:max-content;max-width:86%;padding:12px 16px;border-radius:18px 18px 18px 6px;background:var(--soft);border:1px solid var(--line);font-size:14px;font-weight:500;opacity:0;transform:translateY(8px);transition:.35s}
-.static-bubble.right{align-self:flex-end;background:var(--tealSoft);border-color:rgba(63,193,179,.24);border-radius:18px 18px 6px 18px}
-.static-bubble.show{opacity:.82;transform:translateY(0)}
 .pain h2{margin-bottom:18px}
 
 .teams-grid,.pricing-grid,.boundary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
@@ -1648,7 +1831,7 @@ p,h1,h2,h3,h4{margin:0}
 .waitlist-card{background:#fff;border:1px solid var(--line);border-radius:32px;padding:46px;box-shadow:var(--shadow);display:grid;grid-template-columns:.9fr 1fr;gap:68px;align-items:center}
 .waitlist h2{margin-bottom:18px}
 .waitlist-steps{display:grid;gap:10px;margin-top:26px}
-.waitlist-steps span{width:max-content;border:1px solid var(--line);background:#fbfaf7;border-radius:999px;padding:9px 12px;color:var(--muted);font-size:13px;font-weight:600}
+.waitlist-steps span{width:max-content;max-width:100%;border:1px solid var(--line);background:#fbfaf7;border-radius:999px;padding:9px 12px;color:var(--muted);font-size:13px;font-weight:600}
 form{display:grid;gap:15px}
 form label:not(.checkbox){display:grid;gap:8px}
 form label>span{font-size:13px;font-weight:600;color:var(--muted)}
@@ -1732,21 +1915,74 @@ form .btn{width:100%;height:54px}
   .logo span:last-child{font-size:22px}
   .nav-actions{gap:8px}
   .btn{padding:12px 13px;font-size:14px}
-  .hero{padding:62px 18px 50px}
-  .hero h1{font-size:clamp(36px,9.2vw,48px);letter-spacing:-.05em}
-  .hero>p{font-size:16px}
-  .hero-actions{display:grid;max-width:340px;margin-left:auto;margin-right:auto;margin-bottom:40px}
+  .hero{padding:54px 18px 46px}
+  .hero h1{
+    max-width:100%;
+    font-size:clamp(31px,8.7vw,40px);
+    line-height:1.16;
+    letter-spacing:-.052em;
+  }
+  .hero>p{
+    max-width:100%;
+    font-size:15px;
+    line-height:1.58;
+    margin-top:18px;
+  }
+  .hero-actions{display:grid;max-width:340px;margin-left:auto;margin-right:auto;margin-bottom:34px}
   .hero-btn{width:100%;padding:15px 18px}
-  .hero-frame-inner{border-radius:22px;padding:8px}
+  .hero-frame{max-width:100%}
+  .hero-frame-inner{border-radius:22px;padding:8px;max-width:100%;overflow:hidden}
   .workspace-chrome{height:auto;grid-template-columns:1fr;justify-items:start;padding:14px}
-  .chrome-url{width:100%;min-width:0;max-width:none;text-align:center}
-  .chrome-status{justify-self:start}
-  .ops-room{grid-template-columns:1fr;min-height:auto;padding:16px 16px 84px}
+  .chrome-dots{display:none}
+  .chrome-url{width:100%;min-width:0;max-width:none;text-align:center;font-size:12px;padding:8px 12px}
+  .chrome-status{display:none}
+  .mobile-resident-strip{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding:12px 8px;
+    background:#fffefa;
+    border-bottom:1px solid var(--line);
+    scrollbar-width:none;
+  }
+  .mobile-resident-strip::-webkit-scrollbar{display:none}
+  .mobile-resident-strip button{
+    flex:0 0 auto;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:999px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 10px 7px 7px;
+    box-shadow:0 5px 14px rgba(17,24,39,.04);
+  }
+  .mobile-resident-strip button.active{border-color:rgba(63,193,179,.75)}
+  .mobile-resident-strip .person-avatar{width:30px;height:30px}
+  .mobile-resident-strip span:last-child{display:flex;align-items:center;gap:6px}
+  .mobile-resident-strip strong{font-size:13px;font-weight:600}
+  .mobile-resident-strip em{font-style:normal;font-size:9px;color:#69717e;background:#f4f6f8;border:1px solid #e3e8ef;border-radius:999px;padding:3px 6px}
+  .ops-room{grid-template-columns:1fr;min-height:auto;padding:14px 14px 78px}
   .people-panel{display:none}
-  .request-panel{padding:18px}
-  .request-head{flex-direction:column}
+  .request-panel{padding:16px;border-radius:18px}
+  .request-head{flex-direction:column;gap:12px;margin-bottom:14px}
+  .request-head h3{font-size:24px;line-height:1.12}
+  .request-head p{font-size:13px}
+  .next-action{padding:14px 15px;border-radius:15px}
+  .next-action strong{font-size:14px;line-height:1.42}
   .tracking-row,.timeline-list{grid-template-columns:1fr}
-  .room-toolbar{left:16px;right:16px;transform:none;overflow:auto;justify-content:flex-start}
+  .tracking-row div{padding:12px}
+  .room-toolbar{
+    left:14px;
+    right:14px;
+    bottom:14px;
+    transform:none;
+    overflow-x:auto;
+    justify-content:flex-start;
+    scrollbar-width:none;
+  }
+  .room-toolbar::-webkit-scrollbar{display:none}
+  .room-toolbar span,.room-toolbar button{padding:10px 12px;font-size:12px}
   .resident-tabs{display:none}
   .trust-strip{padding:34px 0}
   .trust-strip p{line-height:1.5;padding:0 18px}
@@ -1763,9 +1999,24 @@ form .btn{width:100%;height:54px}
   .feature-mini-ui{grid-template-columns:1fr}
   .mini-sidebar{display:none}
   .workflow-grid,.teams-grid,.pricing-grid,.resource-grid,.boundary-grid{grid-template-columns:1fr}
-  .pain{padding:0 18px 74px;grid-template-columns:1fr}
-  .message-panel{padding:20px;border-radius:24px;min-height:280px}
-  .typing-bubble,.static-bubble{font-size:14px;max-width:92%}
+  .pain{
+    padding:0 18px 74px;
+    grid-template-columns:1fr;
+    gap:34px;
+  }
+  .message-panel{
+    height:380px;
+    min-height:380px;
+    padding:20px;
+    border-radius:24px;
+    gap:10px;
+  }
+  .chat-bubble{
+    max-width:86%;
+    min-height:56px;
+    padding:10px 13px;
+  }
+  .chat-bubble span{font-size:13px;line-height:1.38}
   .testimonials{padding:72px 0}
   .testimonial-marquee article{width:310px;padding:24px}
   .testimonial-marquee p{font-size:18px}
@@ -1790,11 +2041,21 @@ form .btn{width:100%;height:54px}
 
 @media (max-width:460px){
   .header .secondary{display:none}
-  .hero{padding-top:54px}
+  .nav-shell{padding:0 14px}
+  .hero{padding:48px 14px 42px}
   .logo span:last-child{font-size:21px}
-  .hero h1{font-size:36px}
-  .request-head h3{font-size:25px}
-  .next-action strong{font-size:15px}
+  .hero h1{font-size:31px;line-height:1.18}
+  .hero>p{font-size:14px}
+  .hero-frame-inner{border-radius:20px;padding:6px}
+  .ops-room{padding:12px 12px 76px}
+  .request-head h3{font-size:22px}
+  .next-action strong{font-size:13px}
+  .message-panel{
+    height:372px;
+    min-height:372px;
+    padding:16px;
+  }
+  .chat-bubble{max-width:90%}
   .price-card em{position:static;width:max-content;margin-bottom:16px}
 }
 `;
