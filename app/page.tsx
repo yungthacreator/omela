@@ -91,7 +91,7 @@ const RESIDENTS: Resident[] = [
     owner: "Ada Kelly",
     worker: "Tomi Adebayo",
     practice: "Greenfield Medical",
-    pharmacy: "Boots, High Street",
+    pharmacy: "Dalton Pharmacy",
     next: "Call Greenfield Medical to confirm whether the request was approved.",
     supply: 2,
     progress: 58,
@@ -120,7 +120,7 @@ const RESIDENTS: Resident[] = [
     owner: "James Otieno",
     worker: "Ben Carter",
     practice: "Northgate Surgery",
-    pharmacy: "Well, Market Square",
+    pharmacy: "Lockwood Pharmacy",
     next: "Wait for the practice to confirm approval before updating the pharmacy.",
     supply: 8,
     progress: 68,
@@ -149,7 +149,7 @@ const RESIDENTS: Resident[] = [
     owner: "James Kowalski",
     worker: "Maya Singh",
     practice: "Hillside Practice",
-    pharmacy: "Boots, High Street",
+    pharmacy: "Boots",
     next: "Collection window is open until 6pm.",
     supply: 14,
     progress: 92,
@@ -178,7 +178,7 @@ const RESIDENTS: Resident[] = [
     owner: "Clara Moss",
     worker: "Ben Carter",
     practice: "Riverbank Surgery",
-    pharmacy: "Lloyds, Station Road",
+    pharmacy: "Well Pharmacy",
     next: "Confirm the medication list before noon.",
     supply: 4,
     progress: 42,
@@ -230,6 +230,49 @@ const FEATURES: Feature[] = [
     title: "Shared timeline",
     copy: "Keep the full trail visible, so families, managers, and support workers do not reconstruct it from memory.",
     bullets: ["Every update", "Every owner", "Every status", "Every next step"],
+  },
+];
+
+const PHARMACIES = [
+  {
+    name: "Dalton Pharmacy",
+    distance: "0.4 miles",
+    status: "Open until 6pm",
+    meta: "Best match",
+    tone: "selected",
+    pin: "one",
+  },
+  {
+    name: "Lockwood Pharmacy",
+    distance: "0.8 miles",
+    status: "Collection available",
+    meta: "Nearby",
+    tone: "normal",
+    pin: "two",
+  },
+  {
+    name: "Boots",
+    distance: "1.1 miles",
+    status: "High street branch",
+    meta: "Open",
+    tone: "normal",
+    pin: "three",
+  },
+  {
+    name: "Well Pharmacy",
+    distance: "1.5 miles",
+    status: "Open today",
+    meta: "Alternative",
+    tone: "normal",
+    pin: "four",
+  },
+  {
+    name: "PharmacyWise Heckmondike",
+    distance: "2.3 miles",
+    status: "Call before sending",
+    meta: "Confirm first",
+    tone: "warning",
+    pin: "five",
   },
 ];
 
@@ -655,7 +698,7 @@ function FeatureShowcase() {
           })}
         </aside>
 
-        <div className="feature-visual">
+        <div className="feature-visual pharmacy-visual">
           <div className="feature-visual-head">
             <span>
               <Icon size={18} />
@@ -666,30 +709,81 @@ function FeatureShowcase() {
             </div>
           </div>
 
-          <div className="feature-mini-ui">
-            <div className="mini-sidebar">
-              <span />
-              <span />
-              <span />
+          <div className="pharmacy-workspace">
+            <div className="pharmacy-toolbar">
+              <div className="pharmacy-search">
+                <span>⌕</span>
+                <strong>Search pharmacies near Margaret</strong>
+              </div>
+              <button type="button">Use selected pharmacy</button>
             </div>
 
-            <div className="mini-main">
-              <div className="mini-row large-row">
-                <strong>{feature.title}</strong>
-                <em>Live</em>
+            <div className="request-context-card">
+              <div>
+                <span className="context-label">Person supported</span>
+                <strong>Margaret Littlewood</strong>
+                <p>Amlodipine 5mg · RX-20814</p>
+              </div>
+              <div>
+                <span className="context-label">Practice</span>
+                <strong>Greenfield Medical</strong>
+                <p>Request needs follow-up today</p>
+              </div>
+              <StatusPill tone="danger">Needs follow-up</StatusPill>
+            </div>
+
+            <div className="pharmacy-map-layout">
+              <div className="real-map" aria-label="Nearby pharmacy map preview">
+                <div className="map-water" />
+                <div className="map-park" />
+                <div className="map-road road-a" />
+                <div className="map-road road-b" />
+                <div className="map-road road-c" />
+                <div className="map-road road-d" />
+                <div className="map-road road-e" />
+                <div className="map-route" />
+
+                <span className="map-pin home-pin">
+                  <UserRound size={12} />
+                </span>
+
+                {PHARMACIES.map((pharmacy, index) => (
+                  <span key={pharmacy.name} className={`map-pin pharmacy-pin ${pharmacy.pin} ${index === 0 ? "selected" : ""}`}>
+                    {index + 1}
+                  </span>
+                ))}
+
+                <div className="map-tooltip">
+                  <span>Selected pharmacy</span>
+                  <strong>Dalton Pharmacy</strong>
+                  <small>0.4 miles · Open until 6pm</small>
+                </div>
               </div>
 
-              {feature.bullets.map((bullet, index) => (
-                <div className="mini-row" key={bullet}>
-                  <span className="mini-check">
-                    <Check size={11} />
-                  </span>
-                  <p>{bullet}</p>
-                  <small>{index === 0 ? "Now" : `${index + 2}m`}</small>
+              <div className="pharmacy-results">
+                <div className="results-head">
+                  <span>Nearby pharmacies</span>
+                  <strong>5 found</strong>
                 </div>
-              ))}
 
-              <div className="mini-note">Omela prepares a clear update for everyone with access.</div>
+                {PHARMACIES.map((pharmacy, index) => (
+                  <button type="button" key={pharmacy.name} className={`pharmacy-result ${index === 0 ? "selected" : ""} ${pharmacy.tone === "warning" ? "warning" : ""}`}>
+                    <span className="result-number">{index + 1}</span>
+                    <span className="result-copy">
+                      <strong>{pharmacy.name}</strong>
+                      <small>
+                        {pharmacy.distance} · {pharmacy.status}
+                      </small>
+                    </span>
+                    <em>{pharmacy.meta}</em>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="map-next-step">
+              <Check size={14} />
+              <span>Send the request to Greenfield Medical, then track collection at Dalton Pharmacy.</span>
             </div>
           </div>
         </div>
@@ -1529,30 +1623,282 @@ p,h1,h2,h3,h4{margin:0}
 }
 .feature-intro p{padding-top:9px}
 .feature-intro p,.section-head p,.admin-stress-copy,.waitlist p,.final-cta p{color:var(--muted);font-size:16px;line-height:1.6;letter-spacing:-.02em}
-.feature-stage{display:grid;grid-template-columns:370px 1fr;gap:20px;background:#fff;border:1px solid var(--line);border-radius:30px;padding:20px;box-shadow:var(--softShadow);min-height:500px}
+.feature-stage{
+  display:grid;
+  grid-template-columns:360px minmax(0,1fr);
+  gap:20px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:30px;
+  padding:20px;
+  box-shadow:var(--softShadow);
+  min-height:560px;
+}
 .feature-tabs{display:grid;gap:10px}
 .feature-tabs button{border:1px solid var(--line);background:#fbfaf7;border-radius:20px;padding:15px;text-align:left;transition:.18s;min-height:112px}
 .feature-tabs button:hover,.feature-tabs button.active{background:#fff;border-color:rgba(63,193,179,.65);box-shadow:0 10px 28px rgba(17,24,39,.045)}
 .feature-tabs button span{width:36px;height:36px;border-radius:999px;background:var(--tealSoft);color:#08766e;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
 .feature-tabs strong{display:block;font-size:16px;font-weight:500;letter-spacing:-.03em;margin-bottom:5px}
 .feature-tabs small{display:block;color:var(--muted);font-size:12px;line-height:1.43}
-.feature-visual{background:var(--soft);border-radius:24px;padding:30px;display:grid;align-content:center;min-height:458px}
-.feature-visual-head{display:flex;gap:14px;margin-bottom:22px;min-height:96px}
-.feature-visual-head>span{width:44px;height:44px;border-radius:999px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:#08766e;flex:0 0 auto}
 .feature-visual h3{font-size:27px;font-weight:400;letter-spacing:-.045em;margin-bottom:8px}
 .feature-visual p{font-size:15px;color:var(--muted);line-height:1.55}
-.feature-mini-ui{display:grid;grid-template-columns:76px 1fr;min-height:300px;background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:0 14px 42px rgba(17,24,39,.07);overflow:hidden}
-.mini-sidebar{background:#fbfaf7;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:12px;align-items:center;padding-top:28px}
-.mini-sidebar span{width:34px;height:34px;border-radius:12px;background:var(--tealSoft)}
-.mini-main{padding:26px;display:grid;align-content:start;gap:11px}
-.mini-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;background:#fbfaf7;border:1px solid var(--line);border-radius:16px;padding:12px}
-.mini-row.large-row{grid-template-columns:1fr auto;background:var(--dark);color:#fff}
-.mini-row strong{font-weight:500}
-.mini-row em{font-style:normal;color:var(--teal);font-size:12px;font-weight:700}
-.mini-check{width:23px;height:23px;border-radius:999px;background:var(--teal);display:flex;align-items:center;justify-content:center;color:#073d38}
-.mini-row p{font-size:14px;color:var(--ink)}
-.mini-row small{font-size:12px;color:var(--muted);font-weight:600}
-.mini-note{margin-top:8px;color:#08766e;background:var(--tealSoft);border:1px solid rgba(63,193,179,.25);border-radius:16px;padding:12px;font-size:13px;font-weight:600}
+.pharmacy-visual{
+  background:
+    radial-gradient(circle at 18% 10%,rgba(89,208,195,.14),transparent 34%),
+    linear-gradient(180deg,#f8f6ef 0%,#efede5 100%);
+  border-radius:24px;
+  padding:26px;
+  display:flex;
+  flex-direction:column;
+  min-height:520px;
+}
+.feature-visual-head{display:flex;gap:14px;margin-bottom:20px;min-height:auto}
+.feature-visual-head>span{width:44px;height:44px;border-radius:999px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:#08766e;flex:0 0 auto}
+.pharmacy-workspace{
+  background:#fffefa;
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:18px;
+  box-shadow:0 18px 50px rgba(17,24,39,.06);
+}
+.pharmacy-toolbar{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:12px;
+  align-items:center;
+  margin-bottom:14px;
+}
+.pharmacy-search{
+  min-height:48px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:0 14px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:#fff;
+  color:var(--muted);
+}
+.pharmacy-search span{
+  width:24px;
+  height:24px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  background:var(--tealSoft);
+  color:#08766e;
+  font-size:15px;
+  font-weight:700;
+}
+.pharmacy-search strong{
+  font-size:14px;
+  font-weight:500;
+  color:#4b5563;
+}
+.pharmacy-toolbar button{
+  height:48px;
+  border:0;
+  border-radius:15px;
+  background:var(--dark);
+  color:#fff;
+  padding:0 16px;
+  font-size:13px;
+  font-weight:600;
+}
+.request-context-card{
+  display:grid;
+  grid-template-columns:1fr 1fr auto;
+  gap:12px;
+  align-items:center;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:#fff;
+  margin-bottom:14px;
+}
+.context-label{
+  display:block;
+  margin-bottom:5px;
+  color:var(--muted2);
+  text-transform:uppercase;
+  letter-spacing:.11em;
+  font-size:9px;
+  font-weight:700;
+}
+.request-context-card strong{
+  display:block;
+  font-size:15px;
+  font-weight:600;
+  letter-spacing:-.025em;
+}
+.request-context-card p{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:12px;
+}
+.pharmacy-map-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 290px;
+  gap:14px;
+  align-items:stretch;
+}
+.real-map{
+  position:relative;
+  min-height:330px;
+  border:1px solid var(--line);
+  border-radius:22px;
+  overflow:hidden;
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.35) 1px,transparent 1px),
+    linear-gradient(rgba(255,255,255,.35) 1px,transparent 1px),
+    radial-gradient(circle at 22% 18%,rgba(89,208,195,.18),transparent 28%),
+    radial-gradient(circle at 76% 72%,rgba(201,149,107,.14),transparent 30%),
+    #e7e1d7;
+  background-size:36px 36px,36px 36px,100% 100%,100% 100%,100% 100%;
+}
+.map-water{
+  position:absolute;
+  left:-60px;
+  bottom:-36px;
+  width:240px;
+  height:130px;
+  border-radius:50%;
+  background:rgba(89,208,195,.16);
+  filter:blur(.2px);
+}
+.map-park{
+  position:absolute;
+  right:30px;
+  bottom:30px;
+  width:130px;
+  height:92px;
+  border-radius:30px;
+  background:rgba(123,170,126,.15);
+}
+.map-road{
+  position:absolute;
+  height:20px;
+  border-radius:999px;
+  background:rgba(255,255,255,.74);
+  box-shadow:inset 0 0 0 1px rgba(229,223,211,.8);
+}
+.road-a{width:120%;left:-10%;top:42%;transform:rotate(-9deg)}
+.road-b{width:88%;right:-10%;top:65%;transform:rotate(18deg)}
+.road-c{width:72%;left:4%;top:23%;transform:rotate(35deg)}
+.road-d{width:22px;height:130%;left:48%;top:-14%;transform:rotate(4deg)}
+.road-e{width:62%;right:0;top:16%;transform:rotate(-28deg)}
+.map-route{
+  position:absolute;
+  left:25%;
+  top:42%;
+  width:46%;
+  height:74px;
+  border:3px solid var(--teal);
+  border-left:0;
+  border-bottom:0;
+  border-radius:0 28px 0 0;
+  opacity:.9;
+}
+.map-pin{
+  position:absolute;
+  width:34px;
+  height:34px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  z-index:3;
+  font-size:12px;
+  font-weight:700;
+  box-shadow:0 10px 24px rgba(17,24,39,.16);
+}
+.home-pin{left:21%;top:37%;background:#111827;color:#fff}
+.pharmacy-pin{background:#fff;color:#08766e;border:2px solid var(--teal)}
+.pharmacy-pin.selected{background:var(--teal);color:#073d38;transform:scale(1.08)}
+.pharmacy-pin.one{right:25%;top:28%}
+.pharmacy-pin.two{right:43%;top:48%}
+.pharmacy-pin.three{right:14%;top:55%}
+.pharmacy-pin.four{left:18%;bottom:18%}
+.pharmacy-pin.five{right:20%;bottom:14%}
+.map-tooltip{
+  position:absolute;
+  right:28px;
+  top:42px;
+  width:230px;
+  padding:15px;
+  border-radius:17px;
+  background:rgba(255,255,255,.94);
+  border:1px solid var(--line);
+  box-shadow:0 18px 40px rgba(17,24,39,.13);
+  z-index:4;
+}
+.map-tooltip span{
+  display:block;
+  color:#08766e;
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  font-size:9px;
+  font-weight:700;
+  margin-bottom:6px;
+}
+.map-tooltip strong{display:block;font-size:16px;font-weight:600;letter-spacing:-.03em}
+.map-tooltip small{display:block;margin-top:4px;color:var(--muted);font-size:12px}
+.pharmacy-results{display:grid;gap:9px;align-content:start}
+.results-head{display:flex;justify-content:space-between;align-items:center;padding:0 2px 3px}
+.results-head span{color:var(--muted2);text-transform:uppercase;letter-spacing:.11em;font-size:9px;font-weight:700}
+.results-head strong{color:var(--muted);font-size:12px;font-weight:600}
+.pharmacy-result{
+  width:100%;
+  min-height:62px;
+  display:grid;
+  grid-template-columns:30px 1fr auto;
+  gap:10px;
+  align-items:center;
+  text-align:left;
+  border:1px solid var(--line);
+  background:#fff;
+  border-radius:16px;
+  padding:10px;
+}
+.pharmacy-result.selected{border-color:rgba(63,193,179,.75);box-shadow:0 10px 26px rgba(89,208,195,.14)}
+.pharmacy-result.warning{background:#fffaf0}
+.result-number{
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  background:var(--tealSoft);
+  color:#08766e;
+  display:grid;
+  place-items:center;
+  font-size:12px;
+  font-weight:700;
+}
+.result-copy strong{display:block;font-size:13px;font-weight:600;letter-spacing:-.02em}
+.result-copy small{display:block;margin-top:3px;color:var(--muted);font-size:11px;line-height:1.3}
+.pharmacy-result em{
+  font-style:normal;
+  color:#08766e;
+  background:var(--tealSoft);
+  border-radius:999px;
+  padding:5px 7px;
+  font-size:9px;
+  font-weight:700;
+  white-space:nowrap;
+}
+.map-next-step{
+  margin-top:14px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:13px 14px;
+  border:1px solid rgba(63,193,179,.28);
+  border-radius:16px;
+  background:var(--tealSoft);
+  color:#075f58;
+  font-size:13px;
+  font-weight:600;
+  line-height:1.45;
+}
+.map-next-step svg{flex:0 0 auto}
 
 .section{max-width:1240px;margin:0 auto;padding:82px 42px}
 .section-head{margin-bottom:44px}
@@ -1732,6 +2078,9 @@ form .btn{width:100%;height:54px}
   .feature-intro,.waitlist-card{grid-template-columns:1fr;gap:36px}
   .feature-stage{grid-template-columns:1fr}
   .feature-tabs{grid-template-columns:repeat(2,1fr)}
+  .pharmacy-map-layout{grid-template-columns:1fr}
+  .real-map{min-height:300px}
+  .pharmacy-results{grid-template-columns:repeat(2,1fr)}
   .workflow-grid,.teams-grid,.pricing-grid,.boundary-grid{grid-template-columns:repeat(2,1fr)}
   .step-arrow{display:none}
   .footer-main{grid-template-columns:1fr;gap:54px}
@@ -1750,7 +2099,7 @@ form .btn{width:100%;height:54px}
   .hero>p{max-width:100%;font-size:15px;line-height:1.58;margin-top:18px}
   .hero-actions{display:grid;max-width:340px;margin-left:auto;margin-right:auto;margin-bottom:34px}
   .hero-btn{width:100%;padding:15px 18px}
-  .hero-frame{max-width:100%;min-height:682px}
+  .hero-frame{max-width:100%;min-height:auto}
   .hero-frame-inner{border-radius:22px;padding:8px;max-width:100%;overflow:hidden}
   .workspace-chrome{height:auto;grid-template-columns:1fr;justify-items:start;padding:14px}
   .chrome-dots{display:none}
@@ -1764,18 +2113,18 @@ form .btn{width:100%;height:54px}
   .mobile-resident-strip span:last-child{display:flex;align-items:center;gap:6px}
   .mobile-resident-strip strong{font-size:13px;font-weight:600}
   .mobile-resident-strip em{font-style:normal;font-size:9px;color:#69717e;background:#f4f6f8;border:1px solid #e3e8ef;border-radius:999px;padding:3px 6px}
-  .ops-room{grid-template-columns:1fr;height:560px;padding:14px}
+  .ops-room{grid-template-columns:1fr;height:auto;padding:14px}
   .people-panel{display:none}
-  .request-panel{padding:16px;border-radius:18px;height:532px}
-  .request-head{flex-direction:column;gap:12px;margin-bottom:14px;min-height:114px}
+  .request-panel{padding:16px;border-radius:18px;height:auto}
+  .request-head{flex-direction:column;gap:12px;margin-bottom:14px;min-height:auto}
   .request-head h3{font-size:23px;line-height:1.12}
   .request-head p{font-size:13px}
   .next-action{padding:14px 15px;border-radius:15px;min-height:88px}
   .next-action strong{font-size:14px;line-height:1.42}
   .tracking-row{grid-template-columns:1fr;min-height:0}
   .tracking-row div{padding:11px;min-height:62px}
-  .timeline-card{min-height:210px}
-  .timeline-list{grid-template-columns:1fr;min-height:130px}
+  .timeline-card{min-height:auto}
+  .timeline-list{grid-template-columns:1fr;min-height:auto}
   .resident-tabs{display:none}
   .trust-strip{padding:34px 0}
   .trust-strip p{line-height:1.5;padding:0 18px}
@@ -1789,9 +2138,16 @@ form .btn{width:100%;height:54px}
   .feature-stage{padding:14px;border-radius:24px;min-height:auto}
   .feature-tabs{grid-template-columns:1fr}
   .feature-tabs button{min-height:120px}
-  .feature-visual{padding:22px;min-height:450px}
-  .feature-mini-ui{grid-template-columns:1fr}
-  .mini-sidebar{display:none}
+  .pharmacy-visual{padding:18px;min-height:auto}
+  .pharmacy-workspace{padding:14px;border-radius:20px}
+  .pharmacy-toolbar{grid-template-columns:1fr}
+  .pharmacy-toolbar button{width:100%}
+  .request-context-card{grid-template-columns:1fr}
+  .real-map{min-height:300px}
+  .map-tooltip{left:16px;right:16px;top:18px;width:auto}
+  .pharmacy-results{grid-template-columns:1fr}
+  .pharmacy-result{grid-template-columns:30px 1fr}
+  .pharmacy-result em{grid-column:2;width:max-content}
   .workflow-grid,.teams-grid,.pricing-grid,.boundary-grid{grid-template-columns:1fr}
   .admin-stress{padding:0 18px 74px}
   .message-panel{height:380px;min-height:380px;padding:20px;border-radius:24px;grid-template-rows:repeat(4,72px);gap:10px}
@@ -1828,12 +2184,16 @@ form .btn{width:100%;height:54px}
   .logo span:last-child{font-size:21px}
   .hero h1{font-size:30px;line-height:1.18}
   .hero>p{font-size:14px}
-  .hero-frame{min-height:690px}
+  .hero-frame{min-height:auto}
   .hero-frame-inner{border-radius:20px;padding:6px}
-  .ops-room{padding:12px;height:565px}
-  .request-panel{height:541px}
+  .ops-room{padding:12px;height:auto}
+  .request-panel{height:auto}
   .request-head h3{font-size:22px}
   .next-action strong{font-size:13px}
+  .real-map{min-height:280px}
+  .map-pin{width:30px;height:30px;font-size:11px}
+  .map-tooltip{padding:13px}
+  .pharmacy-search strong{font-size:13px}
   .message-panel{height:368px;min-height:368px;padding:16px;grid-template-rows:repeat(4,70px)}
   .chat-slot{height:70px}
   .chat-bubble{max-width:90%}
