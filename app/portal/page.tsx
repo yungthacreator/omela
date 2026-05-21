@@ -1,13 +1,8 @@
 import { auth, signOut } from "@/auth";
-import { redirect } from "next/navigation";
 import PortalClient from "./PortalClient";
 
 export default async function PortalPage() {
   const session = await auth();
-
-  if (!session?.user) {
-    redirect("/login");
-  }
 
   async function signOutAction() {
     "use server";
@@ -16,8 +11,8 @@ export default async function PortalPage() {
 
   return (
     <PortalClient
-      userName={session.user.name ?? "Omela workspace"}
-      userImage={session.user.image ?? null}
+      userName={session?.user?.name ?? "Pavium"}
+      userImage={session?.user?.image ?? null}
       signOutAction={signOutAction}
     />
   );
